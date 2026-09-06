@@ -3,9 +3,9 @@
 import { db } from "@/lib/db"
 import { activity } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
-import { asc, count } from "drizzle-orm"
+import { asc, count, and, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
-import { seasonData } from "@/lib/season-data"
+import { seasonData } from "@/lib/season-data-2026-27"
 
 export async function getActivities() {
   await getUserId()
@@ -14,9 +14,17 @@ export async function getActivities() {
 
 export async function seedSeason() {
   await getUserId()
-  const [{ value }] = await db.select({ value: count() }).from(activity)
-  if (value > 0) return { seeded: false }
 
+  // The previous build contained placeholder/mock activities. Detect that dataset
+  // and replace it with the official SF work plan imported from the uploaded PDF.
+  const [{ value: officialEntry }] = await db
+    .select({ value: count() })
+    .from(activity)
+    .where(and(eq(activity.date, "2026-09-08"), eq(activity.type, "recording"), eq(activity.title, "Nahrávanie propagačného CD")))
+
+  if (officialEntry > 0) return { seeded: false }
+
+  await db.delete(activity)
   await db.insert(activity).values(
     seasonData.map((a) => ({
       date: a.date,
@@ -27,6 +35,7 @@ export async function seedSeason() {
       conductor: a.conductor,
       venue: a.venue,
       program: a.program,
+      notes: a.notes ?? null,
     })),
   )
 
