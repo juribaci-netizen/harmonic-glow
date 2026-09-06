@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import { getSessionUser } from "@/lib/session"
 import { AppShell } from "@/components/app-shell"
 import { DashboardView } from "@/components/dashboard-view"
@@ -7,14 +6,13 @@ import { getTimeEntries } from "@/app/actions/time-entries"
 
 export default async function DashboardPage() {
   const user = await getSessionUser()
-  if (!user) redirect("/sign-in")
-
   const [activities, entries] = await Promise.all([getActivities(), getTimeEntries()])
 
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const upcoming = activities.filter((a) => a.date >= todayStr && a.type !== "off").slice(0, 6)
-
   const now = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
+  const upcoming = activities.filter((a) => a.date >= todayStr && a.type !== "off").slice(0, 6)
+  const today = activities.filter((a) => a.date === todayStr)
+
   const y = now.getFullYear()
   const m = now.getMonth()
   const inMonth = (d: string) => {
@@ -28,8 +26,9 @@ export default async function DashboardPage() {
     <AppShell user={{ name: user.name, email: user.email }}>
       <DashboardView
         name={user.name}
+        today={today}
         upcoming={upcoming}
-        recentEntries={entries.slice(0, 6)}
+        recentEntries={entries.slice(0, 4)}
         monthHours={monthHours}
         monthActivityCount={monthActivityCount}
       />
