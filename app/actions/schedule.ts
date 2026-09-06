@@ -7,22 +7,13 @@ import { asc, count, and, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { seasonData } from "@/lib/season-data-2026-27"
 
-export async function getActivities() {
-  await getUserId()
-  return db.select().from(activity).orderBy(asc(activity.date), asc(activity.startTime))
-}
-
-export async function seedSeason() {
-  await getUserId()
-
-  // The previous build contained placeholder/mock activities. Detect that dataset
-  // and replace it with the official SF work plan imported from the uploaded PDF.
+async function syncOfficialSchedule() {
   const [{ value: officialEntry }] = await db
     .select({ value: count() })
     .from(activity)
     .where(and(eq(activity.date, "2026-09-08"), eq(activity.type, "recording"), eq(activity.title, "Nahrávanie propagačného CD")))
 
-  if (officialEntry > 0) return { seeded: false }
+  if (officialEntry > 0) return false
 
   await db.delete(activity)
   await db.insert(activity).values(
@@ -39,7 +30,17 @@ export async function seedSeason() {
     })),
   )
 
-  revalidatePath("/schedule")
-  revalidatePath("/")
-  return { seeded: true, count: seasonData.length }
+  return true
+}
+
+export async function getActivities() {
+  await getUserId()
+  await syncOfficialSchedule()
+  return db.select().from(activity).orderBy(asc(activity.date), asc(activity.startTime))
+}
+
+export async function seedSeason() {
+  await getUserId()
+  const seeded = await syncOfficialSchedule()
+  return { seeded, count: seeded ? seasonData.length : undefined }
 }
