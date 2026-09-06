@@ -4,43 +4,28 @@ import { Fraunces, Geist, Geist_Mono } from 'next/font/google'
 import { LanguageProvider } from '@/components/language-provider'
 import './globals.css'
 
-const geistSans = Geist({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-})
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-})
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-})
+const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces' })
 
 export const metadata: Metadata = {
-  title: 'Worktime — Slovenská filharmónia',
-  description:
-    'Evidencia pracovného času pre členov orchestra Slovenskej filharmónie. Track rehearsals, concerts, and monthly work-hour records.',
+  title: 'Worktime',
+  description: 'Worktime — Slovak Philharmonic work-hour management.',
+  applicationName: 'Worktime',
   generator: 'v0.app',
 }
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
   themeColor: '#1a1626',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="sk"
-      className={`dark bg-background ${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}
-    >
+    <html lang="sk" className={`dark bg-background ${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}>
       <body className="antialiased font-sans">
         <LanguageProvider>{children}</LanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
