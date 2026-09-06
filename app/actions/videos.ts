@@ -6,6 +6,7 @@ import { getUserId } from "@/lib/session"
 import { count, desc } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { concertVideoSeed } from "@/lib/season-data"
+import { concertArchiveSeed } from "@/lib/concert-archive"
 
 export async function getVideos() {
   await getUserId()
@@ -21,6 +22,14 @@ export async function seedVideos() {
   return { seeded: true }
 }
 
+export async function syncConcertArchive() {
+  await getUserId()
+  await db.delete(concertVideo)
+  await db.insert(concertVideo).values(concertArchiveSeed)
+  revalidatePath("/videos")
+  return { synced: true, count: concertArchiveSeed.length }
+}
+
 export type VideoInput = {
   title: string
   date: string | null
@@ -28,6 +37,7 @@ export type VideoInput = {
   venue: string | null
   description: string | null
   url: string | null
+  thumbnailUrl?: string | null
 }
 
 export async function addVideo(input: VideoInput) {
@@ -39,6 +49,7 @@ export async function addVideo(input: VideoInput) {
     venue: input.venue,
     description: input.description,
     url: input.url,
+    thumbnailUrl: input.thumbnailUrl ?? null,
   })
   revalidatePath("/videos")
   return { ok: true }
