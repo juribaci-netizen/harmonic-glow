@@ -2,10 +2,10 @@ export type Lang = "sk" | "en"
 
 export const translations = {
   sk: {
-    appName: "Worktime", orchestra: "Slovenská filharmónia", practice: "Cvičenie", concerts: "Koncerty",
+    appName: "Worktime", orchestra: "Slovenská filharmónia", practice: "Cvičenie", concerts: "Koncerty", todayWorked: "Dnes odpracované",
     signIn: "Prihlásiť sa", signUp: "Registrovať sa", signOut: "Odhlásiť sa", welcomeBack: "Vitajte späť", createAccount: "Vytvoriť účet", signInSubtitle: "Prihláste sa do evidencie pracovného času", signUpSubtitle: "Zaregistrujte sa a začnite s evidenciou", name: "Meno a priezvisko", email: "E-mail", password: "Heslo", haveAccount: "Už máte účet?", noAccount: "Nemáte účet?", pleaseWait: "Prosím čakajte...", somethingWrong: "Niečo sa pokazilo",
     dashboard: "Prehľad", schedule: "Rozvrh", timesheet: "Výkaz", videos: "Videá", profile: "Profil",
-    goodDay: "Dobrý deň", today: "Dnes", monthOverview: "Prehľad mesiaca", hoursThisMonth: "Hodiny tento mesiac", activitiesThisMonth: "Aktivity tento mesiac", upcomingActivities: "Nadchádzajúce aktivity", recentEntries: "Posledné záznamy", noUpcoming: "Žiadne nadchádzajúce aktivity", noEntries: "Zatiaľ žiadne záznamy", viewSchedule: "Zobraziť rozvrh", viewTimesheet: "Zobraziť výkaz", logged: "zaznamenané", scheduled: "naplánované",
+    goodDay: "Dobrý deň", today: "Dnes", monthOverview: "Prehľad mesiaca", hoursThisMonth: "hodín", activitiesThisMonth: "skúšok", upcomingActivities: "Nadchádzajúce aktivity", recentEntries: "Posledné záznamy", noUpcoming: "Žiadne nadchádzajúce aktivity", noEntries: "Zatiaľ žiadne záznamy", viewSchedule: "Zobraziť rozvrh", viewTimesheet: "Zobraziť výkaz", logged: "zaznamenané", scheduled: "naplánované",
     seasonSchedule: "Rozvrh", seasonSubtitle: "Pracovný plán orchestra na sezónu 2026/2027", seedSeason: "Načítať sezónny plán", seeding: "Načítavam...", logHours: "Zaznamenať hodiny", logged2: "Zaznamenané", allTypes: "Všetko",
     monthlyRecord: "Výkaz hodín", timesheetSubtitle: "Prehľad odpracovaných hodín", totalHours: "Celkom hodín", date: "Dátum", activity: "Aktivita", type: "Typ", hours: "Hodiny", status: "Stav", actions: "Akcie", noRecords: "Žiadne záznamy pre tento mesiac", export: "Exportovať",
     concertVideos: "Koncertné videá", videosSubtitle: "Archív nahrávok a záznamov z koncertov", watch: "Pozrieť", noVideos: "Zatiaľ žiadne videá", addVideo: "Pridať video",
@@ -15,10 +15,10 @@ export const translations = {
     months: ["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"], weekdays: ["Ne","Po","Ut","St","Št","Pi","So"],
   },
   en: {
-    appName: "Worktime", orchestra: "Slovak Philharmonic", practice: "Practice", concerts: "Concerts",
+    appName: "Worktime", orchestra: "Slovak Philharmonic", practice: "Practice", concerts: "Concerts", todayWorked: "Worked today",
     signIn: "Sign in", signUp: "Sign up", signOut: "Sign out", welcomeBack: "Welcome back", createAccount: "Create account", signInSubtitle: "Sign in to your work-hour records", signUpSubtitle: "Sign up to start tracking your hours", name: "Full name", email: "Email", password: "Password", haveAccount: "Already have an account?", noAccount: "Don't have an account?", pleaseWait: "Please wait...", somethingWrong: "Something went wrong",
     dashboard: "Home", schedule: "Schedule", timesheet: "Timesheet", videos: "Videos", profile: "Profile",
-    goodDay: "Good evening", today: "Today", monthOverview: "Month overview", hoursThisMonth: "Hours this month", activitiesThisMonth: "Activities this month", upcomingActivities: "Upcoming activities", recentEntries: "Recent entries", noUpcoming: "No upcoming activities", noEntries: "No entries yet", viewSchedule: "View schedule", viewTimesheet: "View timesheet", logged: "logged", scheduled: "scheduled",
+    goodDay: "Good evening", today: "Today", monthOverview: "Month overview", hoursThisMonth: "hours", activitiesThisMonth: "rehearsals", upcomingActivities: "Upcoming activities", recentEntries: "Recent entries", noUpcoming: "No upcoming activities", noEntries: "No entries yet", viewSchedule: "View schedule", viewTimesheet: "View timesheet", logged: "logged", scheduled: "scheduled",
     seasonSchedule: "Schedule", seasonSubtitle: "Orchestra work plan for the 2026/2027 season", seedSeason: "Load season plan", seeding: "Loading...", logHours: "Log hours", logged2: "Logged", allTypes: "All",
     monthlyRecord: "Hours", timesheetSubtitle: "Overview of worked hours", totalHours: "Total hours", date: "Date", activity: "Activity", type: "Type", hours: "Hours", status: "Status", actions: "Actions", noRecords: "No records for this month", export: "Export",
     concertVideos: "Concert videos", videosSubtitle: "Archive of concert recordings and broadcasts", watch: "Watch", noVideos: "No videos yet", addVideo: "Add video",
