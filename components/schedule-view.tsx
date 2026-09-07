@@ -20,7 +20,15 @@ type Activity = {
 export function ScheduleView({ activities }: { activities: Activity[] }) {
   const { t, lang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
-  const [cursor, setCursor] = useState(new Date(2026, 8, 1))
+  const today = new Date()
+  const localIso = (d: Date) => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+    return y + "-" + m + "-" + day
+  }
+  const todayIso = localIso(today)
+  const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
 
   const year = cursor.getFullYear()
   const month = cursor.getMonth()
@@ -28,9 +36,9 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
   const monthActivities = useMemo(() => {
     return activities.filter((a) => {
       const d = new Date(a.date + "T00:00:00")
-      return d.getFullYear() === year && d.getMonth() === month
+      return d.getFullYear() === year && d.getMonth() === month && a.date >= todayIso
     })
-  }, [activities, year, month])
+  }, [activities, year, month, todayIso])
 
   const grouped = useMemo(() => {
     const map = new Map<string, Activity[]>()
@@ -91,7 +99,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
 
             <div className="rounded-2xl bg-white px-4 py-3 text-center shadow-sm ring-1 ring-black/[.06]">
               <p className="text-[15px] font-semibold capitalize">{monthName}</p>
-              <p className="mt-0.5 text-[10px] text-black/45">24. 8. 2026 – 3. 1. 2027</p>
+              <p className="mt-0.5 text-[10px] text-black/45">od dneška · celý aktuálny plán</p>
             </div>
 
             <button
