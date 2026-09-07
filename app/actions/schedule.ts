@@ -11,7 +11,7 @@ async function syncOfficialSchedule() {
   const [{ value: currentVersion }] = await db
     .select({ value: count() })
     .from(activity)
-    .where(and(eq(activity.date, "2026-09-03"), eq(activity.title, "Symfónia umenia"), eq(activity.notes, "Zrušená")))
+    .where(and(eq(activity.date, "2026-09-04"), eq(activity.type, "off"), eq(activity.title, "Voľno")))
 
   if (currentVersion > 0) return false
 
