@@ -12,7 +12,7 @@ export function LanguageToggle({ className }: { className?: string }) {
         className,
       )}
     >
-      {(["sk", "en"] as const).map((l) => (
+      {(["sk", "en", "de"] as const).map((l) => (
         <button
           key={l}
           type="button"
