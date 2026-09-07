@@ -117,18 +117,8 @@ export function DashboardView({
       </div>
 
       <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <a href="https://www.filharmonia.sk/sites/default/files/2026-08/Programovy%20katalog%2078.%20koncertnej%20sezony%20Slovenskej%20filharmonie.pdf" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-[#eeeae4] text-black">
-          <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#f7f4ef] via-[#e7e1d8] to-[#cfc5b7]">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute h-[150%] w-[38%] -rotate-[28deg] rounded-[50%] border-[18px] border-white/75"/>
-              <div className="absolute h-[115%] w-[30%] rotate-[34deg] rounded-[50%] border-[13px] border-white/55"/>
-              <div className="relative text-center">
-                <p className="text-[19px] font-normal tracking-[-.04em]">slovenská</p>
-                <p className="text-[44px] font-normal leading-[.78] tracking-[-.09em]">FILHAR<br/>MÓNIA</p>
-              </div>
-            </div>
-            <div className="absolute bottom-4 right-4 rounded-full bg-white/72 px-3 py-1.5 text-[10px] backdrop-blur">78. koncertná sezóna · 26/27</div>
-          </div>
+        <a href="https://www.filharmonia.sk/sites/default/files/2026-08/Programovy%20katalog%2078.%20koncertnej%20sezony%20Slovenskej%20filharmonie.pdf" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-[#eeeae4]">
+          <img src="/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
         </a>
         <a href="https://filharmonia.sk/aktuality-a-novinky/" target="_blank" rel="noreferrer" className="w-[88%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black text-white">
           <div className="relative aspect-[16/9]">
