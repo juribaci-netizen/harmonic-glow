@@ -23,7 +23,6 @@ export function DashboardView({
 }) {
   const { lang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
-  const firstName = name.split(" ")[0]
   const now = new Date()
   const todayLabel = now.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})
 
@@ -47,7 +46,6 @@ export function DashboardView({
   return <div className="space-y-7">
     <header className="pt-2">
       <p className="modern-kicker capitalize text-black/38">{todayLabel}</p>
-      <h1 className="ios-title mt-2">{firstName}</h1>
     </header>
 
     <section>
