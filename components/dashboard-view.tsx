@@ -3,13 +3,13 @@
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
-import { CalendarDays, ClipboardCheck, PlaySquare, ChevronRight, Clock3, MapPin } from "lucide-react"
+import { CalendarDays, ChevronRight, Clock3, MapPin, PlaySquare } from "lucide-react"
 
 type Activity = { id:number; date:string; type:string; startTime:string|null; endTime:string|null; title:string; conductor:string|null; venue:string|null }
 type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string }
 
 export function DashboardView({
-  name, today, upcoming, weekActivities, monthHours
+  name, upcoming, weekActivities
 }:{
   name:string
   today:Activity[]
@@ -27,10 +27,9 @@ export function DashboardView({
   const now = new Date()
   const todayLabel = now.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})
 
-  const weekDays = useMemo(()=>{
+  const days = useMemo(()=>{
     const start = new Date(now)
     start.setHours(0,0,0,0)
-
     return Array.from({length:7},(_,i)=>{
       const d = new Date(start)
       d.setDate(start.getDate()+i)
@@ -40,7 +39,6 @@ export function DashboardView({
 
   const todayIso = now.toISOString().slice(0,10)
   const [selectedDate,setSelectedDate] = useState(todayIso)
-
   const selectedActivities = weekActivities.filter(a=>a.date===selectedDate)
   const selectedDay = new Date(selectedDate+"T00:00:00")
   const selectedLabel = selectedDay.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})
@@ -59,66 +57,72 @@ export function DashboardView({
 
       <div className="apple-card rounded-[26px] p-3">
         <div className="grid grid-cols-7 gap-1">
-          {weekDays.map(d=>{
+          {days.map(d=>{
             const iso=d.toISOString().slice(0,10)
             const active=iso===selectedDate
             const has=weekActivities.some(a=>a.date===iso && a.type!=="off")
-            const off=weekActivities.some(a=>a.date===iso && a.type==="off")
             return <button key={iso} onClick={()=>setSelectedDate(iso)} className={"flex flex-col items-center rounded-[14px] py-2.5 "+(active?"bg-black text-white":"")}>
               <span className={"text-[8px] font-bold uppercase "+(active?"text-white/55":"text-black/35")}>{d.toLocaleDateString(locale,{weekday:"short"}).replace(".","")}</span>
               <span className="mt-1 text-[20px] font-bold leading-none">{d.getDate()}</span>
-              <span className={"mt-1 h-1.5 w-1.5 rounded-full "+(has?(active?"bg-[#0a84ff]":"bg-[#0a84ff]"):off?(active?"bg-white/35":"bg-black/18"):"bg-transparent")}/>
+              <span className={"mt-1 h-1.5 w-1.5 rounded-full "+(has?"bg-[#0a84ff]":"bg-black/12")}/>
             </button>
           })}
         </div>
 
         <div className="mt-3 border-t border-black/[.06] pt-3">
-          <div className="flex items-baseline justify-between px-1">
-  <p className="text-[17px] font-bold capitalize tracking-[-.02em] text-black">{selectedLabel}</p>
-  <span className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/30">Program dňa</span>
-</div>
+          <p className="px-1 text-[17px] font-bold capitalize tracking-[-.02em]">{selectedLabel}</p>
+
           {selectedActivities.length===0 ? (
             <div className="mt-2 rounded-[18px] bg-[#f2f2f7] px-4 py-4">
               <p className="text-[14px] font-semibold">Voľno</p>
-              <p className="mt-1 text-[11px] text-black/38">Žiadna naplánovaná aktivita.</p>
             </div>
           ) : (
             <div className="mt-2 overflow-hidden rounded-[18px] bg-[#f2f2f7]">
               {selectedActivities.map(a=><div key={a.id} className="flex items-start gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-white text-[#0a84ff] shadow-sm"><CalendarDays className="h-4 w-4"/></div>
                 <div className="min-w-0 flex-1">
-                  {a.startTime&&<p className="flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em] text-black"><Clock3 className="h-4 w-4 text-[#0a84ff]"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+                  {a.startTime&&<p className="flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em]"><Clock3 className="h-4 w-4 text-[#0a84ff]"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
                   <p className={(a.startTime?"mt-1 ":"")+"text-[13px] font-semibold text-black/65"}>{a.type==="off"?"Voľno":a.title}</p>
                   {a.venue&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><MapPin className="h-3 w-3"/>{a.venue}</p>}
                 </div>
               </div>)}
             </div>
           )}
-        </div>
 
-        <Link href="/schedule" className="mt-3 flex items-center justify-between rounded-[18px] bg-black px-4 py-3.5 text-white">
-          <span className="text-[13px] font-semibold">Otvoriť celý plán práce</span>
-          <ChevronRight className="h-4 w-4 text-white/55"/>
-        </Link>
+          <Link href="/schedule" className="mt-3 flex items-center justify-between rounded-[18px] bg-black px-4 py-3.5 text-white">
+            <span className="text-[13px] font-semibold">Celý plán práce</span>
+            <ChevronRight className="h-4 w-4 text-white/55"/>
+          </Link>
+        </div>
       </div>
     </section>
 
-    <section className="grid grid-cols-2 gap-3">
-      <Link href="/timesheet" className="rounded-[24px] bg-[#0a84ff] p-4 text-white shadow-[0_10px_24px_rgba(10,132,255,.22)]">
-        <ClipboardCheck className="h-5 w-5"/>
-        <p className="mt-7 text-[11px] font-semibold text-white/70">EPČ</p>
-        <p className="mt-1 text-[26px] font-bold tracking-[-.035em]">{monthHours.toFixed(0)} h</p>
-      </Link>
+    <section>
+      <div className="mb-2 flex items-center justify-between px-1">
+        <h2 className="ios-section-title">Náhľad</h2>
+      </div>
 
-      <Link href="/videos" className="apple-card rounded-[24px] p-4">
-        <PlaySquare className="h-5 w-5 text-[#0a84ff]"/>
-        <p className="mt-7 text-[11px] font-semibold text-black/40">Koncerty</p>
-        <p className="mt-1 text-[17px] font-bold">Archív</p>
+      <Link href="/videos" className="apple-card block overflow-hidden rounded-[26px]">
+        <div className="relative h-[150px] bg-gradient-to-br from-[#101012] via-[#323238] to-[#8f8f97]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.22),transparent_35%)]"/>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-white/55">Koncerty</p>
+                <h3 className="mt-1 text-[20px] font-bold tracking-[-.02em]">Archív Slovenskej filharmónie</h3>
+              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-black shadow-lg"><PlaySquare className="h-5 w-5"/></span>
+            </div>
+          </div>
+        </div>
       </Link>
     </section>
 
     <section>
-      <div className="mb-2 flex items-center justify-between px-1"><h2 className="ios-section-title">Najbližšie</h2><Link href="/schedule" className="text-[12px] font-semibold text-[#0a84ff]">Všetko</Link></div>
+      <div className="mb-2 flex items-center justify-between px-1">
+        <h2 className="ios-section-title">Najbližšie</h2>
+        <Link href="/schedule" className="text-[12px] font-semibold text-[#0a84ff]">Všetko</Link>
+      </div>
       <div className="apple-card overflow-hidden rounded-[24px]">
         {upcoming.length===0 ? <p className="p-6 text-center text-[13px] text-black/40">Žiadne nadchádzajúce aktivity</p> :
           upcoming.slice(0,3).map(a=><Link href="/schedule" key={a.id} className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
@@ -126,7 +130,10 @@ export function DashboardView({
               <span className="text-[8px] font-bold uppercase text-black/34">{new Date(a.date+"T00:00:00").toLocaleDateString(locale,{month:"short"})}</span>
               <span className="text-[20px] font-extrabold leading-none">{new Date(a.date+"T00:00:00").getDate()}</span>
             </div>
-            <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{a.title}</p>{a.startTime&&<p className="mt-1 text-[14px] font-extrabold tracking-[-.01em] text-black">{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}</div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-semibold">{a.title}</p>
+              {a.startTime&&<p className="mt-1 text-[14px] font-extrabold tracking-[-.01em]">{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+            </div>
             <ChevronRight className="h-4 w-4 text-black/18"/>
           </Link>)
         }
