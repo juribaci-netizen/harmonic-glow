@@ -9,6 +9,7 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
   const [query,setQuery]=useState("")
   const [selected,setSelected]=useState<Video|null>(null)
   const [embedUrl,setEmbedUrl]=useState<string|null>(null)
+  const [needsDomainPermission,setNeedsDomainPermission]=useState(false)
   const [loading,setLoading]=useState(false)
 
   const filtered=useMemo(()=>initialVideos.filter(v=>{
@@ -19,12 +20,18 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
 
   useEffect(()=>{
     let cancelled=false
-    if(!selected?.url){setEmbedUrl(null);return}
+    if(!selected?.url){setEmbedUrl(null);setNeedsDomainPermission(false);return}
     setLoading(true)
     setEmbedUrl(null)
+    setNeedsDomainPermission(false)
     fetch("/api/video-embed?url="+encodeURIComponent(selected.url))
       .then(r=>r.ok?r.json():null)
-      .then(data=>{if(!cancelled)setEmbedUrl(data?.embedUrl??null)})
+      .then(data=>{
+        if(!cancelled){
+          setEmbedUrl(data?.embedUrl??null)
+          setNeedsDomainPermission(Boolean(data?.needsDomainPermission))
+        }
+      })
       .catch(()=>{if(!cancelled)setEmbedUrl(null)})
       .finally(()=>{if(!cancelled)setLoading(false)})
     return()=>{cancelled=true}
@@ -52,8 +59,9 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-white">
             {selected.thumbnailUrl&&<img src={selected.thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30"/>}
-            <div className="relative">
-              <p className="text-[12px] font-semibold">Prehrávač sa nepodarilo načítať.</p>
+            <div className="relative max-w-[260px]">
+              <p className="text-[13px] font-semibold">{needsDomainPermission ? "Tento záznam nepovoľuje prehrávanie na doméne Worktime." : "Prehrávač sa nepodarilo načítať."}</p>
+              <p className="mt-2 text-[10px] leading-4 text-white/60">{needsDomainPermission ? "Worktime je pripravený na vložené prehrávanie. Pre Vimeo záznamy musí vlastník povoliť doménu harmonic-glow.vercel.app alebo poskytnúť verejný embed." : "Skús originálny záznam."}</p>
               <a href={selected.url||"#"} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-bold text-black">Otvoriť originál <ExternalLink className="ml-1 h-3.5 w-3.5"/></a>
             </div>
           </div>
