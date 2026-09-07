@@ -28,7 +28,7 @@ export const seasonData: SeasonActivity[] = [
   { date:"2026-08-31", type:"ip", startTime:null, endTime:null, title:"IP", conductor:null, venue:null, program:null },
   { date:"2026-09-01", type:"ip", startTime:null, endTime:null, title:"IP", conductor:null, venue:null, program:null },
   { date:"2026-09-02", type:"ip", startTime:null, endTime:null, title:"IP", conductor:null, venue:null, program:null },
-  { date:"2026-09-03", type:"concert", startTime:null, endTime:null, title:"Koncert – Symfónia umenia", conductor:"Pavel Baleff", venue:"Bratislava", program:"Čajkovskij: Polonéza z Eugena Onegina; Gounod: Je veux vivre; Gounod: L’amour! L’amour!...; Gounod: Nuit d’hyménée; Prokofiev: Tanec rytierov; Massenet: Toi! Vous!...; Puccini: Che gelida manina; Puccini: Quando m’en vo; Puccini: O soave fanciulla; Donizetti: Una furtiva lagrima; Donizetti: Caro elisir!; Künneke: Strahlender Mond; Kálmán: Valčík z Čardášovej princeznej; Lehár: Es lebt eine Vilja; Lehár: Dummer, dummer Reitersmann; Bernstein: Maria; I Feel Pretty; Tonight; prídavky Lehár, Verdi, Lehár, Puccini, Mozart." },
+  { date:"2026-09-03", type:"concert", startTime:null, endTime:null, title:"Symfónia umenia", conductor:null, venue:null, program:null, notes:"Zrušená" },
   { date:"2026-09-04", type:"rehearsal", startTime:"09:00", endTime:"12:00", title:"Skúška", conductor:null, venue:"Slovenská filharmónia", program:null },
   { date:"2026-09-04", type:"rehearsal", startTime:"14:00", endTime:"17:00", title:"Skúška", conductor:null, venue:"Slovenská filharmónia", program:null },
   { date:"2026-09-05", type:"rehearsal", startTime:"09:00", endTime:"12:00", title:"Skúška", conductor:null, venue:"Slovenská filharmónia", program:null },
