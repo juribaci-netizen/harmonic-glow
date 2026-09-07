@@ -58,7 +58,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     description: "Slovenský komorný orchester · Wolfgang Amadeus Mozart",
     url: "https://stream.filharmonia.art/?/koncert/KS202605301600",
     thumbnailUrl: "https://operaslovakia.sk/wp-content/uploads/2015/06/SF-Ewald-Danel-%C2%A9-Photo-A.-Trizuljak-DSC_6479.jpg",
-  },,
+  },
   {
     title: "Beseda s Danielom Raiskinom",
     date: "2026-06-05",
