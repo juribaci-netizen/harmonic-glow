@@ -37,10 +37,17 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
     <section className="overflow-hidden rounded-[28px] bg-black shadow-xl">
       <div className="relative aspect-video">
         {embedLoading?<div className="absolute inset-0 flex items-center justify-center text-white"><Loader2 className="h-7 w-7 animate-spin"/></div>:
-        embedUrl?<iframe src={embedUrl} title={selected.title} className="h-full w-full border-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>:
+        embedUrl?(
+          /\.(m3u8|mp4)(\?|$)/i.test(embedUrl)
+            ? <video src={embedUrl} className="h-full w-full bg-black object-contain" controls playsInline autoPlay preload="metadata"/>
+            : <iframe src={embedUrl} title={selected.title} className="h-full w-full border-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+        ):
         <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-white">
           {selected.thumbnailUrl&&<img src={selected.thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30"/>}
-          <a href={selected.url||"#"} target="_blank" rel="noreferrer" className="relative rounded-full bg-white px-4 py-2 text-[12px] font-bold text-black">Otvoriť koncert <ExternalLink className="ml-1 inline h-3.5 w-3.5"/></a>
+          <div className="relative">
+            <p className="mb-3 text-[12px] font-semibold text-white/75">Priame prehrávanie nie je pre tento záznam dostupné.</p>
+            <a href={selected.url||"#"} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-bold text-black">Otvoriť koncert <ExternalLink className="ml-1 h-3.5 w-3.5"/></a>
+          </div>
         </div>}
       </div>
     </section>
@@ -53,7 +60,7 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
   </div>
 
   return <div className="space-y-5">
-    <header className="pt-1"><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-black/35">Slovenská filharmónia</p><h1 className="ios-title mt-1">Koncerty</h1></header>
+    <header className="pt-1"><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-black/35">Slovenská filharmónia</p><h1 className="ios-title mt-1">Koncerty</h1><p className="mt-2 text-[12px] text-black/42">Vyber koncert a prehrávaj ho priamo v aplikácii.</p></header>
 
     <div className="relative">
       <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-black/35"/>
