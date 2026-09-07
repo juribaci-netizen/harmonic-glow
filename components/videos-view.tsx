@@ -1,12 +1,30 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Search, Play, ExternalLink } from "lucide-react"
 
 type Video={id:number;title:string;date:string|null;conductor:string|null;venue:string|null;description:string|null;url:string|null;thumbnailUrl:string|null}
 
 export function VideosView({initialVideos}:{initialVideos:Video[]}){
   const [query,setQuery]=useState("")
+  const [officialThumbs,setOfficialThumbs]=useState<Record<number,string>>({})
+
+  useEffect(()=>{
+    let cancelled=false
+    Promise.all(initialVideos.filter(v=>v.url).map(async v=>{
+      try{
+        const r=await fetch("/api/video-embed?preview=1&url="+encodeURIComponent(v.url!))
+        const data=r.ok?await r.json():null
+        return [v.id,data?.imageUrl??null] as const
+      }catch{return [v.id,null] as const}
+    })).then(rows=>{
+      if(cancelled)return
+      const next:Record<number,string>={}
+      rows.forEach(([id,url])=>{if(url)next[id]=url})
+      setOfficialThumbs(next)
+    })
+    return()=>{cancelled=true}
+  },[initialVideos])
 
   const filtered=useMemo(()=>initialVideos.filter(v=>{
     const q=query.toLowerCase().trim()
@@ -29,7 +47,7 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
     <div className="grid grid-cols-2 gap-3">
       {filtered.map(v=><a key={v.id} href={v.url||"#"} target="_blank" rel="noreferrer" className="apple-card overflow-hidden rounded-[20px] text-left">
         <div className="relative aspect-[4/3] bg-[#202024]">
-          {v.thumbnailUrl&&<img src={v.thumbnailUrl} alt="" className="h-full w-full object-cover"/>}
+          {(officialThumbs[v.id]||v.thumbnailUrl)&&<img src={officialThumbs[v.id]||v.thumbnailUrl||""} alt="" className="h-full w-full object-cover"/>}
           <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-black shadow-lg"><Play className="ml-0.5 h-3.5 w-3.5 fill-current"/></span>
         </div>
         <div className="p-3">
