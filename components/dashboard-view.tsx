@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
-import { CalendarDays, ChevronRight, Clock3, MapPin, PlaySquare } from "lucide-react"
+import { CalendarDays, ChevronRight, Clock3, MapPin, Play } from "lucide-react"
 
 type Activity = { id:number; date:string; type:string; startTime:string|null; endTime:string|null; title:string; conductor:string|null; venue:string|null }
 type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string }
@@ -111,17 +111,16 @@ export function DashboardView({
         <h2 className="ios-section-title">Náhľad</h2>
       </div>
 
-      <Link href="/videos" className="apple-card block overflow-hidden rounded-[20px]">
-        <div className="relative h-[138px] bg-gradient-to-br from-[#171719] via-[#303033] to-[#65656a]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.22),transparent_35%)]"/>
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-white/55">Koncerty</p>
-                <h3 className="mt-1 text-[20px] font-bold tracking-[-.02em]">Archív Slovenskej filharmónie</h3>
-              </div>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-black shadow-lg"><PlaySquare className="h-5 w-5"/></span>
-            </div>
+      <Link href="/videos" className="group block overflow-hidden rounded-[20px] bg-black shadow-[0_10px_30px_rgba(0,0,0,.10)]">
+        <div className="relative aspect-[16/9]">
+          <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-80"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5"/>
+          <span className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.08em] text-white/80 backdrop-blur-md">Posledný koncert</span>
+          <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg"><Play className="ml-0.5 h-4 w-4 fill-current"/></span>
+          <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+            <p className="text-[11px] font-medium text-white/60">21. jún 2026</p>
+            <h3 className="mt-1 text-[22px] font-semibold tracking-[-.035em]">Mozart</h3>
+            <p className="mt-1 text-[11px] text-white/65">SKO · SFZ · Danel · Sedlický</p>
           </div>
         </div>
       </Link>
