@@ -79,8 +79,8 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
         <header className="sticky top-0 z-10 border-b border-black/[.06] bg-[#f4f2ec]/92 px-5 pb-4 pt-5 backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-black/45">Slovenská filharmónia</p>
-              <h1 className="mt-1 font-serif text-[34px] font-semibold leading-none tracking-[-.03em]">Plán práce</h1>
+              <p className="text-[11px] font-medium uppercase tracking-[.16em] text-black/45">Slovenská filharmónia</p>
+              <h1 className="mt-1 text-[38px] font-medium leading-none tracking-[-.03em]">Plán práce</h1>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[#1f49ff]">
               <Music2 className="h-[18px] w-[18px]" />
@@ -98,7 +98,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
             </button>
 
             <div className="rounded-2xl bg-white px-4 py-3 text-center shadow-sm ring-1 ring-black/[.06]">
-              <p className="text-[15px] font-semibold capitalize">{monthName}</p>
+              <p className="text-[15px] font-medium capitalize">{monthName}</p>
               <p className="mt-0.5 text-[10px] text-black/45">od dneška · celý aktuálny plán</p>
             </div>
 
@@ -130,12 +130,12 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                   <section key={date} className="overflow-hidden rounded-[26px] bg-white shadow-sm ring-1 ring-black/[.05]">
                     <div className="flex border-b border-black/[.05] bg-black/[.018]">
                       <div className="flex w-[78px] shrink-0 flex-col items-center justify-center border-r border-black/[.06] py-3">
-                        <span className="text-[9px] font-bold tracking-[.08em] text-black/45">{weekday}</span>
-                        <span className="font-serif text-[30px] font-semibold leading-none">{day}</span>
-                        <span className="mt-1 text-[9px] font-bold tracking-[.08em] text-black/45">{monthShort}</span>
+                        <span className="text-[11px] font-normal tracking-[.04em] text-black/45">{weekday}</span>
+                        <span className="text-[38px] font-normal leading-none">{day}</span>
+                        <span className="mt-1 text-[11px] font-normal tracking-[.04em] text-black/45">{monthShort}</span>
                       </div>
                       <div className="flex min-w-0 flex-1 items-center px-4">
-                        <p className="text-[13px] font-semibold text-black/60">
+                        <p className="text-[13px] font-medium text-black/60">
                           {items.length === 1 ? typeLabel(items[0].type) : items.length + " frekvencie"}
                         </p>
                       </div>
@@ -166,15 +166,15 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    {time && <p className="text-[15px] font-bold leading-tight">{time}</p>}
-                                    <p className={"mt-0.5 text-[15px] leading-tight " + (cancelled ? "font-bold text-red-700" : "font-semibold")}>
+                                    {time && <p className="text-[23px] font-normal leading-tight tracking-[-.02em]">{time}</p>}
+                                    <p className={"mt-0.5 text-[15px] leading-tight " + (cancelled ? "font-medium text-red-700" : "font-medium")}>
                                       {cancelled ? "Symfónia umenia" : off ? "Voľno" : a.title}
                                     </p>
                                   </div>
 
                                   <span
                                     className={
-                                      "shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.04em] ring-1 " +
+                                      "shrink-0 rounded-full px-2.5 py-1 text-[9px] font-medium uppercase tracking-[.04em] ring-1 " +
                                       (cancelled
                                         ? "bg-red-100 text-red-700 ring-red-200"
                                         : off
@@ -187,7 +187,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                                 </div>
 
                                 {cancelled ? (
-                                  <p className="mt-2 text-[12px] font-semibold text-red-700">Zrušená</p>
+                                  <p className="mt-2 text-[12px] font-medium text-red-700">Zrušená</p>
                                 ) : !off ? (
                                   <div className="mt-2 space-y-1.5">
                                     {a.conductor && <p className="text-[12px] font-medium">Diriguje: {a.conductor}</p>}
