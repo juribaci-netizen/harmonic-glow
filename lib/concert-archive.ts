@@ -58,5 +58,32 @@ export const concertArchiveSeed: ArchiveItem[] = [
     description: "Slovenský komorný orchester · Wolfgang Amadeus Mozart",
     url: "https://stream.filharmonia.art/?/koncert/KS202605301600",
     thumbnailUrl: "https://operaslovakia.sk/wp-content/uploads/2015/06/SF-Ewald-Danel-%C2%A9-Photo-A.-Trizuljak-DSC_6479.jpg",
+  },,
+  {
+    title: "Beseda s Danielom Raiskinom",
+    date: "2026-06-05",
+    conductor: "Daniel Raiskin · Martin Bubnáš",
+    venue: "Slovenská filharmónia",
+    description: "Rozhovor / beseda · Beethoven · Brahms",
+    url: "https://stream.filharmonia.art/",
+    thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg",
   },
-]
+  {
+    title: "Beseda s Milanom Paľom a Ondrejom Olosom",
+    date: "2026-04-16",
+    conductor: "Ondrej Olos · Milan Paľa · Martin Bubnáš",
+    venue: "Slovenská filharmónia",
+    description: "Rozhovor / beseda · Walton · Cikker · Rachmaninov",
+    url: "https://stream.filharmonia.art/",
+    thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg",
+  },
+  {
+    title: "Beseda s Mariánom Lejavom a Ondrejom Veselým",
+    date: "2026-02-06",
+    conductor: "Marián Lejava · Ondrej Veselý · Martin Bubnáš",
+    venue: "Slovenská filharmónia",
+    description: "Rozhovor / beseda · Parík · Zimmer · Honegger",
+    url: "https://stream.filharmonia.art/",
+    thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2023/06/005-SKO-SZMB-foto-A-TRIZULJAK-w-scaled.jpg",
+  }
+].sort((a,b)=>(b.date ?? "").localeCompare(a.date ?? ""))
