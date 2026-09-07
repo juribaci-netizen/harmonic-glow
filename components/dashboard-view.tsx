@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useI18n } from "@/components/language-provider"
 import { CalendarDays, ChevronRight, Clock3, MapPin, Play } from "lucide-react"
 
@@ -43,11 +43,6 @@ export function DashboardView({
     const day = String(d.getDate()).padStart(2, "0")
     return y + "-" + m + "-" + day
   }
-  const todayIso = localIso(now)
-  const [selectedDate,setSelectedDate] = useState(todayIso)
-  const selectedActivities = weekActivities.filter(a=>a.date===selectedDate)
-  const selectedDay = new Date(selectedDate+"T00:00:00")
-  const selectedLabel = selectedDay.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})
 
   return <div className="space-y-7">
     <header className="pt-2">
@@ -58,52 +53,57 @@ export function DashboardView({
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
         <h2 className="ios-section-title">Plán práce</h2>
-        <span className="text-[11px] font-medium text-black/35">od dneška</span>
+        <Link href="/schedule" className="text-[12px] font-semibold text-black">Celý plán</Link>
       </div>
 
-      <div className="apple-card rounded-[20px] p-3">
-        <div className="grid grid-cols-7 gap-1">
-          {days.map(d=>{
-            const iso=localIso(d)
-            const active=iso===selectedDate
-            const has=weekActivities.some(a=>a.date===iso && a.type!=="off")
-            return <button key={iso} onClick={()=>setSelectedDate(iso)} className={"flex flex-col items-center rounded-[12px] py-2.5 "+(active?"bg-black text-white":"")}>
-              <span className={"text-[8px] font-bold uppercase "+(active?"text-white/55":"text-black/35")}>{d.toLocaleDateString(locale,{weekday:"short"}).replace(".","")}</span>
-              <span className="mt-1 text-[20px] font-bold leading-none">{d.getDate()}</span>
-              <span className={"mt-1 h-1.5 w-1.5 rounded-full "+(has?"bg-black":"bg-black/12")}/>
-            </button>
-          })}
-        </div>
+      <div className="space-y-3">
+        <DayPreview
+          title="Dnes"
+          date={days[0]}
+          activities={weekActivities.filter(a=>a.date===localIso(days[0]))}
+          locale={locale}
+        />
 
-        <div className="mt-3 border-t border-black/[.06] pt-3">
-          <p className="px-1 text-[17px] font-bold capitalize tracking-[-.02em]">{selectedLabel}</p>
+        <DayPreview
+          title="Zajtra"
+          date={days[1]}
+          activities={weekActivities.filter(a=>a.date===localIso(days[1]))}
+          locale={locale}
+        />
 
-          {selectedActivities.length===0 ? (
-            <div className="mt-2 rounded-[12px] bg-[#f4f4f5] px-4 py-4">
-              <p className="text-[14px] font-semibold">Voľno</p>
+        <details className="apple-card overflow-hidden rounded-[20px]">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-4">
+            <div>
+              <p className="text-[14px] font-semibold">Celý týždeň projektu</p>
+              <p className="mt-1 text-[10px] text-black/38">Dnešný deň + nasledujúcich 6 dní</p>
             </div>
-          ) : (
-            <div className="mt-2 overflow-hidden rounded-[12px] bg-[#f4f4f5]">
-              {selectedActivities.map(a=><div key={a.id} className="flex items-start gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-white text-black shadow-sm"><CalendarDays className="h-4 w-4"/></div>
-                <div className="min-w-0 flex-1">
-                  {a.startTime&&<p className={"flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em] "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black")}><Clock3 className={"h-4 w-4 "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black")}/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
-                  <div className="mt-1 flex items-center gap-2">
-                    <p className={"text-[13px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
-                    {/konkurz/i.test(a.title)&&<span className="rounded-full bg-[#af52de]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[.05em] text-[#af52de]">Konkurz</span>}
-                  </div>
-                  {a.venue&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><MapPin className="h-3 w-3"/>{a.venue}</p>}
+            <ChevronRight className="h-4 w-4 text-black/25 transition group-open:rotate-90"/>
+          </summary>
+
+          <div className="border-t border-black/[.06]">
+            {days.map(d=>{
+              const iso=localIso(d)
+              const items=weekActivities.filter(a=>a.date===iso)
+              return <div key={iso} className="border-b border-black/[.05] px-4 py-3.5 last:border-0">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-[12px] font-semibold capitalize">{d.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"short"})}</p>
+                  <span className="text-[9px] font-medium uppercase tracking-[.06em] text-black/30">{items.length>1?items.length+" frekvencie":items.length===1?"1 frekvencia":"voľno"}</span>
                 </div>
-              </div>)}
-            </div>
-          )}
-
-          <Link href="/schedule" className="mt-3 flex items-center justify-between rounded-[12px] bg-black px-4 py-3.5 text-white">
-            <span className="text-[13px] font-semibold">Celý plán práce</span>
-            <ChevronRight className="h-4 w-4 text-black/30"/>
-          </Link>
-        </div>
+                {items.length===0 ? <p className="mt-2 text-[12px] text-black/38">Voľno</p> :
+                  <div className="mt-2 space-y-2">
+                    {items.map(a=><div key={a.id} className="rounded-[12px] bg-[#f4f4f5] px-3 py-2.5">
+                      {a.startTime&&<p className={"text-[14px] font-extrabold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+                      <p className={"mt-0.5 text-[12px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
+                    </div>)}
+                  </div>
+                }
+              </div>
+            })}
+          </div>
+        </details>
       </div>
+    </section>
+
     </section>
 
     <section>
@@ -147,5 +147,28 @@ export function DashboardView({
         }
       </div>
     </section>
+  </div>
+}
+
+
+function DayPreview({title,date,activities,locale}:{title:string;date:Date;activities:Activity[];locale:string}) {
+  return <div className="apple-card rounded-[20px] p-4">
+    <div className="flex items-baseline justify-between">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/35">{title}</p>
+        <p className="mt-1 text-[16px] font-bold capitalize tracking-[-.02em]">{date.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}</p>
+      </div>
+      <span className="text-[9px] font-semibold text-black/28">{activities.length>1?activities.length+" frekvencie":activities.length===1?"1 frekvencia":"voľno"}</span>
+    </div>
+
+    {activities.length===0 ? <p className="mt-3 text-[13px] text-black/40">Voľno</p> :
+      <div className="mt-3 space-y-2">
+        {activities.map(a=><div key={a.id} className="rounded-[14px] bg-[#f4f4f5] px-3.5 py-3">
+          {a.startTime&&<p className={"flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em] "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black")}><Clock3 className="h-4 w-4"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+          <p className={"mt-1 text-[13px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
+          {a.venue&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><MapPin className="h-3 w-3"/>{a.venue}</p>}
+        </div>)}
+      </div>
+    }
   </div>
 }
