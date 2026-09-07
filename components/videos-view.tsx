@@ -9,6 +9,7 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
   const [query,setQuery]=useState("")
   const [selected,setSelected]=useState<Video|null>(null)
   const [embedUrl,setEmbedUrl]=useState<string|null>(null)
+  const [playerUrl,setPlayerUrl]=useState<string|null>(null)
   const [embedLoading,setEmbedLoading]=useState(false)
 
   const filtered=useMemo(()=>initialVideos.filter(v=>{
@@ -19,11 +20,18 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
 
   useEffect(()=>{
     let cancelled=false
-    if(!selected?.url){setEmbedUrl(null);return}
+    if(!selected?.url){setEmbedUrl(null);setPlayerUrl(null);return}
     setEmbedLoading(true)
+    setEmbedUrl(null)
+    setPlayerUrl(null)
     fetch("/api/video-embed?url="+encodeURIComponent(selected.url))
       .then(r=>r.ok?r.json():null)
-      .then(data=>{if(!cancelled)setEmbedUrl(data?.embedUrl??null)})
+      .then(data=>{
+        if(!cancelled){
+          setEmbedUrl(data?.embedUrl??null)
+          setPlayerUrl(data?.playerUrl??null)
+        }
+      })
       .catch(()=>{if(!cancelled)setEmbedUrl(null)})
       .finally(()=>{if(!cancelled)setEmbedLoading(false)})
     return()=>{cancelled=true}
@@ -39,8 +47,10 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
         {embedLoading?<div className="absolute inset-0 flex items-center justify-center text-white"><Loader2 className="h-7 w-7 animate-spin"/></div>:
         embedUrl?(
           /\.(m3u8|mp4)(\?|$)/i.test(embedUrl)
-            ? <video src={embedUrl} className="h-full w-full bg-black object-contain" controls playsInline autoPlay preload="metadata"/>
+            ? <video src={embedUrl} className="h-full w-full bg-black object-contain" controls playsInline preload="metadata"/>
             : <iframe src={embedUrl} title={selected.title} className="h-full w-full border-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+        ):playerUrl?(
+          <iframe src={playerUrl} title={selected.title} className="h-full w-full border-0 bg-black" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
         ):
         <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-white">
           {selected.thumbnailUrl&&<img src={selected.thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30"/>}
