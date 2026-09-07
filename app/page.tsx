@@ -12,8 +12,6 @@ export default async function DashboardPage() {
   const todayStr = now.toISOString().slice(0, 10)
 
   const start = new Date(now)
-  const weekday = (start.getDay() + 6) % 7
-  start.setDate(start.getDate() - weekday)
   start.setHours(0,0,0,0)
 
   const end = new Date(start)
