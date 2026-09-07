@@ -1,45 +1,27 @@
 "use server"
 
-import { db } from "@/lib/db"
-import { activity } from "@/lib/db/schema"
-import { getUserId } from "@/lib/session"
-import { asc, count, and, eq } from "drizzle-orm"
 import { seasonData } from "@/lib/season-data-2026-27"
 
-async function syncOfficialSchedule() {
-  const [{ value: officialEntry }] = await db
-    .select({ value: count() })
-    .from(activity)
-    .where(and(eq(activity.date, "2026-09-08"), eq(activity.type, "recording"), eq(activity.title, "Nahrávanie propagačného CD")))
-
-  if (officialEntry > 0) return false
-
-  await db.delete(activity)
-  await db.insert(activity).values(
-    seasonData.map((a) => ({
-      date: a.date,
-      type: a.type,
-      startTime: a.startTime,
-      endTime: a.endTime,
-      title: a.title,
-      conductor: a.conductor,
-      venue: a.venue,
-      program: a.program,
-      notes: a.notes ?? null,
-    })),
-  )
-
-  return true
-}
-
+/**
+ * The work plan is currently sourced directly from the official season data.
+ * Keeping it out of the database makes schedule updates immediately visible
+ * and avoids stale/corrupted activity rows after plan changes.
+ */
 export async function getActivities() {
-  await getUserId()
-  await syncOfficialSchedule()
-  return db.select().from(activity).orderBy(asc(activity.date), asc(activity.startTime))
+  return seasonData.map((a, index) => ({
+    id: index + 1,
+    date: a.date,
+    type: a.type,
+    startTime: a.startTime,
+    endTime: a.endTime,
+    title: a.title,
+    conductor: a.conductor,
+    venue: a.venue,
+    program: a.program,
+    notes: a.notes ?? null,
+  }))
 }
 
 export async function seedSeason() {
-  await getUserId()
-  const seeded = await syncOfficialSchedule()
-  return { seeded, count: seeded ? seasonData.length : undefined }
+  return { seeded: false, count: seasonData.length }
 }
