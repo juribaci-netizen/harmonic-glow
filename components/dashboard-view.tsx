@@ -51,7 +51,6 @@ export function DashboardView({
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
         <h2 className="ios-section-title">Zo Slovenskej filharmónie</h2>
-        <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="text-[12px] font-medium text-black">Otvoriť web</a>
       </div>
 
       <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
