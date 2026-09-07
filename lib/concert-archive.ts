@@ -11,7 +11,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     conductor: "Ewald Danel · Adam Sedlický",
     venue: "Koncertná sieň Slovenskej filharmónie",
     description: "Slovenský komorný orchester · Slovenský filharmonický zbor",
-    url: "https://stream.filharmonia.art/concert/KS202606211530",
+    url: "https://stream.filharmonia.art/?/koncert/KS202606211530",
     thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg",
   },
   {
@@ -20,7 +20,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     conductor: "Ewald Danel · Kadesha",
     venue: "Slovenská filharmónia",
     description: "Slovenský komorný orchester · Mendelssohn Bartholdy · Bartók · Holst · Bloch",
-    url: "https://stream.filharmonia.art/concert/KS202603121900",
+    url: "https://stream.filharmonia.art/?/koncert/KS202603121900",
     thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2023/06/005-SKO-SZMB-foto-A-TRIZULJAK-w-scaled.jpg",
   },
   {
@@ -29,7 +29,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     conductor: "Ewald Danel",
     venue: "Stĺpová sieň Slovenskej filharmónie",
     description: "Slovenský komorný orchester · Ježek · Bella · Bach · Čajkovskij",
-    url: "https://stream.filharmonia.art/concert/SS202606141600",
+    url: "https://stream.filharmonia.art/?/koncert/SS202606141600",
     thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2023/06/005-SKO-SZMB-foto-A-TRIZULJAK-w-scaled.jpg",
   },
   {
@@ -38,7 +38,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     conductor: "Rastislav Štúr",
     venue: "Koncertná sieň Slovenskej filharmónie",
     description: "Slovenská filharmónia · Ricotti · Dvořák · Chausson · Borodin · Casella · Béres · Berg",
-    url: "https://stream.filharmonia.art/concert/KS202606101900",
+    url: "https://stream.filharmonia.art/?/koncert/KS202606101900",
     thumbnailUrl: "https://operaslovakia.sk/wp-content/uploads/2015/06/SF-Ewald-Danel-%C2%A9-Photo-A.-Trizuljak-DSC_6479.jpg",
   },
   {
@@ -47,7 +47,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     conductor: "J. Hinnerk Andresen · J. Mitrík",
     venue: "Koncertná sieň Slovenskej filharmónie",
     description: "Le Nuove Musiche · Schimrack, d. Ä. · Zarevúcky · Gabrieli",
-    url: "https://stream.filharmonia.art/concert/KS202606091900",
+    url: "https://stream.filharmonia.art/?/koncert/KS202606091900",
     thumbnailUrl: "https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg",
   },
   {
@@ -56,7 +56,7 @@ export const concertArchiveSeed: ArchiveItem[] = [
     conductor: "Ewald Danel",
     venue: "Slovenská filharmónia",
     description: "Slovenský komorný orchester · Wolfgang Amadeus Mozart",
-    url: "https://stream.filharmonia.art/concert/KS202605301600",
+    url: "https://stream.filharmonia.art/?/koncert/KS202605301600",
     thumbnailUrl: "https://operaslovakia.sk/wp-content/uploads/2015/06/SF-Ewald-Danel-%C2%A9-Photo-A.-Trizuljak-DSC_6479.jpg",
   },
 ]
