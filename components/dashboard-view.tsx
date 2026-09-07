@@ -112,8 +112,6 @@ export function DashboardView({
       </div>
     </section>
 
-    </section>
-
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
         <h2 className="ios-section-title">Náhľad</h2>
