@@ -23,8 +23,11 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
     <div className="min-h-svh bg-white">
       <div className="mx-auto min-h-svh w-full max-w-[460px]">
         <header className="sticky top-0 z-30 bg-white/84 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
-          <div className="flex h-14 items-center justify-between px-5">
-            <p className="text-[15px] font-semibold tracking-[-.03em]">Worktime</p>
+          <div className="relative flex h-14 items-center justify-between px-5">
+            <p className="text-[15px] font-medium tracking-[-.03em]">Worktime</p>
+            <Link href="/" aria-label="Worktime" className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-[10px] bg-white shadow-[0_2px_10px_rgba(0,0,0,.06)]">
+              <img src="/icon.svg" alt="" className="h-full w-full" />
+            </Link>
             <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="text-[10px] font-medium text-black/35 transition-opacity hover:opacity-60">Slovenská filharmónia</a>
           </div>
         </header>
