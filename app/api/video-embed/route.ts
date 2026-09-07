@@ -74,22 +74,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid url" }, { status: 400 })
   }
 
-  if (target.hostname !== NEW_HOST || !target.pathname.startsWith("/concert/")) {
+  if (target.hostname !== NEW_HOST) {
     return NextResponse.json({ error: "Only official concert URLs are allowed" }, { status: 400 })
   }
 
-  const id = target.pathname.split("/").filter(Boolean).pop()
-  const legacyPlayerUrl = id ? `https://${OLD_HOST}/video/?v=${encodeURIComponent(id)}` : null
+  const queryRoute = decodeURIComponent(target.search.slice(1)).replace(/=$/,"")
+  const pathId = target.pathname.startsWith("/concert/") ? target.pathname.split("/").filter(Boolean).pop() : null
+  const queryId = queryRoute.startsWith("/koncert/") ? queryRoute.split("/").filter(Boolean).pop() : null
+  const id = pathId ?? queryId
+
+  if (!id) {
+    return NextResponse.json({ error: "Concert id not found" }, { status: 400 })
+  }
+
+  const canonicalNewUrl = `https://${NEW_HOST}/?/koncert/${encodeURIComponent(id)}`
+  const legacyPlayerUrl = `https://${OLD_HOST}/video/?v=${encodeURIComponent(id)}`
 
   try {
-    const current = await inspect(target.toString())
+    const current = await inspect(canonicalNewUrl)
     const legacy = legacyPlayerUrl ? await inspect(legacyPlayerUrl) : null
     const embedUrl = current.embedUrl ?? legacy?.embedUrl ?? null
 
     if (debug) {
       return NextResponse.json({
         embedUrl,
-        sourceUrl: target.toString(),
+        sourceUrl: canonicalNewUrl,
         legacyPlayerUrl,
         current,
         legacy,
@@ -99,13 +108,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       embedUrl,
       playerUrl: legacyPlayerUrl,
-      sourceUrl: target.toString(),
+      sourceUrl: canonicalNewUrl,
     }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" } })
   } catch (error) {
     return NextResponse.json({
       embedUrl: null,
       playerUrl: legacyPlayerUrl,
-      sourceUrl: target.toString(),
+      sourceUrl: canonicalNewUrl,
       debugError: debug ? String(error) : undefined,
     }, { status: 200 })
   }
