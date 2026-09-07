@@ -8,12 +8,12 @@ import { revalidatePath } from "next/cache"
 import { seasonData } from "@/lib/season-data-2026-27"
 
 async function syncOfficialSchedule() {
-  const [{ value: officialEntry }] = await db
+  const [{ value: currentVersion }] = await db
     .select({ value: count() })
     .from(activity)
-    .where(and(eq(activity.date, "2026-09-08"), eq(activity.type, "recording"), eq(activity.title, "Nahrávanie propagačného CD")))
+    .where(and(eq(activity.date, "2026-09-03"), eq(activity.title, "Symfónia umenia"), eq(activity.notes, "Zrušená")))
 
-  if (officialEntry > 0) return false
+  if (currentVersion > 0) return false
 
   await db.delete(activity)
   await db.insert(activity).values(
