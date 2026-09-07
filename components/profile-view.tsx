@@ -1,13 +1,56 @@
 "use client"
 
-import { useState, useTransition } from "react"
 import { useI18n } from "@/components/language-provider"
-import { saveProfile } from "@/app/actions/profile"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { User, Mail, Phone, MapPin, Music2, CalendarDays, Bell, Moon, Globe2 } from "lucide-react"
+import { Mail, Phone, Music2, MapPin, CalendarDays, Globe2, ChevronRight, Bell } from "lucide-react"
 
 type Profile={fullName:string|null;instrument:string|null;section:string|null;position:string|null;phone:string|null}
-export function ProfileView({user,profile}:{user:{name:string;email:string};profile:Profile|null}){const {t,lang}=useI18n();const [pending,startTransition]=useTransition();const [saved,setSaved]=useState(false);const [form,setForm]=useState({fullName:profile?.fullName??user.name,instrument:profile?.instrument??"Violin",section:profile?.section??"Prvé husle",position:profile?.position??"",phone:profile?.phone??""});const set=(k:keyof typeof form,v:string)=>setForm(x=>({...x,[k]:v}));const submit=(e:React.FormEvent)=>{e.preventDefault();setSaved(false);startTransition(async()=>{await saveProfile(form);setSaved(true)})};return <div className="space-y-5 pb-3"><header><h1 className="font-serif text-[28px] font-semibold">{t.myProfile}</h1></header><div className="flex items-center gap-4 py-2"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#efe9dd] text-[#17233d]"><Music2 className="h-9 w-9"/></div><div><h2 className="text-lg font-semibold">{form.fullName}</h2><p className="text-sm text-muted-foreground">{form.instrument}</p><p className="text-xs text-muted-foreground">{t.orchestra}</p></div></div><section><h2 className="mb-3 font-serif text-[19px] font-semibold">Osobné údaje</h2><Card className="divide-y overflow-hidden rounded-2xl p-0 shadow-none"><div className="flex items-center gap-3 p-4"><User className="h-4 w-4 text-muted-foreground"/><div><p className="text-[10px] text-muted-foreground">{t.fullName}</p><p className="text-sm">{form.fullName}</p></div></div><div className="flex items-center gap-3 p-4"><Mail className="h-4 w-4 text-muted-foreground"/><div><p className="text-[10px] text-muted-foreground">{t.email}</p><p className="text-sm">{user.email}</p></div></div><div className="flex items-center gap-3 p-4"><Phone className="h-4 w-4 text-muted-foreground"/><div><p className="text-[10px] text-muted-foreground">{t.phone}</p><p className="text-sm">{form.phone||"—"}</p></div></div><div className="flex items-center gap-3 p-4"><MapPin className="h-4 w-4 text-muted-foreground"/><div><p className="text-[10px] text-muted-foreground">Mesto</p><p className="text-sm">Bratislava</p></div></div></Card></section><section><h2 className="mb-3 font-serif text-[19px] font-semibold">Orchestrálne údaje</h2><Card className="divide-y overflow-hidden rounded-2xl p-0 shadow-none"><div className="flex items-center gap-3 p-4"><Music2 className="h-4 w-4 text-muted-foreground"/><div><p className="text-[10px] text-muted-foreground">{t.position}</p><p className="text-sm">{form.section}</p></div></div><div className="flex items-center gap-3 p-4"><CalendarDays className="h-4 w-4 text-muted-foreground"/><div><p className="text-[10px] text-muted-foreground">Od</p><p className="text-sm">Január 2024</p></div></div></Card></section><section><h2 className="mb-3 font-serif text-[19px] font-semibold">Nastavenia</h2><Card className="divide-y overflow-hidden rounded-2xl p-0 shadow-none"><div className="flex items-center gap-3 p-4"><Bell className="h-4 w-4 text-muted-foreground"/><span className="text-sm flex-1">Notifikácie</span><span className="text-xs text-muted-foreground">›</span></div><div className="flex items-center gap-3 p-4"><Moon className="h-4 w-4 text-muted-foreground"/><span className="text-sm flex-1">Svetlý režim</span><span className="h-5 w-9 rounded-full bg-slate-200 p-0.5"><span className="block h-4 w-4 rounded-full bg-white shadow-sm"/></span></div><div className="flex items-center gap-3 p-4"><Globe2 className="h-4 w-4 text-muted-foreground"/><span className="text-sm flex-1">Jazyk</span><span className="text-xs text-muted-foreground">{lang==="sk"?"Slovenčina":"English"} ›</span></div></Card></section><form onSubmit={submit} className="hidden"><Input value={form.fullName} onChange={e=>set("fullName",e.target.value)}/></form><Button className="w-full rounded-xl" onClick={e=>{e.preventDefault();startTransition(async()=>{await saveProfile(form);setSaved(true)})}} disabled={pending}>{pending?t.saving:saved?t.saved:t.save}</Button></div>}
+
+export function ProfileView({user,profile}:{user:{name:string;email:string};profile:Profile|null}) {
+  const {lang}=useI18n()
+  const fullName=profile?.fullName??user.name
+  const instrument=profile?.instrument??"Husle"
+  const section=profile?.section??"Prvé husle"
+  const phone=profile?.phone??"—"
+
+  return <div className="space-y-5">
+    <header className="pt-1"><h1 className="ios-title">Profil</h1></header>
+
+    <section className="apple-card rounded-[28px] p-5">
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#0a84ff] to-[#65b7ff] text-white shadow-lg"><Music2 className="h-8 w-8"/></div>
+        <div><h2 className="text-[20px] font-bold tracking-[-.02em]">{fullName}</h2><p className="mt-1 text-[13px] text-black/45">{instrument} · {section}</p><p className="mt-1 text-[11px] text-black/35">Slovenská filharmónia</p></div>
+      </div>
+    </section>
+
+    <Group title="Osobné údaje">
+      <Row icon={<Mail/>} label="E-mail" value={user.email}/>
+      <Row icon={<Phone/>} label="Telefón" value={phone}/>
+      <Row icon={<MapPin/>} label="Mesto" value="Bratislava"/>
+    </Group>
+
+    <Group title="Orchester">
+      <Row icon={<Music2/>} label="Sekcia" value={section}/>
+      <Row icon={<CalendarDays/>} label="Člen od" value="Január 2024"/>
+    </Group>
+
+    <Group title="Nastavenia">
+      <Row icon={<Bell/>} label="Notifikácie" value="Zapnuté" chevron/>
+      <Row icon={<Globe2/>} label="Jazyk" value={lang==="sk"?"Slovenčina":lang==="de"?"Deutsch":"English"} chevron/>
+    </Group>
+
+    <p className="px-2 pb-2 text-center text-[10px] text-black/28">Worktime · Slovenská filharmónia</p>
+  </div>
+}
+
+function Group({title,children}:{title:string;children:React.ReactNode}) {
+  return <section><p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[.08em] text-black/34">{title}</p><div className="apple-card overflow-hidden rounded-[24px]">{children}</div></section>
+}
+
+function Row({icon,label,value,chevron=false}:{icon:React.ReactNode;label:string;value:string;chevron?:boolean}) {
+  return <div className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
+    <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#0a84ff] text-white [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
+    <span className="flex-1 text-[13px] font-medium">{label}</span>
+    <span className="max-w-[48%] truncate text-[12px] text-black/42">{value}</span>
+    {chevron&&<ChevronRight className="h-4 w-4 text-black/20"/>}
+  </div>
+}
