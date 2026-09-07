@@ -136,7 +136,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       </div>
                       <div className="flex min-w-0 flex-1 items-center px-4">
                         <p className="text-[13px] font-semibold text-black/60">
-                          {items.length === 1 ? typeLabel(items[0].type) : items.length + " položky"}
+                          {items.length === 1 ? typeLabel(items[0].type) : items.length + " frekvencie"}
                         </p>
                       </div>
                     </div>
