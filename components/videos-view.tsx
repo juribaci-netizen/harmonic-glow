@@ -1,13 +1,15 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Search, Play, ArrowLeft, ExternalLink } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Search, Play, ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
 
 type Video={id:number;title:string;date:string|null;conductor:string|null;venue:string|null;description:string|null;url:string|null;thumbnailUrl:string|null}
 
 export function VideosView({initialVideos}:{initialVideos:Video[]}){
   const [query,setQuery]=useState("")
   const [selected,setSelected]=useState<Video|null>(null)
+  const [embedUrl,setEmbedUrl]=useState<string|null>(null)
+  const [loading,setLoading]=useState(false)
 
   const filtered=useMemo(()=>initialVideos.filter(v=>{
     const q=query.toLowerCase().trim()
@@ -15,10 +17,18 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
     return hay.includes(q)
   }),[initialVideos,query])
 
-  const play=(v:Video)=>{
-    if(!v.url) return
-    window.location.href=v.url
-  }
+  useEffect(()=>{
+    let cancelled=false
+    if(!selected?.url){setEmbedUrl(null);return}
+    setLoading(true)
+    setEmbedUrl(null)
+    fetch("/api/video-embed?url="+encodeURIComponent(selected.url))
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{if(!cancelled)setEmbedUrl(data?.embedUrl??null)})
+      .catch(()=>{if(!cancelled)setEmbedUrl(null)})
+      .finally(()=>{if(!cancelled)setLoading(false)})
+    return()=>{cancelled=true}
+  },[selected])
 
   if(selected)return <div className="space-y-4">
     <button onClick={()=>setSelected(null)} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-black"><ArrowLeft className="h-4 w-4"/>Koncerty</button>
@@ -30,24 +40,31 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
     </header>
 
     <section className="overflow-hidden rounded-[22px] bg-black shadow-[0_14px_36px_rgba(0,0,0,.16)]">
-      <button onClick={()=>play(selected)} className="relative block aspect-video w-full text-left">
-        {selected.thumbnailUrl&&<img src={selected.thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75"/>}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/5"/>
-        <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-black shadow-xl">
-          <Play className="ml-1 h-5 w-5 fill-current"/>
-        </span>
-        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-          <p className="text-[11px] font-semibold">Prehrať oficiálny záznam</p>
-          <p className="mt-1 text-[10px] text-white/60">Koncertný archív Slovenskej filharmónie</p>
-        </div>
-      </button>
+      <div className="relative aspect-video w-full">
+        {loading ? (
+          <div className="absolute inset-0 flex items-center justify-center text-white">
+            <Loader2 className="h-7 w-7 animate-spin"/>
+          </div>
+        ) : embedUrl ? (
+          /\.(m3u8|mp4)(\?|$)/i.test(embedUrl)
+            ? <video src={embedUrl} className="h-full w-full bg-black object-contain" controls playsInline preload="metadata"/>
+            : <iframe src={embedUrl} title={selected.title} className="h-full w-full border-0 bg-black" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-white">
+            {selected.thumbnailUrl&&<img src={selected.thumbnailUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30"/>}
+            <div className="relative">
+              <p className="text-[12px] font-semibold">Prehrávač sa nepodarilo načítať.</p>
+              <a href={selected.url||"#"} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center rounded-full bg-white px-4 py-2 text-[12px] font-bold text-black">Otvoriť originál <ExternalLink className="ml-1 h-3.5 w-3.5"/></a>
+            </div>
+          </div>
+        )}
+      </div>
     </section>
 
     <section className="apple-card rounded-[20px] p-4">
       {selected.conductor&&<p className="text-[13px] font-semibold">Diriguje: {selected.conductor}</p>}
       {selected.venue&&<p className="mt-1 text-[11px] text-black/42">{selected.venue}</p>}
       {selected.description&&<p className="mt-3 text-[12px] leading-relaxed text-black/55">{selected.description}</p>}
-      <button onClick={()=>play(selected)} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-black px-4 py-2.5 text-[12px] font-semibold text-white">Prehrať koncert <ExternalLink className="h-3.5 w-3.5"/></button>
     </section>
   </div>
 
@@ -55,7 +72,7 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
     <header className="pt-1">
       <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-black/35">Slovenská filharmónia</p>
       <h1 className="ios-title mt-1">Koncerty</h1>
-      <p className="mt-2 text-[12px] text-black/42">Oficiálne záznamy z koncertného archívu.</p>
+      <p className="mt-2 text-[12px] text-black/42">Vyber koncert a prehrávaj ho priamo v aplikácii.</p>
     </header>
 
     <div className="relative">
@@ -76,7 +93,5 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
         </div>
       </button>)}
     </div>
-
-    {filtered.length===0&&<div className="apple-card rounded-[20px] p-8 text-center text-[13px] text-black/40">Nič sa nenašlo.</div>}
   </div>
 }
