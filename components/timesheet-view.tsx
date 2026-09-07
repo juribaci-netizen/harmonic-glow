@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
 import { confirmSuggestedEntry, deleteEntry, suggestIndividualPreparation } from "@/app/actions/time-entries"
-import { ChevronLeft, ChevronRight, Download, Sparkles, CheckCircle2, Clock3 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Download, Sparkles, CheckCircle2, Clock3, FileText } from "lucide-react"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null}
 
@@ -68,10 +68,20 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           <p className="text-[15px] font-bold tracking-[-.02em]">Oficiálny formulár</p>
           <p className="mt-1 text-[10px] leading-4 text-black/40">EPČ version 2.1 · pôvodný PDF formulár</p>
         </div>
-        <a href="#epc-formular" className="shrink-0 rounded-full bg-black px-4 py-2 text-[11px] font-semibold text-white">Zobraziť</a>
+        <button onClick={()=>document.getElementById("epc-formular")?.scrollIntoView({behavior:"smooth",block:"center"})} className="shrink-0 rounded-full bg-black px-4 py-2 text-[11px] font-semibold text-white">Zobraziť</button>
       </div>
-      <div id="epc-formular" className="mt-3 rounded-[14px] bg-[#f4f4f5] px-3.5 py-3 text-[11px] leading-4 text-black/50">
-        Formulár EPČ version 2.1 bude slúžiť ako výsledný mesačný dokument, ktorý aplikácia vyplní z evidencie.
+      <div id="epc-formular" className="mt-3 rounded-[14px] bg-[#f4f4f5] p-3.5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white shadow-sm"><FileText className="h-4 w-4"/></span>
+          <div>
+            <p className="text-[12px] font-semibold">Mesačný výkaz EPČ</p>
+            <p className="mt-0.5 text-[10px] text-black/40">Automaticky vyplnený podľa evidencie</p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button className="rounded-[12px] bg-white px-3 py-2.5 text-[11px] font-semibold shadow-sm">Náhľad formulára</button>
+          <button className="rounded-[12px] bg-black px-3 py-2.5 text-[11px] font-semibold text-white">Vytvoriť PDF</button>
+        </div>
       </div>
     </section>
 
