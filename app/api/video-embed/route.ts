@@ -63,9 +63,28 @@ async function inspect(url: string) {
   }
 }
 
+function extractPreview(html: string, baseUrl: string) {
+  const normalized = html.replaceAll("\\/","/").replaceAll("&amp;","&")
+  const patterns = [
+    /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
+    /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i,
+    /<video[^>]+poster=["']([^"']+)["']/i,
+  ]
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern)
+    if (match?.[1]) {
+      try { return new URL(match[1], baseUrl).toString() } catch { return match[1] }
+    }
+  }
+  return null
+}
+
 export async function GET(request: NextRequest) {
   const raw = request.nextUrl.searchParams.get("url")
   const debug = request.nextUrl.searchParams.get("debug") === "1"
+  const preview = request.nextUrl.searchParams.get("preview") === "1"
 
   if (!raw) return NextResponse.json({ error: "Missing url" }, { status: 400 })
 
@@ -91,6 +110,17 @@ export async function GET(request: NextRequest) {
   const legacyPlayerUrl = `https://${OLD_HOST}/video/?v=${encodeURIComponent(id)}`
 
   try {
+    if (preview) {
+      const response = await fetch(canonicalNewUrl, {
+        headers: { "User-Agent": "Mozilla/5.0", "Accept": "text/html,application/xhtml+xml" },
+        cache: "no-store",
+        redirect: "follow",
+      })
+      const html = await response.text()
+      const imageUrl = extractPreview(html, response.url || canonicalNewUrl)
+      return NextResponse.json({ imageUrl }, { headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" } })
+    }
+
     const current = await inspect(canonicalNewUrl)
     const legacy = legacyPlayerUrl ? await inspect(legacyPlayerUrl) : null
     const embedUrl = current.embedUrl ?? legacy?.embedUrl ?? null
