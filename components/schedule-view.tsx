@@ -75,14 +75,14 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
 
   return (
     <div className="mx-auto w-full max-w-[430px] pb-6">
-      <section className="overflow-hidden rounded-[32px] bg-[#f7f7f4] shadow-[0_12px_40px_rgba(0,0,0,.06)] ring-1 ring-black/[.05]">
-        <header className="sticky top-0 z-10 border-b border-black/[.06] bg-[#f7f7f4]/95 px-5 pb-4 pt-5 backdrop-blur-xl">
+      <section className="overflow-hidden rounded-[32px] bg-[#f4f2ec] shadow-[0_12px_40px_rgba(0,0,0,.06)] ring-1 ring-black/[.05]">
+        <header className="sticky top-0 z-10 border-b border-black/[.06] bg-[#f4f2ec]/92 px-5 pb-4 pt-5 backdrop-blur-xl">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[.16em] text-black/45">Slovenská filharmónia</p>
               <h1 className="mt-1 font-serif text-[34px] font-semibold leading-none tracking-[-.03em]">Plán práce</h1>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[#d7b56d]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[#1f49ff]">
               <Music2 className="h-[18px] w-[18px]" />
             </div>
           </div>
@@ -152,14 +152,14 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                             key={a.id}
                             className={
                               "px-4 py-4 " +
-                              (cancelled ? "bg-red-50" : off ? "bg-[#f4f1ea]" : "bg-white")
+                              (cancelled ? "bg-red-50" : off ? "bg-[#ece8df]" : "bg-white")
                             }
                           >
                             <div className="flex items-start gap-3">
                               <span
                                 className={
                                   "mt-[7px] h-2.5 w-2.5 shrink-0 rounded-full " +
-                                  (cancelled ? "bg-red-500" : off ? "bg-black/25" : a.type === "concert" ? "bg-black" : "bg-[#d7b56d]")
+                                  (cancelled ? "bg-red-500" : off ? "bg-black/25" : a.type === "concert" ? "bg-black" : "bg-[#1f49ff]")
                                 }
                               />
 
@@ -179,7 +179,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                                         ? "bg-red-100 text-red-700 ring-red-200"
                                         : off
                                           ? "bg-black/[.04] text-black/45 ring-black/[.08]"
-                                          : "bg-[#f7f7f4] text-black/55 ring-black/[.08]")
+                                          : "bg-[#f4f2ec] text-black/55 ring-black/[.08]")
                                     }
                                   >
                                     {cancelled ? "Zrušené" : typeLabel(a.type)}
