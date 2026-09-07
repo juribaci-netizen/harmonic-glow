@@ -65,68 +65,6 @@ export function DashboardView({
 
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
-        <h2 className="ios-section-title">Plán práce</h2>
-        <Link href="/schedule" className="text-[12px] font-medium text-black">Plán práce</Link>
-      </div>
-
-      <div className="space-y-3">
-        <DayPreview
-          title="Dnes"
-          date={days[0]}
-          activities={weekActivities.filter(a=>a.date===localIso(days[0]))}
-          locale={locale}
-        />
-
-        <DayPreview
-          title="Zajtra"
-          date={days[1]}
-          activities={weekActivities.filter(a=>a.date===localIso(days[1]))}
-          locale={locale}
-        />
-
-        <details className="apple-card overflow-hidden rounded-[20px]">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-4">
-            <div>
-              <p className="text-[20px] font-normal">Celý týždeň projektu</p>
-              <p className="mt-1 text-[10px] text-black/38">Dnešný deň + nasledujúcich 6 dní</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-black/25 transition group-open:rotate-90"/>
-          </summary>
-
-          <div className="border-t border-black/[.06]">
-            {days.map(d=>{
-              const iso=localIso(d)
-              const items=weekActivities.filter(a=>a.date===iso)
-              return <div key={iso} className="border-b border-black/[.05] px-4 py-3.5 last:border-0">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-[12px] font-medium capitalize">{d.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"short"})}</p>
-                  <span className="text-[9px] font-medium uppercase tracking-[.06em] text-black/30">{items.length>1?items.length+" frekvencie":items.length===1?"1 frekvencia":"voľno"}</span>
-                </div>
-                {items.length===0 ? <p className="mt-2 text-[12px] text-black/38">Voľno</p> :
-                  <div className="mt-2 space-y-2">
-                    {items.map(a=><div key={a.id} className="rounded-[12px] bg-[#f5f5f7] px-3 py-2.5">
-                      {a.startTime&&<p className={"text-[20px] font-normal "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
-                      <p className={"mt-0.5 text-[12px] font-medium "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
-                    </div>)}
-                  </div>
-                }
-              </div>
-            })}
-          </div>
-        </details>
-
-        <a href="/Pracovny-plan-SF-24-8-2026-3-1-2027.pdf" target="_blank" rel="noreferrer" className="apple-card flex items-center justify-between rounded-[20px] px-4 py-4">
-          <div>
-            <p className="text-[20px] font-normal">Celý plán práce</p>
-            <p className="mt-1 text-[10px] text-black/38">Originálny pracovný plán · PDF</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-black/25"/>
-        </a>
-      </div>
-    </section>
-
-    <section>
-      <div className="mb-2 flex items-center justify-between px-1">
         <h2 className="ios-section-title">Náhľad</h2>
       </div>
 
