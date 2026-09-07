@@ -44,16 +44,16 @@ export function VideosView({initialVideos}:{initialVideos:Video[]}){
       <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Hľadať koncert alebo skladateľa" className="h-11 w-full rounded-[14px] border-0 bg-[#e9e5dc] pl-10 pr-4 text-[13px] outline-none placeholder:text-black/34"/>
     </div>
 
-    <div className="space-y-4">
-      {filtered.map(v=><a key={v.id} href={v.url||"#"} target="_blank" rel="noreferrer" className="apple-card block overflow-hidden rounded-[20px] text-left">
-        <div className="relative aspect-video bg-[#202024]">
-          {(officialThumbs[v.id]||v.thumbnailUrl)&&<img src={officialThumbs[v.id]||v.thumbnailUrl||""} alt="" className="h-full w-full object-cover"/>}
-          <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-black shadow-lg"><Play className="ml-0.5 h-3.5 w-3.5 fill-current"/></span>
+    <div className="space-y-6">
+      {filtered.map(v=><a key={v.id} href={v.url||"#"} target="_blank" rel="noreferrer" className="group block overflow-hidden rounded-[24px] bg-black text-left shadow-[0_22px_60px_rgba(0,0,0,.16)]">
+        <div className="relative aspect-[2.2/1] bg-black">
+          {(officialThumbs[v.id]||v.thumbnailUrl)&&<img src={officialThumbs[v.id]||v.thumbnailUrl||""} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.015]"/>}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-black/10"/><span className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-black shadow-xl backdrop-blur"><Play className="ml-0.5 h-4 w-4 fill-current"/></span>
         </div>
         <div className="p-3">
           <p className="text-[9px] font-semibold uppercase tracking-[.08em] text-black/35">{v.date?new Date(v.date+"T00:00:00").toLocaleDateString("sk-SK",{day:"numeric",month:"short",year:"numeric"}):""}</p>
           <h2 className="mt-1 line-clamp-2 text-[13px] font-bold leading-tight tracking-[-.01em]">{v.title}</h2>
-          {v.conductor&&<p className="mt-1 line-clamp-1 text-[10px] text-black/40">Diriguje: {v.conductor}</p>}
+          {v.conductor&&<p className="mt-1.5 line-clamp-1 text-[11px] text-white/60">Diriguje: {v.conductor}</p>}
           <p className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-black/45">Otvoriť na streame <ExternalLink className="h-3 w-3"/></p>
         </div>
       </a>)}
