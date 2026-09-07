@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   description: 'Worktime — Slovak Philharmonic work-hour management.',
   applicationName: 'Worktime',
   generator: 'v0.app',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export const viewport: Viewport = {
