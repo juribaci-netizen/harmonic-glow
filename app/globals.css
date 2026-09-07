@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Avenir Next", "Helvetica Neue", Helvetica, Arial, var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Avenir Next", "Helvetica Neue", Helvetica, Arial, var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -36,24 +36,24 @@
 
 :root {
   color-scheme: light;
-  --background: #f7f7f8;
+  --background: #f4f2ec;
   --foreground: #111114;
-  --card: #ffffff;
+  --card: #fffefa;
   --card-foreground: #111114;
   --popover: #ffffff;
   --popover-foreground: #111114;
   --primary: #111111;
   --primary-foreground: #ffffff;
-  --secondary: #e9e9ee;
+  --secondary: #e7e3da;
   --secondary-foreground: #111114;
-  --muted: #e9e9ee;
+  --muted: #ebe7df;
   --muted-foreground: #6e6e73;
-  --accent: #111111;
+  --accent: #1f49ff;
   --accent-foreground: #ffffff;
   --destructive: #ff3b30;
   --border: rgba(60,60,67,.14);
   --input: rgba(60,60,67,.18);
-  --ring: #111111;
+  --ring: #1f49ff;
   --radius: 1rem;
 }
 
@@ -98,32 +98,64 @@
 }
 
 .apple-card {
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,.055);
-  box-shadow: 0 1px 2px rgba(0,0,0,.025), 0 8px 24px rgba(0,0,0,.035);
+  background: rgba(255,254,250,.96);
+  border: 1px solid rgba(17,17,17,.07);
+  box-shadow: 0 18px 50px rgba(17,17,17,.045);
 }
 
 .apple-glass {
-  background: rgba(255,255,255,.72);
-  backdrop-filter: saturate(180%) blur(28px);
-  -webkit-backdrop-filter: saturate(180%) blur(28px);
-  border: 1px solid rgba(255,255,255,.55);
+  background: rgba(255,254,250,.72);
+  backdrop-filter: saturate(160%) blur(30px);
+  -webkit-backdrop-filter: saturate(160%) blur(30px);
+  border: 1px solid rgba(17,17,17,.06);
 }
 
 .ios-title {
-  font-size: 32px;
-  line-height: 1.04;
-  font-weight: 700;
-  letter-spacing: -.045em;
+  font-size: 36px;
+  line-height: .98;
+  font-weight: 650;
+  letter-spacing: -.055em;
 }
 
 .ios-section-title {
   font-size: 18px;
-  line-height: 1.15;
+  line-height: 1.05;
   font-weight: 650;
-  letter-spacing: -.025em;
+  letter-spacing: -.035em;
 }
 
 @media (min-width: 700px) {
   body { background: #ececf1; }
+}
+
+.modern-kicker{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.bauhaus-rule{
+  height:3px;
+  width:42px;
+  border-radius:999px;
+  background:#1f49ff;
+}
+.art-panel{
+  position:relative;
+  overflow:hidden;
+}
+.art-panel::after{
+  content:"";
+  position:absolute;
+  right:-26px;
+  top:-26px;
+  width:88px;
+  height:88px;
+  border-radius:26px;
+  background:#ff4d2e;
+  transform:rotate(18deg);
+  opacity:.92;
+}
+.art-dot{
+  width:10px;height:10px;border-radius:999px;background:#1f49ff;
 }
