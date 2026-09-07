@@ -85,7 +85,7 @@ export function DashboardView({
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-white text-[#0a84ff] shadow-sm"><CalendarDays className="h-4 w-4"/></div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-semibold">{a.type==="off"?"Voľno":a.title}</p>
-                  {a.startTime&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><Clock3 className="h-3 w-3"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+                  {a.startTime&&<p className="mt-2 flex items-center gap-2 text-[15px] font-bold tracking-[-.01em] text-black"><Clock3 className="h-4 w-4 text-[#0a84ff]"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
                   {a.venue&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><MapPin className="h-3 w-3"/>{a.venue}</p>}
                 </div>
               </div>)}
@@ -123,7 +123,7 @@ export function DashboardView({
               <span className="text-[8px] font-bold uppercase text-black/34">{new Date(a.date+"T00:00:00").toLocaleDateString(locale,{month:"short"})}</span>
               <span className="text-[17px] font-bold leading-none">{new Date(a.date+"T00:00:00").getDate()}</span>
             </div>
-            <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{a.title}</p><p className="mt-0.5 truncate text-[10px] text-black/38">{a.startTime || ""}</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{a.title}</p>{a.startTime&&<p className="mt-1 text-[12px] font-bold text-black/65">{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}</div>
             <ChevronRight className="h-4 w-4 text-black/18"/>
           </Link>)
         }
