@@ -20,12 +20,12 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
   const { t } = useI18n()
 
   return (
-    <div className="min-h-svh bg-[#f7f7f8]">
+    <div className="min-h-svh bg-[#f4f2ec]">
       <div className="mx-auto min-h-svh w-full max-w-[460px]">
-        <header className="sticky top-0 z-30 bg-[#f7f7f8]/82 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
+        <header className="sticky top-0 z-30 bg-[#f4f2ec]/84 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
           <div className="flex h-14 items-center justify-between px-5">
-            <p className="text-[15px] font-semibold tracking-[-.02em]">Worktime</p>
-            <p className="text-[10px] font-medium tracking-[.02em] text-black/35">SF</p>
+            <div><div className="bauhaus-rule mb-1.5"/><p className="text-[15px] font-semibold tracking-[-.03em]">Worktime</p></div>
+            <p className="modern-kicker text-black/35">SF / 2026</p>
           </div>
         </header>
 
@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
           <div className="px-5 pb-6 pt-2">{children}</div>
         </main>
 
-        <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[460px] -translate-x-1/2 border-t border-black/[.06] bg-white/82 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
+        <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[460px] -translate-x-1/2 border-t border-black/[.06] bg-[#fffefa]/86 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
           <div className="grid h-[64px] grid-cols-5 px-3">
             {navItems.map(item=>{
               const active=pathname===item.href
