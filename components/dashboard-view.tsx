@@ -46,8 +46,8 @@ export function DashboardView({
 
   return <div className="space-y-7">
     <header className="pt-2">
-      <p className="text-[11px] font-semibold capitalize text-black/38">{todayLabel}</p>
-      <h1 className="ios-title mt-1">{firstName}</h1>
+      <p className="modern-kicker capitalize text-black/38">{todayLabel}</p>
+      <div className="mt-2 flex items-end justify-between gap-4"><h1 className="ios-title">{firstName}</h1><span className="art-dot mb-1"/></div>
     </header>
 
     <section>
@@ -91,9 +91,9 @@ export function DashboardView({
                 </div>
                 {items.length===0 ? <p className="mt-2 text-[12px] text-black/38">Voľno</p> :
                   <div className="mt-2 space-y-2">
-                    {items.map(a=><div key={a.id} className="rounded-[12px] bg-[#f4f4f5] px-3 py-2.5">
-                      {a.startTime&&<p className={"text-[14px] font-extrabold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
-                      <p className={"mt-0.5 text-[12px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
+                    {items.map(a=><div key={a.id} className="rounded-[12px] bg-[#ece8df] px-3 py-2.5">
+                      {a.startTime&&<p className={"text-[14px] font-extrabold "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+                      <p className={"mt-0.5 text-[12px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
                     </div>)}
                   </div>
                 }
@@ -145,8 +145,8 @@ export function DashboardView({
               <span className="text-[20px] font-extrabold leading-none">{new Date(a.date+"T00:00:00").getDate()}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className={"truncate text-[13px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"")}>{a.title}</p>
-              {a.startTime&&<p className={"mt-1 text-[14px] font-extrabold tracking-[-.01em] "+(/konkurz/i.test(a.title)?"text-[#af52de]":"")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+              <p className={"truncate text-[13px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"")}>{a.title}</p>
+              {a.startTime&&<p className={"mt-1 text-[14px] font-extrabold tracking-[-.01em] "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
             </div>
             <ChevronRight className="h-4 w-4 text-black/18"/>
           </Link>)
@@ -158,7 +158,7 @@ export function DashboardView({
 
 
 function DayPreview({title,date,activities,locale}:{title:string;date:Date;activities:Activity[];locale:string}) {
-  return <div className="apple-card rounded-[20px] p-4">
+  return <div className="apple-card art-panel rounded-[20px] p-4">
     <div className="flex items-baseline justify-between">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/35">{title}</p>
@@ -170,8 +170,8 @@ function DayPreview({title,date,activities,locale}:{title:string;date:Date;activ
     {activities.length===0 ? <p className="mt-3 text-[13px] text-black/40">Voľno</p> :
       <div className="mt-3 space-y-2">
         {activities.map(a=><div key={a.id} className="rounded-[14px] bg-[#f4f4f5] px-3.5 py-3">
-          {a.startTime&&<p className={"flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em] "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black")}><Clock3 className="h-4 w-4"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
-          <p className={"mt-1 text-[13px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#af52de]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
+          {a.startTime&&<p className={"flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em] "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black")}><Clock3 className="h-4 w-4"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+          <p className={"mt-1 text-[13px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
           {a.venue&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><MapPin className="h-3 w-3"/>{a.venue}</p>}
         </div>)}
       </div>
