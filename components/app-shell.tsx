@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
         <header className="sticky top-0 z-30 bg-white/84 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
           <div className="flex h-14 items-center justify-between px-5">
             <p className="text-[15px] font-semibold tracking-[-.03em]">Worktime</p>
-            <p className="text-[10px] font-medium text-black/35">Slovenská filharmónia</p>
+            <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="text-[10px] font-medium text-black/35 transition-opacity hover:opacity-60">Slovenská filharmónia</a>
           </div>
         </header>
 
