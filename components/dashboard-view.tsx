@@ -9,7 +9,7 @@ type Activity = { id:number; date:string; type:string; startTime:string|null; en
 type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string }
 
 export function DashboardView({
-  name, today, upcoming, weekActivities, monthHours, todayHours
+  name, today, upcoming, weekActivities, monthHours
 }:{
   name:string
   today:Activity[]
@@ -109,17 +109,6 @@ export function DashboardView({
         <p className="mt-7 text-[11px] font-semibold text-black/40">Koncerty</p>
         <p className="mt-1 text-[17px] font-bold">Archív</p>
       </Link>
-    </section>
-
-    <section className="apple-card rounded-[24px] p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-semibold text-black/40">Dnes odpracované</p>
-          <p className="mt-1 text-[24px] font-bold tracking-[-.03em]">{todayHours.toFixed(1)} h</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-[#f2f2f7] text-[#0a84ff]"><CalendarDays className="h-5 w-5"/></div>
-      </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/[.07]"><div className="h-full rounded-full bg-[#0a84ff]" style={{width:String(Math.min(100,(todayHours/8)*100))+"%"}}/></div>
     </section>
 
     <section>
