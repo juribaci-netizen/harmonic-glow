@@ -29,8 +29,6 @@ export function DashboardView({
 
   const weekDays = useMemo(()=>{
     const start = new Date(now)
-    const weekday = (start.getDay()+6)%7
-    start.setDate(start.getDate()-weekday)
     start.setHours(0,0,0,0)
 
     return Array.from({length:7},(_,i)=>{
@@ -55,8 +53,8 @@ export function DashboardView({
 
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
-        <h2 className="ios-section-title">Tento týždeň</h2>
-        <Link href="/schedule" className="text-[12px] font-semibold text-[#0a84ff]">Plán práce</Link>
+        <h2 className="ios-section-title">Plán práce</h2>
+        <span className="text-[11px] font-medium text-black/35">od dneška</span>
       </div>
 
       <div className="apple-card rounded-[26px] p-3">
@@ -94,6 +92,11 @@ export function DashboardView({
             </div>
           )}
         </div>
+
+        <Link href="/schedule" className="mt-3 flex items-center justify-between rounded-[18px] bg-black px-4 py-3.5 text-white">
+          <span className="text-[13px] font-semibold">Otvoriť celý plán práce</span>
+          <ChevronRight className="h-4 w-4 text-white/55"/>
+        </Link>
       </div>
     </section>
 
