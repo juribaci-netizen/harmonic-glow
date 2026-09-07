@@ -53,7 +53,7 @@ export function DashboardView({
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
         <h2 className="ios-section-title">Plán práce</h2>
-        <Link href="/schedule" className="text-[12px] font-semibold text-black">Celý plán</Link>
+        <Link href="/schedule" className="text-[12px] font-semibold text-black">Plán práce</Link>
       </div>
 
       <div className="space-y-3">
@@ -101,6 +101,14 @@ export function DashboardView({
             })}
           </div>
         </details>
+
+        <Link href="/schedule?view=original" className="apple-card flex items-center justify-between rounded-[20px] px-4 py-4">
+          <div>
+            <p className="text-[14px] font-semibold">Celý plán práce</p>
+            <p className="mt-1 text-[10px] text-black/38">Originálny pracovný plán · PDF</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-black/25"/>
+        </Link>
       </div>
     </section>
 
