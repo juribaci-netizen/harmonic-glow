@@ -4,16 +4,15 @@ import { db } from "@/lib/db"
 import { activity } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
 import { asc, count, and, eq } from "drizzle-orm"
-import { revalidatePath } from "next/cache"
 import { seasonData } from "@/lib/season-data-2026-27"
 
 async function syncOfficialSchedule() {
-  const [{ value: currentVersion }] = await db
+  const [{ value: officialEntry }] = await db
     .select({ value: count() })
     .from(activity)
-    .where(and(eq(activity.date, "2026-09-04"), eq(activity.type, "off"), eq(activity.title, "Voľno")))
+    .where(and(eq(activity.date, "2026-09-08"), eq(activity.type, "recording"), eq(activity.title, "Nahrávanie propagačného CD")))
 
-  if (currentVersion > 0) return false
+  if (officialEntry > 0) return false
 
   await db.delete(activity)
   await db.insert(activity).values(
