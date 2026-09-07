@@ -107,14 +107,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       embedUrl,
-      playerUrl: legacyPlayerUrl,
       sourceUrl: canonicalNewUrl,
+      needsDomainPermission: !embedUrl,
     }, { headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" } })
   } catch (error) {
     return NextResponse.json({
       embedUrl: null,
-      playerUrl: legacyPlayerUrl,
       sourceUrl: canonicalNewUrl,
+      needsDomainPermission: true,
       debugError: debug ? String(error) : undefined,
     }, { status: 200 })
   }
