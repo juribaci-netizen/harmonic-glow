@@ -18,7 +18,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? (localStorage.getItem("worktime-lang") as Lang | null) : null
-    if (stored === "sk" || stored === "en") setLangState(stored)
+    if (stored === "sk" || stored === "en" || stored === "de") setLangState(stored)
   }, [])
 
   const setLang = (next: Lang) => {
