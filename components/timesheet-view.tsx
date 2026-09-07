@@ -3,33 +3,123 @@
 import { useEffect, useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
 import { confirmSuggestedEntry, deleteEntry, suggestIndividualPreparation } from "@/app/actions/time-entries"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Download, Sparkles, FileCheck2, Clock3, BriefcaseBusiness, CheckCircle2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Download, Sparkles, CheckCircle2, Clock3 } from "lucide-react"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null}
 
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth}:{initialEntries:Entry[];year:number;month:number}){
- const {t,lang}=useI18n(); const [cursor,setCursor]=useState(new Date(initialYear,initialMonth,1)); const [entries,setEntries]=useState(initialEntries); const locale=lang==="sk"?"sk-SK":"en-GB";
- const load=async(y:number,m:number)=>{await suggestIndividualPreparation(y,m);const res=await fetch(`/api/timesheet?year=${y}&month=${m}`);if(res.ok)setEntries(await res.json())}
- useEffect(()=>{load(cursor.getFullYear(),cursor.getMonth())},[cursor])
- const monthName=cursor.toLocaleDateString(locale,{month:"long",year:"numeric"});
- const confirmedEntries=useMemo(()=>entries.filter(e=>e.status!=="suggested"),[entries]); const suggestions=useMemo(()=>entries.filter(e=>e.status==="suggested"),[entries]);
- const total=useMemo(()=>confirmedEntries.reduce((s,e)=>s+Number(e.hours),0),[confirmedEntries]); const workingDays=useMemo(()=>new Set(confirmedEntries.map(e=>e.date)).size,[confirmedEntries]);
- const weeks=useMemo(()=>{const map=new Map<string,{hours:number}>();entries.forEach(e=>{const d=new Date(e.date+"T00:00:00");const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);const key=d.toISOString().slice(0,10);map.set(key,{hours:(map.get(key)?.hours??0)+(e.status==="suggested"?0:Number(e.hours))});});return Array.from(map.entries()).sort((a,b)=>a[0].localeCompare(b[0]));},[entries]);
- const move=(d:number)=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()+d,1));
- const confirm=async(id:number)=>{await confirmSuggestedEntry(id);await load(cursor.getFullYear(),cursor.getMonth())}; const remove=async(id:number)=>{await deleteEntry(id);setEntries(x=>x.filter(e=>e.id!==id))};
- const exportCsv=()=>{const head=["Dátum","Kategória","Činnosť","Hodiny","Stav"];const rows=entries.map(e=>[e.date,e.type==="rehearsal"||e.type==="concert"?"Kolektívny pracovný výkon":"Individuálna príprava",e.title,e.hours,e.status==="suggested"?"Návrh – nepotvrdené":e.status].map(x=>`"${String(x).replaceAll('"','""')}"`).join(','));const blob=new Blob([[head.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`epc-${cursor.getFullYear()}-${cursor.getMonth()+1}.csv`;a.click();URL.revokeObjectURL(url)};
- const grouped=Array.from(entries.reduce((m,e)=>{const a=m.get(e.date)||[];a.push(e);m.set(e.date,a);return m},new Map<string,Entry[]>()).entries()).sort((a,b)=>a[0].localeCompare(b[0])); const fmtDay=(d:string)=>new Date(d+"T00:00:00").toLocaleDateString(locale,{weekday:"short",day:"numeric",month:"numeric"});
- return <div className="flex flex-col gap-4 pb-3">
-  <header className="pt-1"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">EPČ · Evidencia pracovného času</p><h1 className="font-serif text-[29px] font-semibold tracking-tight">EPČ</h1><p className="mt-1 text-xs text-muted-foreground">Údaje sa zostavia automaticky z tvojej evidencie.</p></header>
-  <div className="flex items-center justify-between"><Button variant="outline" size="icon" className="rounded-xl" onClick={()=>move(-1)}><ChevronLeft/></Button><div className="text-center"><p className="font-semibold capitalize">{monthName}</p></div><Button variant="outline" size="icon" className="rounded-xl" onClick={()=>move(1)}><ChevronRight/></Button></div>
-  <Card className="rounded-2xl border-0 bg-[#17233d] p-4 text-white shadow-sm"><div className="flex items-center justify-between"><div><p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Pracovný fond</p><p className="mt-1 font-serif text-2xl font-semibold">40 h <span className="text-sm font-sans font-normal text-white/60">/ týždeň</span></p></div><BriefcaseBusiness className="h-5 w-5 text-white/70"/></div><div className="mt-3 rounded-xl bg-white/10 p-2.5"><p className="text-[10px] text-white/55">Potvrdené v období</p><p className="mt-1 text-lg font-semibold">{total.toFixed(1)} h</p></div></Card>
-  {suggestions.length>0&&<Card className="rounded-2xl border border-amber-200 bg-amber-50 p-3 shadow-none"><div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-amber-700"/><div><p className="text-sm font-semibold text-amber-950">Návrhy prípravy</p><p className="text-[10px] text-amber-800">Doplnenie do 40 h čaká na potvrdenie.</p></div></div><div className="mt-2 space-y-1.5">{suggestions.map(e=><div key={e.id} className="flex items-center gap-2 rounded-xl bg-white/80 p-2"><div className="min-w-0 flex-1"><p className="text-xs font-medium">{fmtDay(e.date)}</p><p className="text-[10px] text-muted-foreground">Individuálna príprava · {Number(e.hours).toFixed(1)} h</p></div><Button size="sm" className="h-7 rounded-lg" onClick={()=>confirm(e.id)}>OK</Button><Button variant="ghost" size="sm" className="h-7 rounded-lg" onClick={()=>remove(e.id)}>Nie</Button></div>)}</div></Card>}
-  <section><div className="mb-2 flex items-center justify-between"><div><h2 className="font-serif text-[19px] font-semibold">Týždne</h2><p className="text-[10px] text-muted-foreground">Skutočný čas oproti 40 h.</p></div></div><div className="space-y-2">{weeks.length===0?<Card className="rounded-xl p-5 text-center text-sm text-muted-foreground">Zatiaľ žiadna evidencia.</Card>:weeks.map(([start,w])=>{const pct=Math.min(100,w.hours/40*100);return <Card key={start} className="rounded-xl border-0 bg-[#f5f8fd] p-3 shadow-none"><div className="flex items-center justify-between"><p className="text-xs font-medium">{new Date(start+"T00:00:00").toLocaleDateString(locale,{day:"numeric",month:"short"})}</p><p className="font-mono text-xs font-semibold">{w.hours.toFixed(1)} / 40 h</p></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-[#17233d]" style={{width:`${pct}%`}}/></div>{w.hours>=40&&<p className="mt-1 flex items-center gap-1 text-[10px] text-emerald-700"><CheckCircle2 className="h-3 w-3"/>Splnené</p>}</Card>})}</div></section>
-  <section className="space-y-2"><div className="flex items-center justify-between"><h2 className="font-serif text-[19px] font-semibold">Záznamy</h2><span className="inline-flex items-center gap-1 rounded-full bg-[#edf8f2] px-2 py-1 text-[10px] font-medium text-emerald-700"><FileCheck2 className="h-3 w-3"/>Automaticky</span></div>
-   {grouped.length===0?<Card className="rounded-2xl p-7 text-center text-sm text-muted-foreground">{t.noRecords}</Card>:grouped.map(([date,dayEntries])=>{const dayHours=dayEntries.reduce((s,e)=>s+(e.status==="suggested"?0:Number(e.hours)),0);return <Card key={date} className="overflow-hidden rounded-2xl border shadow-none"><div className="flex items-center justify-between border-b bg-[#f7f8fb] px-3 py-2.5"><p className="text-sm font-semibold capitalize">{fmtDay(date)}</p><span className="font-mono text-xs font-semibold">{dayHours.toFixed(1)} h</span></div><div className="divide-y">{dayEntries.map(e=>{const collective=e.type==="rehearsal"||e.type==="concert";const suggested=e.status==="suggested";return <div key={e.id} className={`flex items-center gap-2 px-3 py-2.5 ${suggested?"bg-amber-50/70":""}`}><span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${suggested?"bg-amber-100 text-amber-700":collective?"bg-[#eef4ff] text-blue-700":"bg-[#edf8f2] text-emerald-700"}`}><Clock3 className="h-3.5 w-3.5"/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{e.title}</p><p className="text-[10px] text-muted-foreground">{suggested?"Návrh":collective?"Kolektívny výkon":"Individuálna príprava"}</p></div><span className="font-mono text-xs font-semibold">{Number(e.hours).toFixed(1)} h</span></div>})}</div></Card>})}
-  </section>
-  <Button variant="outline" className="w-full rounded-xl" onClick={exportCsv}><Download className="mr-2 h-4 w-4"/>Exportovať EPČ</Button>
- </div>
+  const {t,lang}=useI18n()
+  const [cursor,setCursor]=useState(new Date(initialYear,initialMonth,1))
+  const [entries,setEntries]=useState(initialEntries)
+  const locale=lang==="sk"?"sk-SK":lang==="de"?"de-DE":"en-GB"
+
+  const load=async(y:number,m:number)=>{
+    await suggestIndividualPreparation(y,m)
+    const res=await fetch("/api/timesheet?year="+y+"&month="+m)
+    if(res.ok)setEntries(await res.json())
+  }
+
+  useEffect(()=>{load(cursor.getFullYear(),cursor.getMonth())},[cursor])
+
+  const monthName=cursor.toLocaleDateString(locale,{month:"long",year:"numeric"})
+  const confirmed=useMemo(()=>entries.filter(e=>e.status!=="suggested"),[entries])
+  const suggestions=useMemo(()=>entries.filter(e=>e.status==="suggested"),[entries])
+  const total=useMemo(()=>confirmed.reduce((s,e)=>s+Number(e.hours),0),[confirmed])
+  const weeks=useMemo(()=>{
+    const map=new Map<string,number>()
+    confirmed.forEach(e=>{
+      const d=new Date(e.date+"T00:00:00")
+      const day=(d.getDay()+6)%7
+      d.setDate(d.getDate()-day)
+      const key=d.toISOString().slice(0,10)
+      map.set(key,(map.get(key)??0)+Number(e.hours))
+    })
+    return Array.from(map.entries()).sort((a,b)=>a[0].localeCompare(b[0]))
+  },[confirmed])
+
+  const grouped=Array.from(entries.reduce((m,e)=>{
+    const a=m.get(e.date)||[]
+    a.push(e)
+    m.set(e.date,a)
+    return m
+  },new Map<string,Entry[]>()).entries()).sort((a,b)=>a[0].localeCompare(b[0]))
+
+  const confirm=async(id:number)=>{await confirmSuggestedEntry(id);await load(cursor.getFullYear(),cursor.getMonth())}
+  const remove=async(id:number)=>{await deleteEntry(id);setEntries(x=>x.filter(e=>e.id!==id))}
+  const exportCsv=()=>{
+    const head=["Dátum","Činnosť","Hodiny","Stav"]
+    const rows=entries.map(e=>[e.date,e.title,e.hours,e.status].map(x=>'"'+String(x).replaceAll('"','""')+'"').join(','))
+    const blob=new Blob([[head.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'})
+    const url=URL.createObjectURL(blob)
+    const a=document.createElement('a')
+    a.href=url
+    a.download="epc-"+cursor.getFullYear()+"-"+(cursor.getMonth()+1)+".csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return <div className="space-y-5">
+    <header className="pt-1"><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-black/35">Evidencia pracovného času</p><h1 className="ios-title mt-1">EPČ</h1></header>
+
+    <div className="grid grid-cols-[44px_1fr_44px] items-center gap-2">
+      <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()-1,1))} className="apple-card flex h-11 w-11 items-center justify-center rounded-full"><ChevronLeft className="h-5 w-5"/></button>
+      <div className="apple-card rounded-[18px] px-4 py-3 text-center"><p className="text-[14px] font-bold capitalize">{monthName}</p></div>
+      <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()+1,1))} className="apple-card flex h-11 w-11 items-center justify-center rounded-full"><ChevronRight className="h-5 w-5"/></button>
+    </div>
+
+    <section className="grid grid-cols-2 gap-3">
+      <div className="rounded-[24px] bg-black p-4 text-white shadow-lg">
+        <p className="text-[10px] font-semibold text-white/45">Pracovný fond</p>
+        <p className="mt-2 text-[28px] font-bold">40 h</p>
+        <p className="mt-1 text-[10px] text-white/40">za týždeň</p>
+      </div>
+      <div className="rounded-[24px] bg-[#0a84ff] p-4 text-white shadow-[0_12px_28px_rgba(10,132,255,.25)]">
+        <p className="text-[10px] font-semibold text-white/65">Potvrdené</p>
+        <p className="mt-2 text-[28px] font-bold">{total.toFixed(1)} h</p>
+        <p className="mt-1 text-[10px] text-white/55">v období</p>
+      </div>
+    </section>
+
+    {suggestions.length>0&&<section>
+      <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[.08em] text-black/34">Návrhy prípravy</p>
+      <div className="apple-card overflow-hidden rounded-[24px]">
+        {suggestions.map(e=><div key={e.id} className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fff3cd] text-[#a66b00]"><Sparkles className="h-4 w-4"/></span>
+          <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold">{new Date(e.date+"T00:00:00").toLocaleDateString(locale,{day:"numeric",month:"short"})}</p><p className="text-[10px] text-black/38">{Number(e.hours).toFixed(1)} h · individuálna príprava</p></div>
+          <button onClick={()=>confirm(e.id)} className="rounded-full bg-[#0a84ff] px-3 py-1.5 text-[11px] font-bold text-white">OK</button>
+          <button onClick={()=>remove(e.id)} className="text-[11px] font-semibold text-black/35">Nie</button>
+        </div>)}
+      </div>
+    </section>}
+
+    <section>
+      <div className="mb-2 flex items-center justify-between px-1"><h2 className="ios-section-title">Týždne</h2></div>
+      <div className="apple-card overflow-hidden rounded-[24px]">
+        {weeks.length===0?<p className="p-6 text-center text-[13px] text-black/40">Zatiaľ žiadna evidencia.</p>:weeks.map(([start,hours])=>{
+          const pct=Math.min(100,hours/40*100)
+          return <div key={start} className="border-b border-black/[.05] px-4 py-3.5 last:border-0">
+            <div className="flex items-center justify-between"><p className="text-[12px] font-semibold">{new Date(start+"T00:00:00").toLocaleDateString(locale,{day:"numeric",month:"short"})}</p><p className="text-[12px] font-bold">{hours.toFixed(1)} / 40 h</p></div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/[.08]"><div className="h-full rounded-full bg-[#0a84ff]" style={{width:String(pct)+"%"}}/></div>
+            {hours>=40&&<p className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-[#34c759]"><CheckCircle2 className="h-3 w-3"/>Splnené</p>}
+          </div>
+        })}
+      </div>
+    </section>
+
+    <section>
+      <div className="mb-2 flex items-center justify-between px-1"><h2 className="ios-section-title">Záznamy</h2><span className="text-[10px] font-semibold text-[#34c759]">Automaticky</span></div>
+      <div className="space-y-3">
+        {grouped.length===0?<div className="apple-card rounded-[24px] p-7 text-center text-[13px] text-black/40">{t.noRecords}</div>:grouped.map(([date,dayEntries])=><div key={date} className="apple-card overflow-hidden rounded-[24px]">
+          <div className="flex items-center justify-between border-b border-black/[.05] bg-black/[.015] px-4 py-3"><p className="text-[12px] font-bold capitalize">{new Date(date+"T00:00:00").toLocaleDateString(locale,{weekday:"short",day:"numeric",month:"short"})}</p><p className="text-[11px] font-bold">{dayEntries.filter(e=>e.status!=="suggested").reduce((s,e)=>s+Number(e.hours),0).toFixed(1)} h</p></div>
+          {dayEntries.map(e=><div key={e.id} className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
+            <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#eaf3ff] text-[#0a84ff]"><Clock3 className="h-4 w-4"/></span>
+            <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{e.title}</p><p className="text-[10px] text-black/38">{e.status==="suggested"?"Návrh":e.type==="rehearsal"||e.type==="concert"?"Kolektívny výkon":"Individuálna príprava"}</p></div>
+            <span className="text-[12px] font-bold">{Number(e.hours).toFixed(1)} h</span>
+          </div>)}
+        </div>)}
+      </div>
+    </section>
+
+    <button onClick={exportCsv} className="apple-card flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 text-[13px] font-bold text-[#0a84ff]"><Download className="h-4 w-4"/>Exportovať EPČ</button>
+  </div>
 }
