@@ -15,9 +15,9 @@ export function ProfileView({user,profile}:{user:{name:string;email:string};prof
   return <div className="space-y-5">
     <header className="pt-1"><h1 className="ios-title">Profil</h1></header>
 
-    <section className="apple-card rounded-[28px] p-5">
+    <section className="apple-card rounded-[20px] p-5">
       <div className="flex items-center gap-4">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#0a84ff] to-[#65b7ff] text-white shadow-lg"><Music2 className="h-8 w-8"/></div>
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#1f49ff] text-white shadow-lg"><Music2 className="h-8 w-8"/></div>
         <div><h2 className="text-[20px] font-bold tracking-[-.02em]">{fullName}</h2><p className="mt-1 text-[13px] text-black/45">{instrument} · {section}</p><p className="mt-1 text-[11px] text-black/35">Slovenská filharmónia</p></div>
       </div>
     </section>
@@ -43,12 +43,12 @@ export function ProfileView({user,profile}:{user:{name:string;email:string};prof
 }
 
 function Group({title,children}:{title:string;children:React.ReactNode}) {
-  return <section><p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[.08em] text-black/34">{title}</p><div className="apple-card overflow-hidden rounded-[24px]">{children}</div></section>
+  return <section><p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[.08em] text-black/34">{title}</p><div className="apple-card overflow-hidden rounded-[18px]">{children}</div></section>
 }
 
 function Row({icon,label,value,chevron=false}:{icon:React.ReactNode;label:string;value:string;chevron?:boolean}) {
   return <div className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
-    <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#0a84ff] text-white [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
+    <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#1f49ff] text-white [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
     <span className="flex-1 text-[13px] font-medium">{label}</span>
     <span className="max-w-[48%] truncate text-[12px] text-black/42">{value}</span>
     {chevron&&<ChevronRight className="h-4 w-4 text-black/20"/>}
