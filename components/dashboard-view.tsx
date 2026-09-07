@@ -66,14 +66,17 @@ export function DashboardView({
             const off=weekActivities.some(a=>a.date===iso && a.type==="off")
             return <button key={iso} onClick={()=>setSelectedDate(iso)} className={"flex flex-col items-center rounded-[14px] py-2.5 "+(active?"bg-black text-white":"")}>
               <span className={"text-[8px] font-bold uppercase "+(active?"text-white/55":"text-black/35")}>{d.toLocaleDateString(locale,{weekday:"short"}).replace(".","")}</span>
-              <span className="mt-1 text-[16px] font-bold">{d.getDate()}</span>
+              <span className="mt-1 text-[20px] font-bold leading-none">{d.getDate()}</span>
               <span className={"mt-1 h-1.5 w-1.5 rounded-full "+(has?(active?"bg-[#0a84ff]":"bg-[#0a84ff]"):off?(active?"bg-white/35":"bg-black/18"):"bg-transparent")}/>
             </button>
           })}
         </div>
 
         <div className="mt-3 border-t border-black/[.06] pt-3">
-          <p className="px-1 text-[10px] font-semibold capitalize text-black/38">{selectedLabel}</p>
+          <div className="flex items-baseline justify-between px-1">
+  <p className="text-[17px] font-bold capitalize tracking-[-.02em] text-black">{selectedLabel}</p>
+  <span className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/30">Program dňa</span>
+</div>
           {selectedActivities.length===0 ? (
             <div className="mt-2 rounded-[18px] bg-[#f2f2f7] px-4 py-4">
               <p className="text-[14px] font-semibold">Voľno</p>
@@ -84,8 +87,8 @@ export function DashboardView({
               {selectedActivities.map(a=><div key={a.id} className="flex items-start gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-white text-[#0a84ff] shadow-sm"><CalendarDays className="h-4 w-4"/></div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-semibold">{a.type==="off"?"Voľno":a.title}</p>
-                  {a.startTime&&<p className="mt-2 flex items-center gap-2 text-[15px] font-bold tracking-[-.01em] text-black"><Clock3 className="h-4 w-4 text-[#0a84ff]"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+                  {a.startTime&&<p className="flex items-center gap-2 text-[17px] font-extrabold tracking-[-.02em] text-black"><Clock3 className="h-4 w-4 text-[#0a84ff]"/>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
+                  <p className={(a.startTime?"mt-1 ":"")+"text-[13px] font-semibold text-black/65"}>{a.type==="off"?"Voľno":a.title}</p>
                   {a.venue&&<p className="mt-1 flex items-center gap-1.5 text-[10px] text-black/40"><MapPin className="h-3 w-3"/>{a.venue}</p>}
                 </div>
               </div>)}
@@ -119,11 +122,11 @@ export function DashboardView({
       <div className="apple-card overflow-hidden rounded-[24px]">
         {upcoming.length===0 ? <p className="p-6 text-center text-[13px] text-black/40">Žiadne nadchádzajúce aktivity</p> :
           upcoming.slice(0,3).map(a=><Link href="/schedule" key={a.id} className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
-            <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-[12px] bg-[#f2f2f7]">
+            <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[14px] bg-[#f2f2f7]">
               <span className="text-[8px] font-bold uppercase text-black/34">{new Date(a.date+"T00:00:00").toLocaleDateString(locale,{month:"short"})}</span>
-              <span className="text-[17px] font-bold leading-none">{new Date(a.date+"T00:00:00").getDate()}</span>
+              <span className="text-[20px] font-extrabold leading-none">{new Date(a.date+"T00:00:00").getDate()}</span>
             </div>
-            <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{a.title}</p>{a.startTime&&<p className="mt-1 text-[12px] font-bold text-black/65">{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}</div>
+            <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{a.title}</p>{a.startTime&&<p className="mt-1 text-[14px] font-extrabold tracking-[-.01em] text-black">{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}</div>
             <ChevronRight className="h-4 w-4 text-black/18"/>
           </Link>)
         }
