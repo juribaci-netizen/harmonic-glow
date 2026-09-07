@@ -37,7 +37,13 @@ export function DashboardView({
     })
   },[])
 
-  const todayIso = now.toISOString().slice(0,10)
+  const localIso = (d: Date) => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+    return y + "-" + m + "-" + day
+  }
+  const todayIso = localIso(now)
   const [selectedDate,setSelectedDate] = useState(todayIso)
   const selectedActivities = weekActivities.filter(a=>a.date===selectedDate)
   const selectedDay = new Date(selectedDate+"T00:00:00")
@@ -58,7 +64,7 @@ export function DashboardView({
       <div className="apple-card rounded-[26px] p-3">
         <div className="grid grid-cols-7 gap-1">
           {days.map(d=>{
-            const iso=d.toISOString().slice(0,10)
+            const iso=localIso(d)
             const active=iso===selectedDate
             const has=weekActivities.some(a=>a.date===iso && a.type!=="off")
             return <button key={iso} onClick={()=>setSelectedDate(iso)} className={"flex flex-col items-center rounded-[14px] py-2.5 "+(active?"bg-black text-white":"")}>
