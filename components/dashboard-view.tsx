@@ -47,7 +47,7 @@ export function DashboardView({
   return <div className="space-y-7">
     <header className="pt-2">
       <p className="modern-kicker capitalize text-black/38">{todayLabel}</p>
-      <div className="mt-2 flex items-end justify-between gap-4"><h1 className="ios-title">{firstName}</h1><span className="art-dot mb-1"/></div>
+      <h1 className="ios-title mt-2">{firstName}</h1>
     </header>
 
     <section>
@@ -91,7 +91,7 @@ export function DashboardView({
                 </div>
                 {items.length===0 ? <p className="mt-2 text-[12px] text-black/38">Voľno</p> :
                   <div className="mt-2 space-y-2">
-                    {items.map(a=><div key={a.id} className="rounded-[12px] bg-[#ece8df] px-3 py-2.5">
+                    {items.map(a=><div key={a.id} className="rounded-[12px] bg-[#f5f5f7] px-3 py-2.5">
                       {a.startTime&&<p className={"text-[14px] font-extrabold "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black")}>{a.startTime}{a.endTime?" – "+a.endTime:""}</p>}
                       <p className={"mt-0.5 text-[12px] font-semibold "+(/konkurz/i.test(a.title)?"text-[#d43a2f]":"text-black/65")}>{a.type==="off"?"Voľno":a.title}</p>
                     </div>)}
@@ -158,7 +158,7 @@ export function DashboardView({
 
 
 function DayPreview({title,date,activities,locale}:{title:string;date:Date;activities:Activity[];locale:string}) {
-  return <div className="apple-card art-panel rounded-[20px] p-4">
+  return <div className="apple-card rounded-[20px] p-4">
     <div className="flex items-baseline justify-between">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/35">{title}</p>
