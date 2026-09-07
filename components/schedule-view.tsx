@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useI18n } from "@/components/language-provider"
-import { ChevronLeft, ChevronRight, MapPin, Music2 } from "lucide-react"
+import { MapPin, Music2 } from "lucide-react"
 
 type Activity = {
   id: number
@@ -20,40 +20,32 @@ type Activity = {
 export function ScheduleView({ activities }: { activities: Activity[] }) {
   const { t, lang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
-  const today = new Date()
+
   const localIso = (d: Date) => {
     const y = d.getFullYear()
     const m = String(d.getMonth() + 1).padStart(2, "0")
     const day = String(d.getDate()).padStart(2, "0")
     return y + "-" + m + "-" + day
   }
-  const todayIso = localIso(today)
-  const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
 
-  const year = cursor.getFullYear()
-  const month = cursor.getMonth()
+  const todayIso = localIso(new Date())
 
-  const monthActivities = useMemo(() => {
-    return activities.filter((a) => {
-      const d = new Date(a.date + "T00:00:00")
-      return d.getFullYear() === year && d.getMonth() === month && a.date >= todayIso
-    })
-  }, [activities, year, month, todayIso])
+  const visible = useMemo(
+    () => activities
+      .filter(a => a.date >= todayIso)
+      .sort((a,b) => a.date.localeCompare(b.date) || (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99")),
+    [activities, todayIso]
+  )
 
   const grouped = useMemo(() => {
     const map = new Map<string, Activity[]>()
-    for (const a of monthActivities) {
+    for (const a of visible) {
       const list = map.get(a.date) ?? []
       list.push(a)
       map.set(a.date, list)
     }
     return Array.from(map.entries())
-  }, [monthActivities])
-
-  const monthName = cursor.toLocaleDateString(locale, {
-    month: "long",
-    year: "numeric",
-  })
+  }, [visible])
 
   const typeLabel = (type: string) => {
     const map: Record<string, string> = {
@@ -68,156 +60,92 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
     return map[type] ?? type
   }
 
-  const timeLabel = (a: Activity) => {
-    if (!a.startTime) return ""
-    return a.startTime + (a.endTime ? " – " + a.endTime : "")
-  }
+  const timeLabel = (a: Activity) =>
+    a.startTime ? a.startTime + (a.endTime ? " – " + a.endTime : "") : ""
 
   return (
     <div className="mx-auto w-full max-w-[430px] pb-6">
-      <section className="overflow-hidden rounded-[32px] bg-[#f4f2ec] shadow-[0_12px_40px_rgba(0,0,0,.06)] ring-1 ring-black/[.05]">
-        <header className="sticky top-0 z-10 border-b border-black/[.06] bg-[#f4f2ec]/92 px-5 pb-4 pt-5 backdrop-blur-xl">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-[.16em] text-black/45">Slovenská filharmónia</p>
-              <h1 className="mt-1 text-[38px] font-medium leading-none tracking-[-.03em]">Plán práce</h1>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[#1f49ff]">
-              <Music2 className="h-[18px] w-[18px]" />
-            </div>
+      <header className="sticky top-14 z-20 -mx-5 border-b border-black/[.05] bg-white/92 px-5 pb-4 pt-3 backdrop-blur-2xl">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
+            <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
+            <p className="mt-2 text-[11px] text-black/38">Od dneška až do 3. januára 2027</p>
           </div>
-
-          <div className="grid grid-cols-[44px_1fr_44px] items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCursor(new Date(year, month - 1, 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/[.06] active:scale-95"
-              aria-label="Predchádzajúci mesiac"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            <div className="rounded-2xl bg-white px-4 py-3 text-center shadow-sm ring-1 ring-black/[.06]">
-              <p className="text-[15px] font-medium capitalize">{monthName}</p>
-              <p className="mt-0.5 text-[10px] text-black/45">od dneška · celý aktuálny plán</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setCursor(new Date(year, month + 1, 1))}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/[.06] active:scale-95"
-              aria-label="Nasledujúci mesiac"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white">
+            <Music2 className="h-4 w-4" />
           </div>
-        </header>
-
-        <div className="px-3 pb-4 pt-3">
-          {grouped.length === 0 ? (
-            <div className="rounded-[24px] bg-white p-8 text-center text-sm text-black/45 ring-1 ring-black/[.05]">
-              Žiadne položky v tomto mesiaci.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {grouped.map(([date, items]) => {
-                const d = new Date(date + "T00:00:00")
-                const weekday = d.toLocaleDateString(locale, { weekday: "short" }).replace(".", "").toUpperCase()
-                const day = d.getDate()
-                const monthShort = d.toLocaleDateString(locale, { month: "short" }).replace(".", "").toUpperCase()
-
-                return (
-                  <section key={date} className="overflow-hidden rounded-[26px] bg-white shadow-sm ring-1 ring-black/[.05]">
-                    <div className="flex border-b border-black/[.05] bg-black/[.018]">
-                      <div className="flex w-[78px] shrink-0 flex-col items-center justify-center border-r border-black/[.06] py-3">
-                        <span className="text-[11px] font-normal tracking-[.04em] text-black/45">{weekday}</span>
-                        <span className="text-[38px] font-normal leading-none">{day}</span>
-                        <span className="mt-1 text-[11px] font-normal tracking-[.04em] text-black/45">{monthShort}</span>
-                      </div>
-                      <div className="flex min-w-0 flex-1 items-center px-4">
-                        <p className="text-[13px] font-medium text-black/60">
-                          {items.length === 1 ? typeLabel(items[0].type) : items.length + " frekvencie"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="divide-y divide-black/[.06]">
-                      {items.map((a) => {
-                        const cancelled = /zruš/i.test(a.title + " " + (a.notes ?? ""))
-                        const off = a.type === "off"
-                        const time = timeLabel(a)
-
-                        return (
-                          <article
-                            key={a.id}
-                            className={
-                              "px-4 py-4 " +
-                              (cancelled ? "bg-red-50" : off ? "bg-[#ece8df]" : "bg-white")
-                            }
-                          >
-                            <div className="flex items-start gap-3">
-                              <span
-                                className={
-                                  "mt-[7px] h-2.5 w-2.5 shrink-0 rounded-full " +
-                                  (cancelled ? "bg-red-500" : off ? "bg-black/25" : a.type === "concert" ? "bg-black" : "bg-[#1f49ff]")
-                                }
-                              />
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    {time && <p className="text-[23px] font-normal leading-tight tracking-[-.02em]">{time}</p>}
-                                    <p className={"mt-0.5 text-[15px] leading-tight " + (cancelled ? "font-medium text-red-700" : "font-medium")}>
-                                      {cancelled ? "Symfónia umenia" : off ? "Voľno" : a.title}
-                                    </p>
-                                  </div>
-
-                                  <span
-                                    className={
-                                      "shrink-0 rounded-full px-2.5 py-1 text-[9px] font-medium uppercase tracking-[.04em] ring-1 " +
-                                      (cancelled
-                                        ? "bg-red-100 text-red-700 ring-red-200"
-                                        : off
-                                          ? "bg-black/[.04] text-black/45 ring-black/[.08]"
-                                          : "bg-[#f4f2ec] text-black/55 ring-black/[.08]")
-                                    }
-                                  >
-                                    {cancelled ? "Zrušené" : typeLabel(a.type)}
-                                  </span>
-                                </div>
-
-                                {cancelled ? (
-                                  <p className="mt-2 text-[12px] font-medium text-red-700">Zrušená</p>
-                                ) : !off ? (
-                                  <div className="mt-2 space-y-1.5">
-                                    {a.conductor && <p className="text-[12px] font-medium">Diriguje: {a.conductor}</p>}
-                                    {a.venue && (
-                                      <p className="flex items-center gap-1.5 text-[11px] text-black/45">
-                                        <MapPin className="h-3 w-3" />
-                                        {a.venue}
-                                      </p>
-                                    )}
-                                    {a.program && <p className="text-[11px] leading-relaxed text-black/45">{a.program}</p>}
-                                    {a.notes && (
-                                      <p className="rounded-xl bg-black/[.035] px-3 py-2 text-[11px] leading-relaxed text-black/55">
-                                        {a.notes}
-                                      </p>
-                                    )}
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          </article>
-                        )
-                      })}
-                    </div>
-                  </section>
-                )
-              })}
-            </div>
-          )}
         </div>
-      </section>
+      </header>
+
+      <div className="pt-4">
+        {grouped.map(([date, items], index) => {
+          const d = new Date(date + "T00:00:00")
+          const monthChanged = index === 0 || grouped[index-1][0].slice(0,7) !== date.slice(0,7)
+
+          return (
+            <div key={date}>
+              {monthChanged && (
+                <div className="sticky top-[134px] z-10 -mx-1 mb-2 mt-6 bg-white/92 px-1 py-2 backdrop-blur-xl first:mt-0">
+                  <p className="text-[14px] font-medium capitalize tracking-[-.02em]">
+                    {d.toLocaleDateString(locale,{month:"long",year:"numeric"})}
+                  </p>
+                </div>
+              )}
+
+              <section className="mb-3 overflow-hidden rounded-[22px] border border-black/[.055] bg-white shadow-[0_10px_30px_rgba(0,0,0,.03)]">
+                <div className="flex">
+                  <div className="flex w-[76px] shrink-0 flex-col items-center justify-center border-r border-black/[.05] bg-[#f7f7f8] py-3">
+                    <span className="text-[10px] font-normal uppercase tracking-[.05em] text-black/38">
+                      {d.toLocaleDateString(locale,{weekday:"short"}).replace(".","")}
+                    </span>
+                    <span className="text-[38px] font-normal leading-none tracking-[-.04em]">{d.getDate()}</span>
+                    <span className="mt-1 text-[10px] font-normal uppercase tracking-[.05em] text-black/38">
+                      {d.toLocaleDateString(locale,{month:"short"}).replace(".","")}
+                    </span>
+                  </div>
+
+                  <div className="min-w-0 flex-1 divide-y divide-black/[.05]">
+                    {items.map(a => {
+                      const off=a.type==="off"
+                      const audition=/konkurz/i.test(a.title)
+                      const cancelled=/zruš/i.test((a.title||"")+" "+(a.notes||""))
+                      const time=timeLabel(a)
+
+                      return (
+                        <article key={a.id} className={"px-4 py-3.5 "+(off?"bg-[#fafafa]":"bg-white")}>
+                          {time && (
+                            <p className={"text-[24px] font-normal leading-none tracking-[-.035em] "+(audition?"text-[#d43a2f]":"text-black")}>
+                              {time}
+                            </p>
+                          )}
+                          <p className={"mt-1 text-[14px] font-normal leading-snug "+(audition?"text-[#d43a2f]":"text-black/72")}>
+                            {cancelled ? "Zrušená" : off ? "Voľno" : a.title}
+                          </p>
+
+                          {!off && !cancelled && (
+                            <div className="mt-2 space-y-1.5">
+                              {a.conductor && <p className="text-[11px] text-black/52">Diriguje: {a.conductor}</p>}
+                              {a.venue && <p className="flex items-center gap-1.5 text-[10px] text-black/38"><MapPin className="h-3 w-3"/>{a.venue}</p>}
+                              {a.program && <details className="pt-1">
+                                <summary className="cursor-pointer list-none text-[10px] font-medium text-black/48">Program +</summary>
+                                <p className="mt-2 text-[10px] leading-5 text-black/42">{a.program}</p>
+                              </details>}
+                              {a.notes && <p className="text-[10px] leading-5 text-black/42">{a.notes}</p>}
+                            </div>
+                          )}
+
+                          <p className="mt-2 text-[9px] uppercase tracking-[.08em] text-black/25">{typeLabel(a.type)}</p>
+                        </article>
+                      )
+                    })}
+                  </div>
+                </div>
+              </section>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
