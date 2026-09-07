@@ -120,6 +120,14 @@ export function DashboardView({
         <a href="https://www.filharmonia.sk/sites/default/files/2026-08/Programovy%20katalog%2078.%20koncertnej%20sezony%20Slovenskej%20filharmonie.pdf" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-[#eeeae4]">
           <img src="/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
         </a>
+        <a href="https://www.bhsfestival.sk/" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
+          <img src="/BHS%202026%20banner%201120x426_0.webp" alt="Bratislavské hudobné slávnosti 2026" className="block h-auto w-full" />
+        </a>
+
+        <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
+          <img src="/web_SF_1120x426_ABO2.jpg" alt="Slovenská filharmónia" className="block h-auto w-full" />
+        </a>
+
         <a href="https://filharmonia.sk/aktuality-a-novinky/" target="_blank" rel="noreferrer" className="w-[88%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black text-white">
           <div className="relative aspect-[16/9]">
             <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="h-full w-full object-cover opacity-82"/>
