@@ -115,7 +115,7 @@ export function DashboardView({
         <div className="relative aspect-[16/9]">
           <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-80"/>
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5"/>
-          <span className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.08em] text-white/80 backdrop-blur-md">Posledný koncert</span>
+          <span className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.08em] text-white/80 backdrop-blur-md">Posledné</span>
           <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg"><Play className="ml-0.5 h-4 w-4 fill-current"/></span>
           <div className="absolute inset-x-0 bottom-0 p-4 text-white">
             <p className="text-[11px] font-medium text-white/60">21. jún 2026</p>
