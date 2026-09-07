@@ -1,12 +1,24 @@
+"use client"
+
 import { AppShell } from "@/components/app-shell"
 import { VideosView } from "@/components/videos-view"
-import { getVideos, seedVideos, syncConcertArchive } from "@/app/actions/videos"
-import { getSessionUser } from "@/lib/session"
-import { redirect } from "next/navigation"
+import { concertArchiveSeed } from "@/lib/concert-archive"
 
-export default async function VideosPage() {
-  const user = await getSessionUser()
-  if (!user) redirect("/sign-in")
-  const videos = await getVideos()
-  return <AppShell user={{ name: user.name, email: user.email }}><VideosView initialVideos={videos} seedVideos={seedVideos} syncArchive={syncConcertArchive} /></AppShell>
+const videos = concertArchiveSeed.map((v,index)=>({
+  id:index+1,
+  title:v.title,
+  date:v.date ?? null,
+  conductor:v.conductor ?? null,
+  venue:v.venue ?? null,
+  description:v.description ?? null,
+  url:v.url ?? null,
+  thumbnailUrl:v.thumbnailUrl ?? null,
+}))
+
+export default function VideosPage() {
+  return (
+    <AppShell user={{ name: "Marek Juran", email: "juribaci@gmail.com" }}>
+      <VideosView initialVideos={videos} />
+    </AppShell>
+  )
 }
