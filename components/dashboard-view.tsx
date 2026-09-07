@@ -57,47 +57,11 @@ export function DashboardView({
         <a href="https://www.filharmonia.sk/sites/default/files/2026-08/Programovy%20katalog%2078.%20koncertnej%20sezony%20Slovenskej%20filharmonie.pdf" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-[#eeeae4]">
           <img src="/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
         </a>
-        <a href="https://www.bhsfestival.sk/" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
+        <a href="https://filharmonia.sk/61-rocnik-BHS-2026" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
           <img src="/BHS%202026%20banner%201120x426_0.webp" alt="Bratislavské hudobné slávnosti 2026" className="block h-auto w-full" />
         </a>
-
-        <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
-          <img src="/web_SF_1120x426_ABO2.jpg" alt="Slovenská filharmónia" className="block h-auto w-full" />
-        </a>
-
-        <a href="https://filharmonia.sk/aktuality-a-novinky/" target="_blank" rel="noreferrer" className="w-[88%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black text-white">
-          <div className="relative aspect-[16/9]">
-            <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="h-full w-full object-cover opacity-82"/>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"/>
-            <div className="absolute inset-x-0 bottom-0 p-4">
-              <p className="text-[10px] uppercase tracking-[.08em] text-white/55">Aktuality</p>
-              <h3 className="mt-1 text-[22px] font-normal leading-[1.05] tracking-[-.035em]">Novinky zo Slovenskej filharmónie</h3>
-              <p className="mt-2 text-[11px] text-white/62">Program, zmeny a aktuálne informácie.</p>
-            </div>
-          </div>
-        </a>
-
-        <a href="https://www.bhsfestival.sk/" target="_blank" rel="noreferrer" className="w-[88%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black text-white">
-          <div className="relative aspect-[16/9]">
-            <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="h-full w-full object-cover opacity-72"/>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/10 to-transparent"/>
-            <div className="absolute inset-x-0 bottom-0 p-4">
-              <p className="text-[10px] uppercase tracking-[.08em] text-white/55">BHS 2026</p>
-              <h3 className="mt-1 text-[22px] font-normal leading-[1.05] tracking-[-.035em]">Bratislavské hudobné slávnosti</h3>
-              <p className="mt-2 text-[11px] text-white/62">23. september – 11. október 2026</p>
-            </div>
-          </div>
-        </a>
-
-        <a href="https://filharmonia.sk/koncerty-a-podujatia/" target="_blank" rel="noreferrer" className="w-[88%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black text-white">
-          <div className="relative aspect-[16/9] bg-[#315f9c]">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#8fc2ff] via-[#4d86c9] to-[#1f3f70]"/>
-            <div className="absolute inset-x-0 bottom-0 p-4">
-              <p className="text-[10px] uppercase tracking-[.08em] text-white/55">Program</p>
-              <h3 className="mt-1 text-[22px] font-normal leading-[1.05] tracking-[-.035em]">Koncerty a podujatia</h3>
-              <p className="mt-2 text-[11px] text-white/62">Pozri si kompletný verejný program SF.</p>
-            </div>
-          </div>
+        <a href="https://filharmonia.sk/vstupenky-zoznam" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
+          <img src="/web_SF_1120x426_ABO2.jpg" alt="Abonentky Slovenskej filharmónie – 78. koncertná sezóna" className="block h-auto w-full" />
         </a>
       </div>
     </section>
