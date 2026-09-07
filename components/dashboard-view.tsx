@@ -54,9 +54,6 @@ export function DashboardView({
       </div>
 
       <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <a href="https://www.filharmonia.sk/sites/default/files/2026-08/Programovy%20katalog%2078.%20koncertnej%20sezony%20Slovenskej%20filharmonie.pdf" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-[#eeeae4]">
-          <img src="/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
-        </a>
         <a href="https://filharmonia.sk/61-rocnik-BHS-2026" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
           <img src="/BHS%202026%20banner%201120x426_0.webp" alt="Bratislavské hudobné slávnosti 2026" className="block h-auto w-full" />
         </a>
@@ -118,13 +115,13 @@ export function DashboardView({
           </div>
         </details>
 
-        <Link href="/schedule?view=original" className="apple-card flex items-center justify-between rounded-[20px] px-4 py-4">
+        <a href="/Pracovny-plan-SF-24-8-2026-3-1-2027.pdf" target="_blank" rel="noreferrer" className="apple-card flex items-center justify-between rounded-[20px] px-4 py-4">
           <div>
             <p className="text-[20px] font-normal">Celý plán práce</p>
             <p className="mt-1 text-[10px] text-black/38">Originálny pracovný plán · PDF</p>
           </div>
           <ChevronRight className="h-4 w-4 text-black/25"/>
-        </Link>
+        </a>
       </div>
     </section>
 
