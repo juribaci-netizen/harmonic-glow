@@ -61,6 +61,20 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   return <div className="space-y-5">
     <header className="pt-1"><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-black/35">Evidencia pracovného času</p><h1 className="ios-title mt-1">EPČ</h1></header>
 
+    <section className="apple-card rounded-[20px] p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/35">Formulár EPČ</p>
+      <div className="mt-2 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[15px] font-bold tracking-[-.02em]">Oficiálny formulár</p>
+          <p className="mt-1 text-[10px] leading-4 text-black/40">EPČ version 2.1 · pôvodný PDF formulár</p>
+        </div>
+        <a href="#epc-formular" className="shrink-0 rounded-full bg-black px-4 py-2 text-[11px] font-semibold text-white">Zobraziť</a>
+      </div>
+      <div id="epc-formular" className="mt-3 rounded-[14px] bg-[#f4f4f5] px-3.5 py-3 text-[11px] leading-4 text-black/50">
+        Formulár EPČ version 2.1 bude slúžiť ako výsledný mesačný dokument, ktorý aplikácia vyplní z evidencie.
+      </div>
+    </section>
+
     <div className="grid grid-cols-[44px_1fr_44px] items-center gap-2">
       <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()-1,1))} className="apple-card flex h-11 w-11 items-center justify-center rounded-full"><ChevronLeft className="h-5 w-5"/></button>
       <div className="apple-card rounded-[18px] px-4 py-3 text-center"><p className="text-[14px] font-bold capitalize">{monthName}</p></div>
