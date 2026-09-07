@@ -59,7 +59,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   }
 
   return <div className="space-y-5">
-    <header className="pt-1"><p className="text-[10px] font-semibold uppercase tracking-[.12em] text-black/35">Evidencia pracovného času</p><h1 className="ios-title mt-1">EPČ</h1></header>
+    <header className="pt-1"><p className="modern-kicker text-black/35">Evidencia pracovného času</p><h1 className="ios-title mt-1">EPČ</h1></header>
 
     <section className="apple-card rounded-[20px] p-4">
       <p className="text-[10px] font-semibold uppercase tracking-[.08em] text-black/35">Formulár EPČ</p>
@@ -97,7 +97,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <p className="mt-2 text-[28px] font-bold">40 h</p>
         <p className="mt-1 text-[10px] text-white/40">za týždeň</p>
       </div>
-      <div className="rounded-[24px] bg-[#0a84ff] p-4 text-white shadow-[0_12px_28px_rgba(10,132,255,.25)]">
+      <div className="rounded-[24px] bg-[#1f49ff] p-4 text-white shadow-[0_12px_28px_rgba(10,132,255,.25)]">
         <p className="text-[10px] font-semibold text-white/65">Potvrdené</p>
         <p className="mt-2 text-[28px] font-bold">{total.toFixed(1)} h</p>
         <p className="mt-1 text-[10px] text-white/55">v období</p>
@@ -110,7 +110,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         {suggestions.map(e=><div key={e.id} className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fff3cd] text-[#a66b00]"><Sparkles className="h-4 w-4"/></span>
           <div className="min-w-0 flex-1"><p className="text-[13px] font-semibold">{new Date(e.date+"T00:00:00").toLocaleDateString(locale,{day:"numeric",month:"short"})}</p><p className="text-[10px] text-black/38">{Number(e.hours).toFixed(1)} h · individuálna príprava</p></div>
-          <button onClick={()=>confirm(e.id)} className="rounded-full bg-[#0a84ff] px-3 py-1.5 text-[11px] font-bold text-white">OK</button>
+          <button onClick={()=>confirm(e.id)} className="rounded-full bg-[#1f49ff] px-3 py-1.5 text-[11px] font-bold text-white">OK</button>
           <button onClick={()=>remove(e.id)} className="text-[11px] font-semibold text-black/35">Nie</button>
         </div>)}
       </div>
@@ -123,7 +123,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           const pct=Math.min(100,hours/40*100)
           return <div key={start} className="border-b border-black/[.05] px-4 py-3.5 last:border-0">
             <div className="flex items-center justify-between"><p className="text-[12px] font-semibold">{new Date(start+"T00:00:00").toLocaleDateString(locale,{day:"numeric",month:"short"})}</p><p className="text-[12px] font-bold">{hours.toFixed(1)} / 40 h</p></div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/[.08]"><div className="h-full rounded-full bg-[#0a84ff]" style={{width:String(pct)+"%"}}/></div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/[.08]"><div className="h-full rounded-full bg-[#1f49ff]" style={{width:String(pct)+"%"}}/></div>
             {hours>=40&&<p className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-[#34c759]"><CheckCircle2 className="h-3 w-3"/>Splnené</p>}
           </div>
         })}
@@ -136,7 +136,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         {grouped.length===0?<div className="apple-card rounded-[24px] p-7 text-center text-[13px] text-black/40">{t.noRecords}</div>:grouped.map(([date,dayEntries])=><div key={date} className="apple-card overflow-hidden rounded-[24px]">
           <div className="flex items-center justify-between border-b border-black/[.05] bg-black/[.015] px-4 py-3"><p className="text-[12px] font-bold capitalize">{new Date(date+"T00:00:00").toLocaleDateString(locale,{weekday:"short",day:"numeric",month:"short"})}</p><p className="text-[11px] font-bold">{dayEntries.filter(e=>e.status!=="suggested").reduce((s,e)=>s+Number(e.hours),0).toFixed(1)} h</p></div>
           {dayEntries.map(e=><div key={e.id} className="flex items-center gap-3 border-b border-black/[.05] px-4 py-3.5 last:border-0">
-            <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#eaf3ff] text-[#0a84ff]"><Clock3 className="h-4 w-4"/></span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#ece8df] text-[#1f49ff]"><Clock3 className="h-4 w-4"/></span>
             <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-semibold">{e.title}</p><p className="text-[10px] text-black/38">{e.status==="suggested"?"Návrh":e.type==="rehearsal"||e.type==="concert"?"Kolektívny výkon":"Individuálna príprava"}</p></div>
             <span className="text-[12px] font-bold">{Number(e.hours).toFixed(1)} h</span>
           </div>)}
@@ -144,6 +144,6 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       </div>
     </section>
 
-    <button onClick={exportCsv} className="apple-card flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 text-[13px] font-bold text-[#0a84ff]"><Download className="h-4 w-4"/>Exportovať EPČ</button>
+    <button onClick={exportCsv} className="apple-card flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 text-[13px] font-bold text-[#1f49ff]"><Download className="h-4 w-4"/>Exportovať EPČ</button>
   </div>
 }
