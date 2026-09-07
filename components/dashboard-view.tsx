@@ -111,16 +111,26 @@ export function DashboardView({
         <h2 className="ios-section-title">Náhľad</h2>
       </div>
 
-      <Link href="/videos" className="group block overflow-hidden rounded-[20px] bg-black shadow-[0_10px_30px_rgba(0,0,0,.10)]">
+      <Link href="/videos" className="group block overflow-hidden rounded-[22px] bg-black shadow-[0_16px_40px_rgba(0,0,0,.14)]">
         <div className="relative aspect-[16/9]">
-          <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-80"/>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5"/>
-          <span className="absolute left-4 top-4 rounded-full bg-black/35 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.08em] text-white/80 backdrop-blur-md">Posledný koncert</span>
-          <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg"><Play className="ml-0.5 h-4 w-4 fill-current"/></span>
+          <img src="https://www.bhsfestival.sk/wp-content/uploads/2025/04/Slovenska-filharmonia-a-Daniel-Raiskin-foto-Peter-Brenkus-9859-2.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[.84] transition duration-500 group-active:scale-[1.01]"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-black/15"/>
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-white/60">Archív Slovenskej filharmónie</p>
+              <p className="mt-1 text-[11px] font-medium text-white/85">Objav koncerty priamo v aplikácii</p>
+            </div>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black shadow-xl"><Play className="ml-0.5 h-4.5 w-4.5 fill-current"/></span>
+          </div>
           <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+            <div className="mb-2 inline-flex items-center rounded-full bg-white/12 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.08em] text-white/80 backdrop-blur-md">Ukážka archívu</div>
             <p className="text-[11px] font-medium text-white/60">21. jún 2026</p>
-            <h3 className="mt-1 text-[22px] font-semibold tracking-[-.035em]">Mozart</h3>
-            <p className="mt-1 text-[11px] text-white/65">SKO · SFZ · Danel · Sedlický</p>
+            <h3 className="mt-1 text-[24px] font-semibold tracking-[-.045em]">Mozart</h3>
+            <p className="mt-1 text-[11px] text-white/70">Slovenský komorný orchester · Slovenský filharmonický zbor</p>
+            <div className="mt-3 flex items-center justify-between">
+              <p className="text-[10px] text-white/55">Diriguje: Ewald Danel · Adam Sedlický</p>
+              <span className="text-[11px] font-semibold text-white">Otvoriť archív →</span>
+            </div>
           </div>
         </div>
       </Link>
