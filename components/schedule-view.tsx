@@ -101,8 +101,8 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
             href="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/work-plan-2026-2027.pdf"
             target="_blank"
             rel="noreferrer"
-            aria-label="Otvoriť a uložiť PDF plán práce"
-            title="PDF plán práce"
+            aria-label="Otvoriť PDF plán práce"
+            title="Otvoriť PDF plán práce"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-transform active:scale-95"
           >
             <Download className="h-[18px] w-[18px]" />
