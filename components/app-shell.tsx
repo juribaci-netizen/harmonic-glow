@@ -25,8 +25,8 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
         <header className="sticky top-0 z-30 bg-white/84 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
           <div className="relative flex h-14 items-center justify-between px-5">
             <p className="text-[15px] font-medium tracking-[-.03em]">Worktime</p>
-            <Link href="/" aria-label="Slovenská filharmónia" className="absolute left-1/2 top-1/2 flex h-10 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden">
-              <img src="/filharmonia-logo-sk.svg?v=3" alt="" className="block h-[30px] w-auto max-w-none object-contain object-left" style={{clipPath:"inset(0 35% 0 0)"}} />
+            <Link href="/" aria-label="Slovenská filharmónia" className="absolute left-1/2 top-1/2 flex h-9 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+              <img src="/filharmonia-mark.svg?v=1" alt="" className="block h-[22px] w-auto object-contain" />
             </Link>
             <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="whitespace-nowrap text-[10px] font-medium tracking-[-.01em] text-black/42 transition-opacity hover:opacity-60">Slovenská filharmónia</a>
           </div>
