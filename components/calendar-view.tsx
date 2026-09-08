@@ -130,13 +130,13 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           {selectedActivities.length===0 ? (
             <div className="px-5 pb-5 pt-3 text-[12px] text-black/28">Žiadne udalosti</div>
           ) : (
-            <div className="divide-y divide-black/[.05]">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {selectedActivities.map(activity=>{
                 const code=serviceCode(activity)
                 const activityType=code==="A"?"Konkurz":code==="Z"?"Zájazd":typeLabel(activity.type)
                 const program=resolvedProgram(activity)
                 return (
-                  <article key={activity.id} className="px-5 py-4">
+                  <article key={activity.id} className="min-w-[88%] snap-center rounded-[22px] border border-black/[.06] bg-[#fafafa] px-5 py-4">
                     <div className="flex items-baseline justify-between gap-4">
                       <p className="text-[10px] uppercase tracking-[.09em] text-black/28">{activityType}</p>
                       {activity.startTime&&<p className="text-[24px] font-normal tracking-[-.035em] text-black">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
@@ -160,6 +160,9 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
                 )
               })}
             </div>
+          )}
+          {selectedActivities.length > 1 && (
+            <p className="px-5 pb-4 pt-1 text-center text-[9px] uppercase tracking-[.1em] text-black/22">Potiahni do strany</p>
           )}
         </div>
       </div>
