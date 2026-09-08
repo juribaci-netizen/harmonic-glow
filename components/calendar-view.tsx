@@ -160,20 +160,18 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
             </span>
           </button>
         })}
-      </div>
     </section>
 
     <section
-      className="mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)]"
+      className={
+        "mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)] " +
+        (isSnapping ? "transition-transform duration-200 ease-out" : "")
+      }
       onTouchStart={event=>{if(!isSnapping){setTouchStartX(event.touches[0].clientX);setDragX(0)}}}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{touchAction:"pan-y"}}
+      style={{touchAction:"pan-y",transform:`translate3d(${dragX}px,0,0)`}}
     >
-      <div
-        className={isSnapping ? "transition-transform duration-200 ease-out" : ""}
-        style={{transform:`translate3d(${dragX}px,0,0)`}}
-      >
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium capitalize text-black/38">
           {selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}
