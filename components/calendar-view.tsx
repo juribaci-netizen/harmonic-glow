@@ -15,27 +15,13 @@ type Activity = {
   venue: string | null
 }
 
-const metalColors: Record<string,string> = {
-  gold: "bg-gradient-to-br from-[#f2dfa0] via-[#b8943f] to-[#75551d]",
-  silver: "bg-gradient-to-br from-[#f1f2f3] via-[#aeb3b8] to-[#686e74]",
-  copper: "bg-gradient-to-br from-[#f0c2a2] via-[#b86f43] to-[#713820]",
-  titanium: "bg-gradient-to-br from-[#c6d5df] via-[#66869d] to-[#294353]",
-}
-
-const metalRingColors: Record<string,string> = {
-  gold: "border-[#b57b12]",
-  silver: "border-[#68737d]",
-  copper: "border-[#b84e28]",
-  titanium: "border-[#2f7198]",
-}
-
-const metalGroup = (activity:Activity) => {
+const serviceCode = (activity:Activity) => {
   const text = `${activity.title} ${activity.venue ?? ""}`
-  if (/konkurz/i.test(text)) return "copper"
-  if (/zájazd|turné|odjazd|cesta|praha|žofín|hostivař/i.test(text)) return "titanium"
-  if (activity.type === "concert" || activity.type === "dress") return "gold"
   if (activity.type === "off" || activity.type === "ip") return null
-  return "silver"
+  if (/konkurz/i.test(text)) return "A"
+  if (/zájazd|turné|odjazd|cesta|praha|žofín|hostivař/i.test(text)) return "Z"
+  if (activity.type === "concert") return "K"
+  return "S"
 }
 
 export function CalendarView({ activities }: { activities: Activity[] }) {
@@ -67,10 +53,10 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     dress:t.type_dress, off:t.type_off, ip:t.type_ip, other:t.type_other,
   } as Record<string,string>)[type] ?? type
   const legendLabels = lang === "sk"
-    ? { gold:"Koncert / generálka", silver:"Skúška / práca", copper:"Konkurz", titanium:"Zájazd" }
+    ? { S:"Skúška · generálka · nahrávanie", K:"Koncert", Z:"Zájazd", A:"Konkurz" }
     : lang === "de"
-      ? { gold:"Konzert / Generalprobe", silver:"Probe / Arbeit", copper:"Probespiel", titanium:"Tournee" }
-      : { gold:"Concert / dress rehearsal", silver:"Rehearsal / work", copper:"Audition", titanium:"Tour" }
+      ? { S:"Probe · Generalprobe · Aufnahme", K:"Konzert", Z:"Tournee", A:"Probespiel" }
+      : { S:"Rehearsal · dress rehearsal · recording", K:"Concert", Z:"Tour", A:"Audition" }
 
   const moveMonth = (offset:number) => {
     const next = new Date(year, month + offset, 1)
@@ -101,16 +87,21 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const items = byDate.get(iso) ?? []
           const active = iso === selected
           const isToday = iso === localIso(today)
-          const markers = items.map(item=>metalGroup(item)).filter((group): group is string => Boolean(group))
+          const markerCounts = items.reduce<Record<string,number>>((counts,item) => {
+            const code=serviceCode(item)
+            if (code) counts[code]=(counts[code]??0)+1
+            return counts
+          },{})
+          const markers = (["S","K","Z","A"] as const).filter(code=>markerCounts[code])
           return <button key={iso} onClick={()=>setSelected(iso)} className="flex h-[58px] flex-col items-center justify-center rounded-[15px]">
             <span className={"flex h-8 w-8 items-center justify-center rounded-full text-[14px] "+(active?"bg-black text-white":isToday?"ring-1 ring-black/25":"")}>{day}</span>
-            <span className="mt-1 flex h-2 items-center gap-1">{markers.map((group,markerIndex)=><i key={`${group}-${markerIndex}`} className={"h-2.5 w-2.5 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/>)}</span>
+            <span className="mt-0.5 flex h-3 items-center gap-0.5">{markers.map(code=><i key={code} className="flex h-3 min-w-3 items-center justify-center rounded-[3px] bg-black px-0.5 text-[7px] font-semibold not-italic leading-none text-white">{code}{markerCounts[code]>1?markerCounts[code]:""}</i>)}</span>
           </button>
         })}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 border-t border-black/[.05] bg-[#fafafa] px-4 py-4">
-        {(["gold","silver","copper","titanium"] as const).map(group=><span key={group} className="flex min-w-0 items-center gap-2 rounded-xl bg-white px-2.5 py-2 text-[10px] text-black/55 ring-1 ring-black/[.045]"><i className={"h-3.5 w-3.5 shrink-0 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/><span>{legendLabels[group]}</span></span>)}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-black/[.05] bg-[#fafafa] px-4 py-4">
+        {(["S","K","Z","A"] as const).map(code=><span key={code} className="flex min-w-0 items-center gap-2 text-[9px] text-black/48"><i className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-black text-[8px] font-semibold not-italic text-white">{code}</i><span>{legendLabels[code]}</span></span>)}
       </div>
     </section>
 
@@ -118,10 +109,10 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
       <p className="mb-2 px-1 text-[13px] font-medium capitalize text-black/55">{selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}</p>
       <div className="overflow-hidden rounded-[22px] border border-black/[.055] bg-white">
         {selectedActivities.length === 0 ? <p className="p-6 text-center text-[13px] text-black/38">Žiadne udalosti</p> : selectedActivities.map(activity=>{
-          const group=metalGroup(activity)
+          const code=serviceCode(activity)
+          const activityType=code==="A"?legendLabels.A:code==="Z"?legendLabels.Z:typeLabel(activity.type)
           return <article key={activity.id} className="relative border-b border-black/[.05] px-5 py-4 last:border-0">
-          {group&&<i className={"absolute bottom-3 left-0 top-3 w-[3px] rounded-r-full "+metalColors[group]}/>} 
-          <div className="flex items-center gap-2">{group&&<i className={"h-3 w-3 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/>}<span className="text-[9px] uppercase tracking-[.08em] text-black/35">{typeLabel(activity.type)}</span></div>
+          <div className="flex items-center gap-2">{code&&<i className="flex h-4 w-4 items-center justify-center rounded-[4px] bg-black text-[8px] font-semibold not-italic text-white">{code}</i>}<span className="text-[9px] uppercase tracking-[.08em] text-black/35">{activityType}</span></div>
           {activity.startTime&&<p className="mt-2 text-[24px] leading-none tracking-[-.035em]">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
           <p className="mt-1 text-[14px] text-black/72">{activity.type === "off" ? typeLabel("off") : activity.title}</p>
           {activity.venue&&<p className="mt-2 flex items-center gap-1.5 text-[10px] text-black/38"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
