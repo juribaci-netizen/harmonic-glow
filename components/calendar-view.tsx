@@ -216,7 +216,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
               })}
             </div>
           )}
-          <div className="px-5 pb-4 pt-1 text-center text-[9px] text-black/16">‹  ›</div>
+
         </div>
       </div>
       </div>
