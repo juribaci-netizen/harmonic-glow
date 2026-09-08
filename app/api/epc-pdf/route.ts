@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { Buffer } from "node:buffer"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { getMonthEntries } from "@/app/actions/time-entries"
@@ -115,7 +116,8 @@ export async function GET(request:Request){
   }
 
   const pdf=buildPdf(jpg,commands)
-  return new NextResponse(pdf,{
+  const body=new Uint8Array(pdf.buffer,pdf.byteOffset,pdf.byteLength)
+  return new NextResponse(body,{
     headers:{
       "Content-Type":"application/pdf",
       "Content-Disposition":`inline; filename="EPC-${year}-${String(month+1).padStart(2,"0")}.pdf"`,
