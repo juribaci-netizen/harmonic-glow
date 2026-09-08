@@ -85,6 +85,31 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
   const cleanProgram = (a: Activity) =>
     a.program?.replace(/Obsadenie(?:\s+sláčikov)?\s+[^.]+\.?/i, "").replace(/\s+/g, " ").trim() || null
 
+  const isProgramPlaceholder = (program: string) =>
+    /^(Program koncertu|Pokračovanie|Dodatočne|Koncert bude|Koncert v spolupráci|Koncert v rámci|Koncert v Prahe|Koncert k Roku|Vianočné koncerty|Príprava programu|Pracovný plán)/i.test(program)
+
+  const resolvedProgram = (a: Activity) => {
+    const own = cleanProgram(a)
+    if (own && !isProgramPlaceholder(own)) return own
+
+    const candidates = activities
+      .filter(candidate => candidate.id !== a.id)
+      .map(candidate => ({ activity: candidate, program: cleanProgram(candidate) }))
+      .filter(candidate => candidate.program && !isProgramPlaceholder(candidate.program))
+      .filter(candidate => {
+        if (a.conductor) return candidate.activity.conductor === a.conductor
+        return a.type === "recording" && candidate.activity.type === "recording"
+      })
+      .map(candidate => ({
+        ...candidate,
+        distance: Math.abs(new Date(candidate.activity.date).getTime() - new Date(a.date).getTime()),
+      }))
+      .filter(candidate => candidate.distance <= 14 * 24 * 60 * 60 * 1000)
+      .sort((left,right) => left.distance - right.distance)
+
+    return candidates[0]?.program ?? null
+  }
+
   const cleanNotes = (a: Activity) =>
     a.notes?.replace(/Obsadenie(?:\s+sláčikov)?\s+[^.]+\.?/i, "").replace(/\s+/g, " ").trim() || null
 
@@ -144,7 +169,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       const cancelled=/zruš/i.test((a.title||"")+" "+(a.notes||""))
                       const time=timeLabel(a)
                       const staffing=staffingLabel(a)
-                      const program=cleanProgram(a)
+                      const program=resolvedProgram(a)
                       const notes=cleanNotes(a)
                       const label=cancelled ? "Zrušená" : off ? "Voľno" : audition ? a.title : typeLabel(a.type)
                       const repeatedTitle=a.title.trim().toLocaleLowerCase(locale)===label.trim().toLocaleLowerCase(locale)
