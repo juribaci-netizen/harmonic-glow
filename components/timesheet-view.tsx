@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
-import { confirmSuggestedEntry, deleteEntry, suggestIndividualPreparation } from "@/app/actions/time-entries"
+import { autoFillMonthFromWorkPlan, confirmSuggestedEntry, deleteEntry } from "@/app/actions/time-entries"
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null}
@@ -14,7 +14,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const locale=lang==="sk"?"sk-SK":lang==="de"?"de-DE":"en-GB"
 
   const load=async(y:number,m:number)=>{
-    await suggestIndividualPreparation(y,m)
+    await autoFillMonthFromWorkPlan(y,m)
     const res=await fetch("/api/timesheet?year="+y+"&month="+m)
     if(res.ok)setEntries(await res.json())
   }
