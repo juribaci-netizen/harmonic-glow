@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useI18n } from "@/components/language-provider"
 import { autoFillMonthFromWorkPlan, updateTimeEntryHours } from "@/app/actions/time-entries"
-import { ChevronLeft, ChevronRight, FileText, Check } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null}
 
@@ -128,40 +128,13 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           <button onClick={beginEdit} className="rounded-full bg-black/[.045] px-3 py-2 text-[10px] font-semibold">Upraviť</button>
         </div>
 
-        <div className="mx-auto aspect-[1.414/1] w-full overflow-hidden rounded-[8px] border border-black/10 bg-white shadow-[0_8px_28px_rgba(0,0,0,.08)]">
-          <div className="h-full p-[3.5%] text-black">
-            <div className="flex items-start justify-between border-b-2 border-black pb-2">
-              <div>
-                <p className="text-[8px] font-bold tracking-tight">SLOVENSKÁ FILHARMÓNIA</p>
-                <p className="mt-1 text-[5px]">EVIDENCIA PRACOVNÉHO ČASU</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[5px] uppercase text-black/55">Mesiac / rok</p>
-                <p className="text-[8px] font-bold capitalize">{monthName}</p>
-              </div>
-            </div>
-            <div className="mt-2 grid grid-cols-[9%_1fr_13%] border border-black text-[5px]">
-              <div className="border-r border-black p-1 font-bold">Deň</div>
-              <div className="border-r border-black p-1 font-bold">Pracovná činnosť / individuálna príprava</div>
-              <div className="p-1 text-right font-bold">Hod.</div>
-              {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
-                const ds=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
-                const row=visibleDays.find(([date])=>date===ds)
-                const es=row?.[1]??[]
-                const sum=es.reduce((s,e)=>s+Number(e.hours),0)
-                const text=es.map(e=>(e.type==="individual"||e.type==="ip"?"IP":e.title)).join(" · ")
-                return <div key={day} className="contents">
-                  <div className="min-h-[11px] border-r border-t border-black px-1 py-[1px] font-semibold">{day}</div>
-                  <div className="min-h-[11px] truncate border-r border-t border-black px-1 py-[1px]">{text}</div>
-                  <div className="min-h-[11px] border-t border-black px-1 py-[1px] text-right">{row?sum.toFixed(1):""}</div>
-                </div>
-              })}
-            </div>
-            <div className="mt-2 flex justify-between text-[5px]">
-              <span>Priebežne vyplnené podľa pracovného plánu</span>
-              <span className="font-bold">Spolu: {visibleDays.reduce((s,[,es])=>s+es.reduce((a,e)=>a+Number(e.hours),0),0).toFixed(1)} h</span>
-            </div>
-          </div>
+        <div className="mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#f3f3f3] shadow-[0_8px_28px_rgba(0,0,0,.08)]">
+          <iframe
+            key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
+            src={"/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"#toolbar=0&navpanes=0&scrollbar=0"}
+            title={"EPČ "+monthName}
+            className="block h-[560px] w-full bg-white"
+          />
         </div>
 
         <p className="mt-3 text-center text-[9px] leading-relaxed text-black/35">Budúce dni zostávajú prázdne. Po skončení dňa sa služby a doplnená IP automaticky objavia v náhľade.</p>
