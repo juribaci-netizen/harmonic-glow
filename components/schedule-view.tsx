@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
-import { ChevronDown, Download, MapPin } from "lucide-react"
+import { Download, MapPin } from "lucide-react"
 
 type Activity = {
   id: number
@@ -146,7 +146,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       const staffing=staffingLabel(a)
                       const program=cleanProgram(a)
                       const notes=cleanNotes(a)
-                      const label=cancelled ? "Zrušená" : off ? "Voľno" : typeLabel(a.type)
+                      const label=cancelled ? "Zrušená" : off ? "Voľno" : audition ? a.title : typeLabel(a.type)
                       const repeatedTitle=a.title.trim().toLocaleLowerCase(locale)===label.trim().toLocaleLowerCase(locale)
 
                       return (
@@ -166,11 +166,8 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                           )}
 
                           {!off && !cancelled && program && (
-                            <details className="group mt-3 border-t border-black/[.06] pt-3">
-                              <summary className="flex cursor-pointer list-none items-center justify-between text-[12px] font-medium text-black/58 [&::-webkit-details-marker]:hidden">
-                                Program
-                                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180"/>
-                              </summary>
+                            <details className="mt-3 border-t border-black/[.06] pt-3">
+                              <summary className="cursor-pointer list-none text-[11px] font-medium text-black/52 [&::-webkit-details-marker]:hidden">Program +</summary>
                               <p className="mt-2 text-[13px] leading-[1.55] text-black/78">{program}</p>
                             </details>
                           )}
