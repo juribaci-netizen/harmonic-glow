@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useI18n } from "@/components/language-provider"
-import { MapPin, Music2 } from "lucide-react"
+import { Download, MapPin } from "lucide-react"
 
 type Activity = {
   id: number
@@ -72,9 +72,16 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
             <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
             <p className="mt-2 text-[11px] text-black/38">Od dneška až do 3. januára 2027</p>
           </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white">
-            <Music2 className="h-4 w-4" />
-          </div>
+          <a
+            href="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/work-plan-2026-2027.pdf"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Otvoriť a uložiť PDF plán práce"
+            title="PDF plán práce"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-transform active:scale-95"
+          >
+            <Download className="h-[18px] w-[18px]" />
+          </a>
         </div>
       </header>
 
