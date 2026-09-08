@@ -53,12 +53,11 @@ export async function GET(request:Request){
 
   const visible=entries.filter(e=>new Date(e.date+"T23:59:59")<=cutoff && e.status!=="suggested")
 
-  const parts=await Promise.all(Array.from({length:10},(_,i)=>
-    readFile(path.join(process.cwd(),"public","epc-template",String(i+1).padStart(2,"0")+".b64"),"utf8")
-  ))
-  const template=Buffer.from(parts.join(""),"base64")
-  const pdf=await PDFDocument.load(template)
-  const page=pdf.getPages()[0]
+  const background=await readFile(path.join(process.cwd(),"public","epc-template-bg.jpg"))
+  const pdf=await PDFDocument.create()
+  const page=pdf.addPage([595.32,841.92])
+  const bg=await pdf.embedJpg(background)
+  page.drawImage(bg,{x:0,y:0,width:595.32,height:841.92})
   const font=await pdf.embedFont(StandardFonts.Helvetica)
   const bold=await pdf.embedFont(StandardFonts.HelveticaBold)
 
