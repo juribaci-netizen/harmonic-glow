@@ -11,6 +11,11 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const {t,lang}=useI18n()
   const [cursor,setCursor]=useState(new Date(initialYear,initialMonth,1))
   const [entries,setEntries]=useState(initialEntries)
+  const [signing,setSigning]=useState(false)
+  const [signed,setSigned]=useState(false)
+  const [hasInk,setHasInk]=useState(false)
+  const canvasRef=useRef<HTMLCanvasElement|null>(null)
+  const drawingRef=useRef(false)
   const locale=lang==="sk"?"sk-SK":lang==="de"?"de-DE":"en-GB"
 
   const load=async(y:number,m:number)=>{
