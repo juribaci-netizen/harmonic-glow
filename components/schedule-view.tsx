@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useI18n } from "@/components/language-provider"
-import { Download, MapPin } from "lucide-react"
+import { ChevronDown, Download, MapPin } from "lucide-react"
 
 type Activity = {
   id: number
@@ -20,6 +20,12 @@ type Activity = {
 export function ScheduleView({ activities }: { activities: Activity[] }) {
   const { t, lang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const localIso = (d: Date) => {
     const y = d.getFullYear()
@@ -28,13 +34,21 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
     return y + "-" + m + "-" + day
   }
 
-  const todayIso = localIso(new Date())
+  const todayIso = localIso(now)
 
   const visible = useMemo(
-    () => activities
-      .filter(a => a.date >= todayIso)
-      .sort((a,b) => a.date.localeCompare(b.date) || (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99")),
-    [activities, todayIso]
+    () => [...activities]
+      .sort((a,b) => a.date.localeCompare(b.date) || (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99"))
+      .filter(a => {
+        if (a.date > todayIso) return true
+        if (a.date < todayIso) return false
+        if (!a.startTime) return true
+
+        const end = new Date(`${a.date}T${a.endTime ?? a.startTime}:00`)
+        if (!a.endTime) end.setHours(end.getHours() + 3)
+        return end.getTime() > now.getTime()
+      }),
+    [activities, now, todayIso]
   )
 
   const grouped = useMemo(() => {
@@ -81,7 +95,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
             <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
-            <p className="mt-2 text-[11px] text-black/38">Od dneška až do 3. januára 2027</p>
+            <p className="mt-2 text-[11px] text-black/38">Najbližšie služby podľa aktuálneho času</p>
           </div>
           <a
             href="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/work-plan-2026-2027.pdf"
@@ -124,7 +138,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                   </div>
 
                   <div className="min-w-0 flex-1 divide-y divide-black/[.05]">
-                    {items.map(a => {
+                    {items.map((a,itemIndex) => {
                       const off=a.type==="off"
                       const audition=/konkurz/i.test(a.title)
                       const cancelled=/zruš/i.test((a.title||"")+" "+(a.notes||""))
@@ -137,6 +151,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
 
                       return (
                         <article key={a.id} className={"px-4 py-4 "+(off?"bg-[#fafafa]":"bg-white")}>
+                          {index===0&&itemIndex===0&&<p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[.12em] text-[#9a6c16]">Najbližšie</p>}
                           <div className="flex items-baseline justify-between gap-3">
                             <h3 className={"text-[18px] font-semibold leading-tight tracking-[-.025em] "+(audition?"text-[#9b5838]":"text-black")}>{label}</h3>
                             {time&&<p className="shrink-0 text-[15px] font-medium tabular-nums text-black/68">{time}</p>}
@@ -151,10 +166,13 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                           )}
 
                           {!off && !cancelled && program && (
-                            <div className="mt-3 border-t border-black/[.06] pt-3">
-                              <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-black/35">Skladby</p>
-                              <p className="mt-1.5 text-[13px] leading-[1.55] text-black/78">{program}</p>
-                            </div>
+                            <details className="group mt-3 border-t border-black/[.06] pt-3">
+                              <summary className="flex cursor-pointer list-none items-center justify-between text-[12px] font-medium text-black/58 [&::-webkit-details-marker]:hidden">
+                                Program
+                                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180"/>
+                              </summary>
+                              <p className="mt-2 text-[13px] leading-[1.55] text-black/78">{program}</p>
+                            </details>
                           )}
 
                           {!off && !cancelled && staffing && (
