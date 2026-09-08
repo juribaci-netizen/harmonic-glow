@@ -5,6 +5,7 @@ import { timeEntry } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
 import { and, desc, eq, gte, lte } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { seasonData } from "@/lib/season-data-2026-27"
 
 export type LogHoursInput = {
   activityId?: number | null
@@ -33,6 +34,129 @@ function weekStart(date: Date) {
 
 function iso(d: Date) {
   return d.toISOString().slice(0, 10)
+}
+
+function scheduledHours(startTime: string | null, endTime: string | null) {
+  if (!startTime) return 0
+  if (!endTime) return 3
+  const [sh, sm] = startTime.split(":").map(Number)
+  const [eh, em] = endTime.split(":").map(Number)
+  const minutes = (eh * 60 + em) - (sh * 60 + sm)
+  return Math.max(0, minutes / 60)
+}
+
+export async function autoFillMonthFromWorkPlan(year: number, month: number) {
+  const userId = await getUserId()
+  const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`
+  const endDay = new Date(year, month + 1, 0).getDate()
+  const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`
+
+  const existing = await db
+    .select()
+    .from(timeEntry)
+    .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, monthStart), lte(timeEntry.date, monthEnd)))
+
+  const byActivity = new Map(existing.filter(e => e.activityId != null).map(e => [e.activityId, e]))
+  const monthActivities = seasonData
+    .map((activity, index) => ({ ...activity, activityId: index + 1 }))
+    .filter(activity => activity.date >= monthStart && activity.date <= monthEnd)
+    .filter(activity => activity.type !== "off" && activity.type !== "ip")
+
+  for (const activity of monthActivities) {
+    const hours = scheduledHours(activity.startTime, activity.endTime)
+    if (hours <= 0 || byActivity.has(activity.activityId)) continue
+    await db.insert(timeEntry).values({
+      userId,
+      activityId: activity.activityId,
+      date: activity.date,
+      type: activity.type,
+      title: activity.title,
+      startTime: activity.startTime,
+      endTime: activity.endTime,
+      hours: String(hours),
+      status: "auto",
+      notes: "Automaticky prevzaté z pracovného plánu SF.",
+    })
+  }
+
+  const refreshed = await db
+    .select()
+    .from(timeEntry)
+    .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, monthStart), lte(timeEntry.date, monthEnd)))
+
+  const weeks = new Map<string, typeof refreshed>()
+  for (const entry of refreshed) {
+    const key = iso(weekStart(new Date(`${entry.date}T00:00:00`)))
+    const list = weeks.get(key) ?? []
+    list.push(entry)
+    weeks.set(key, list)
+  }
+
+  const first = new Date(year, month, 1)
+  const last = new Date(year, month + 1, 0)
+  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
+    const key = iso(weekStart(d))
+    if (!weeks.has(key)) weeks.set(key, [])
+  }
+
+  for (const [weekKey, weekEntries] of weeks) {
+    const total = weekEntries
+      .filter(e => e.status !== "suggested")
+      .reduce((sum, e) => sum + Number(e.hours), 0)
+
+    let missing = Math.max(0, 40 - total)
+    if (missing < 0.5) continue
+
+    const monday = new Date(`${weekKey}T00:00:00`)
+    const dayHours = new Map<string, number>()
+    for (const e of weekEntries) {
+      if (e.status === "suggested") continue
+      dayHours.set(e.date, (dayHours.get(e.date) ?? 0) + Number(e.hours))
+    }
+
+    const candidates: { date: string; existing: number }[] = []
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(monday)
+      d.setDate(d.getDate() + i)
+      if (d.getFullYear() !== year || d.getMonth() !== month) continue
+      const date = iso(d)
+      const existingHours = dayHours.get(date) ?? 0
+      if (existingHours >= 8) continue
+      candidates.push({ date, existing: existingHours })
+    }
+
+    candidates.sort((a,b) => {
+      const aHasWork = a.existing > 0 ? 0 : 1
+      const bHasWork = b.existing > 0 ? 0 : 1
+      return aHasWork - bHasWork || a.existing - b.existing || a.date.localeCompare(b.date)
+    })
+
+    for (const candidate of candidates) {
+      if (missing < 0.5) break
+      const existingAutoIp = weekEntries.find(e => e.date === candidate.date && e.type === "individual" && e.status === "auto")
+      if (existingAutoIp) continue
+      const capacity = Math.min(3, 8 - candidate.existing)
+      const hours = Math.min(capacity, Math.ceil(Math.min(missing, capacity) * 2) / 2)
+      if (hours < 0.5) continue
+      await db.insert(timeEntry).values({
+        userId,
+        activityId: null,
+        date: candidate.date,
+        type: "individual",
+        title: "Individuálna príprava",
+        startTime: null,
+        endTime: null,
+        hours: String(hours),
+        status: "auto",
+        notes: "Automaticky doplnené do pracovného fondu 40 h/týždeň.",
+      })
+      missing -= hours
+    }
+  }
+
+  revalidatePath("/timesheet")
+  revalidatePath("/")
+  return { ok: true }
 }
 
 export async function getTimeEntries() {
