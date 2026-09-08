@@ -54,14 +54,14 @@ export function DashboardView({
       </div>
 
       <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <a href="https://filharmonia.sk" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
+          <img src="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
+        </a>
         <a href="https://filharmonia.sk/61-rocnik-BHS-2026" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
           <img src="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/BHS%202026%20banner%201120x426_0.webp" alt="Bratislavské hudobné slávnosti 2026" className="block h-auto w-full" />
         </a>
         <a href="https://filharmonia.sk/vstupenky-zoznam" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
           <img src="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/web_SF_1120x426_ABO2.jpg" alt="Abonentky Slovenskej filharmónie – 78. koncertná sezóna" className="block h-auto w-full" />
-        </a>
-        <a href="https://filharmonia.sk" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
-          <img src="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
         </a>
       </div>
     </section>
