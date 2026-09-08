@@ -97,6 +97,12 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     URL.revokeObjectURL(url)
   }
 
+  const today=new Date()
+  const visibleDays=grouped.filter(([date])=>{
+    const d=new Date(date+"T23:59:59")
+    return cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear() && cursor.getMonth()<today.getMonth()) || d<=today
+  })
+
   return <div className="space-y-5">
     <header className="pt-1">
       <p className="modern-kicker text-black/35">Evidencia pracovného času</p>
@@ -105,56 +111,69 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
     <section className="overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_16px_44px_rgba(0,0,0,.045)]">
       <div className="grid grid-cols-[42px_1fr_42px] items-center border-b border-black/[.05] px-4 py-4">
-        <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()-1,1))} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[.035]" aria-label="Predchádzajúci mesiac"><ChevronLeft className="h-4 w-4"/></button>
+        <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()-1,1))} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[.035]"><ChevronLeft className="h-4 w-4"/></button>
         <div className="text-center">
           <p className="text-[10px] font-medium uppercase tracking-[.1em] text-black/28">Mesačný výkaz EPČ</p>
           <p className="mt-1 text-[18px] font-semibold capitalize tracking-[-.03em]">{monthName}</p>
         </div>
-        <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()+1,1))} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[.035]" aria-label="Nasledujúci mesiac"><ChevronRight className="h-4 w-4"/></button>
+        <button onClick={()=>setCursor(new Date(cursor.getFullYear(),cursor.getMonth()+1,1))} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[.035]"><ChevronRight className="h-4 w-4"/></button>
       </div>
 
       <div className="p-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="text-[12px] font-semibold">Náhľad EPČ</p>
-            <p className="mt-0.5 text-[10px] text-black/35">Vyplňuje sa automaticky podľa pracovného plánu</p>
+            <p className="text-[12px] font-semibold">Náhľad PDF</p>
+            <p className="mt-0.5 text-[10px] text-black/35">Originálny formulár EPČ · priebežne vyplnený</p>
           </div>
-          <p className="text-[15px] font-semibold">{total.toFixed(1)} h</p>
+          <button onClick={beginEdit} className="rounded-full bg-black/[.045] px-3 py-2 text-[10px] font-semibold">Upraviť</button>
         </div>
 
-        <div className="overflow-hidden rounded-[18px] border border-black/[.07] bg-[#fbfbfa]">
-          <div className="grid grid-cols-[42px_1fr_62px] border-b border-black/[.07] bg-black/[.025] px-3 py-2 text-[9px] font-medium uppercase tracking-[.07em] text-black/30">
-            <span>Deň</span><span>Pracovný plán / IP</span><span className="text-right">Hodiny</span>
-          </div>
-          {grouped.length===0 ? <p className="p-8 text-center text-[12px] text-black/35">EPČ sa priebežne vyplní automaticky.</p> : grouped.map(([date,dayEntries])=>{
-            const work=dayEntries.filter(e=>e.type!=="individual"&&e.type!=="ip")
-            const ip=dayEntries.filter(e=>e.type==="individual"||e.type==="ip")
-            const dayTotal=dayEntries.reduce((s,e)=>s+Number(e.hours),0)
-            return <div key={date} className="grid grid-cols-[42px_1fr_62px] items-start gap-2 border-b border-black/[.055] px-3 py-3 last:border-0">
+        <div className="mx-auto aspect-[1.414/1] w-full overflow-hidden rounded-[8px] border border-black/10 bg-white shadow-[0_8px_28px_rgba(0,0,0,.08)]">
+          <div className="h-full p-[3.5%] text-black">
+            <div className="flex items-start justify-between border-b-2 border-black pb-2">
               <div>
-                <p className="text-[14px] font-semibold">{new Date(date+"T00:00:00").getDate()}</p>
-                <p className="text-[8px] uppercase text-black/25">{new Date(date+"T00:00:00").toLocaleDateString(locale,{weekday:"short"})}</p>
+                <p className="text-[8px] font-bold tracking-tight">SLOVENSKÁ FILHARMÓNIA</p>
+                <p className="mt-1 text-[5px]">EVIDENCIA PRACOVNÉHO ČASU</p>
               </div>
-              <div className="min-w-0">
-                {work.map(e=><div key={e.id} className="mb-1 last:mb-0">
-                  <p className="truncate text-[10px] text-black/58">{e.title}</p>
-                  {editing&&<input inputMode="decimal" value={draftHours[e.id]??String(Number(e.hours))} onChange={ev=>setDraftHours(x=>({...x,[e.id]:ev.target.value}))} className="mt-1 w-16 rounded-md border border-black/10 bg-white px-2 py-1 text-[10px] outline-none"/>}
-                </div>)}
-                {ip.map(e=><div key={e.id} className="mt-1">
-                  <p className="text-[9px] text-black/35">IP {editing?"":Number(e.hours).toFixed(1)+" h"}</p>
-                  {editing&&<input inputMode="decimal" value={draftHours[e.id]??String(Number(e.hours))} onChange={ev=>setDraftHours(x=>({...x,[e.id]:ev.target.value}))} className="mt-1 w-16 rounded-md border border-black/10 bg-white px-2 py-1 text-[10px] outline-none"/>}
-                </div>)}
+              <div className="text-right">
+                <p className="text-[5px] uppercase text-black/55">Mesiac / rok</p>
+                <p className="text-[8px] font-bold capitalize">{monthName}</p>
               </div>
-              <p className="text-right text-[12px] font-semibold">{dayTotal.toFixed(1)} h</p>
             </div>
-          })}
+            <div className="mt-2 grid grid-cols-[9%_1fr_13%] border border-black text-[5px]">
+              <div className="border-r border-black p-1 font-bold">Deň</div>
+              <div className="border-r border-black p-1 font-bold">Pracovná činnosť / individuálna príprava</div>
+              <div className="p-1 text-right font-bold">Hod.</div>
+              {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
+                const ds=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
+                const row=visibleDays.find(([date])=>date===ds)
+                const es=row?.[1]??[]
+                const sum=es.reduce((s,e)=>s+Number(e.hours),0)
+                const text=es.map(e=>(e.type==="individual"||e.type==="ip"?"IP":e.title)).join(" · ")
+                return <div key={day} className="contents">
+                  <div className="min-h-[11px] border-r border-t border-black px-1 py-[1px] font-semibold">{day}</div>
+                  <div className="min-h-[11px] truncate border-r border-t border-black px-1 py-[1px]">{text}</div>
+                  <div className="min-h-[11px] border-t border-black px-1 py-[1px] text-right">{row?sum.toFixed(1):""}</div>
+                </div>
+              })}
+            </div>
+            <div className="mt-2 flex justify-between text-[5px]">
+              <span>Priebežne vyplnené podľa pracovného plánu</span>
+              <span className="font-bold">Spolu: {visibleDays.reduce((s,[,es])=>s+es.reduce((a,e)=>a+Number(e.hours),0),0).toFixed(1)} h</span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {editing ? <button onClick={saveEdit} className="flex items-center justify-center gap-1.5 rounded-[14px] bg-black px-3 py-3 text-[11px] font-semibold text-white"><Check className="h-3.5 w-3.5"/>Uložiť zmeny</button>
-                   : <button onClick={beginEdit} className="rounded-[14px] bg-black/[.045] px-3 py-3 text-[11px] font-semibold">Upraviť</button>}
-          <button onClick={()=>setSigning(true)} className="rounded-[14px] bg-black px-3 py-3 text-[11px] font-semibold text-white">{signed?"Podpísané ✓":"Podpísať EPČ"}</button>
-        </div>
+        <p className="mt-3 text-center text-[9px] leading-relaxed text-black/35">Budúce dni zostávajú prázdne. Po skončení dňa sa služby a doplnená IP automaticky objavia v náhľade.</p>
+
+        {editing&&<div className="mt-4 rounded-[18px] bg-black/[.025] p-3">
+          <div className="mb-2 flex items-center justify-between"><p className="text-[11px] font-semibold">Upraviť hodiny</p><button onClick={saveEdit} className="rounded-full bg-black px-3 py-1.5 text-[9px] font-semibold text-white">Uložiť</button></div>
+          <div className="max-h-48 space-y-2 overflow-auto">
+            {visibleDays.flatMap(([,es])=>es).map(e=><div key={e.id} className="flex items-center justify-between gap-3 text-[9px]"><span className="min-w-0 truncate text-black/50">{e.date} · {e.title}</span><input inputMode="decimal" value={draftHours[e.id]??String(Number(e.hours))} onChange={ev=>setDraftHours(x=>({...x,[e.id]:ev.target.value}))} className="w-16 rounded-lg border border-black/10 bg-white px-2 py-1.5 text-right outline-none"/></div>)}
+          </div>
+        </div>}
+
+        <button onClick={()=>setSigning(true)} className="mt-4 w-full rounded-[15px] bg-black px-4 py-3.5 text-[11px] font-semibold text-white">{signed?"Podpísané ✓":"Podpísať EPČ"}</button>
       </div>
     </section>
 
@@ -164,15 +183,12 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <div className="mx-auto max-w-md">
           <p className="text-[10px] font-medium uppercase tracking-[.09em] text-black/30">EPČ · {monthName}</p>
           <h3 className="mt-1 text-[23px] font-semibold tracking-[-.035em]">Podpíšte výkaz</h3>
-          <p className="mt-1 text-[11px] leading-relaxed text-black/42">Podpíšte sa prstom alebo stylusom. Podpis sa použije iba pre tento mesačný výkaz.</p>
+          <p className="mt-1 text-[11px] text-black/42">Podpíšte sa prstom alebo stylusom. Podpis sa použije iba pre tento mesačný výkaz.</p>
           <div className="mt-5 overflow-hidden rounded-[20px] border border-black/[.07] bg-[#fbfbfa]">
             <canvas ref={canvasRef} width={720} height={260} onPointerDown={beginSign} onPointerMove={drawSign} onPointerUp={endSign} onPointerCancel={endSign} className="block h-[170px] w-full touch-none"/>
             <div className="mx-5 border-t border-black/10 pb-3 pt-2 text-center text-[9px] text-black/25">podpis zamestnanca</div>
           </div>
-          <div className="mt-3 flex items-center justify-between">
-            <button onClick={clearSign} className="px-2 py-2 text-[11px] font-medium text-black/38">Vymazať</button>
-            <button onClick={()=>setSigning(false)} className="px-2 py-2 text-[11px] font-medium text-black/38">Zrušiť</button>
-          </div>
+          <div className="mt-3 flex justify-between"><button onClick={clearSign} className="px-2 py-2 text-[11px] text-black/38">Vymazať</button><button onClick={()=>setSigning(false)} className="px-2 py-2 text-[11px] text-black/38">Zrušiť</button></div>
           <button disabled={!hasInk} onClick={confirmSign} className="mt-2 w-full rounded-[16px] bg-black px-4 py-4 text-[12px] font-semibold text-white disabled:opacity-20">Potvrdiť podpis</button>
         </div>
       </div>
