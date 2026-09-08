@@ -31,9 +31,6 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
   const today = new Date()
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [selected, setSelected] = useState(localIso(today))
-  const [touchStartX, setTouchStartX] = useState<number | null>(null)
-  const [dragX, setDragX] = useState(0)
-  const [isSnapping, setIsSnapping] = useState(false)
   const year = cursor.getFullYear()
   const month = cursor.getMonth()
 
@@ -86,48 +83,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     setCursor(next)
     setSelected(localIso(next))
   }
-  const commitDayChange = (offset:number) => {
-    const current = new Date(selected + "T00:00:00")
-    current.setDate(current.getDate() + offset)
-    const nextIso = localIso(current)
-    setSelected(nextIso)
-    if (current.getFullYear() !== year || current.getMonth() !== month) {
-      setCursor(new Date(current.getFullYear(), current.getMonth(), 1))
-    }
-  }
 
-  const handleTouchMove = (event: React.TouchEvent<HTMLElement>) => {
-    if (touchStartX === null || isSnapping) return
-    const delta = event.touches[0].clientX - touchStartX
-    setDragX(Math.max(-110, Math.min(110, delta)))
-  }
-
-  const handleTouchEnd = () => {
-    if (touchStartX === null || isSnapping) return
-    const threshold = 42
-    if (Math.abs(dragX) < threshold) {
-      setIsSnapping(true)
-      setDragX(0)
-      window.setTimeout(()=>setIsSnapping(false),180)
-      setTouchStartX(null)
-      return
-    }
-
-    const offset = dragX < 0 ? 1 : -1
-    setIsSnapping(true)
-    setDragX(dragX < 0 ? -460 : 460)
-
-    window.setTimeout(() => {
-      commitDayChange(offset)
-      setDragX(dragX < 0 ? 90 : -90)
-      window.requestAnimationFrame(() => {
-        setDragX(0)
-        window.setTimeout(()=>setIsSnapping(false),180)
-      })
-    }, 160)
-
-    setTouchStartX(null)
-  }
 
   return <div className="pb-5">
     <header className="mb-5 flex items-end justify-between pt-3">
@@ -162,16 +118,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
         })}
     </section>
 
-    <section
-      className={
-        "mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)] " +
-        (isSnapping ? "transition-transform duration-200 ease-out" : "")
-      }
-      onTouchStart={event=>{if(!isSnapping){setTouchStartX(event.touches[0].clientX);setDragX(0)}}}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{touchAction:"pan-y",transform:`translate3d(${dragX}px,0,0)`}}
-    >
+    <section className="mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)]">
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium capitalize text-black/38">
           {selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}
@@ -191,12 +138,12 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
                 return (
                   <article key={activity.id} className="px-5 py-4">
                     <div className="flex items-baseline justify-between gap-4">
-                      <p className="text-[10px] uppercase tracking-[.09em] text-black/28">{activityType}</p>
-                      {activity.startTime&&<p className="text-[24px] font-normal tracking-[-.035em] text-black">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
+                      <p className={"text-[10px] uppercase tracking-[.09em] "+(code==="A"?"text-black/38":"text-black/28")}>{activityType}</p>
+                      {activity.startTime&&<p className={"text-[24px] font-normal tracking-[-.035em] "+(code==="A"?"text-black/48":"text-black")}>{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
                     </div>
                     {activity.type!=="off" && (
                       <>
-                        {code==="A" && <p className="mt-2 text-[14px] leading-snug text-black/72">{activity.title}</p>}
+                        {code==="A" && <p className="mt-2 text-[14px] leading-snug text-black/48">{activity.title}</p>}
                         {program ? (
                           <details className="mt-3">
                             <summary className="cursor-pointer list-none text-[11px] font-medium text-black/48 [&::-webkit-details-marker]:hidden">Program +</summary>
