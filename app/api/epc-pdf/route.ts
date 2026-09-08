@@ -69,6 +69,7 @@ function buildPdf(jpg:Buffer,content:string){
   return Buffer.concat(chunks)
 }
 
+// Deployment refresh: progressive EPČ PDF preview
 export async function GET(request:Request){
   const user=await getSessionUser()
   if(!user)return NextResponse.json({error:"Unauthorized"},{status:401})
