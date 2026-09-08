@@ -60,6 +60,9 @@ export function DashboardView({
         <a href="https://filharmonia.sk/vstupenky-zoznam" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
           <img src="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/web_SF_1120x426_ABO2.jpg" alt="Abonentky Slovenskej filharmónie – 78. koncertná sezóna" className="block h-auto w-full" />
         </a>
+        <a href="https://filharmonia.sk" target="_blank" rel="noreferrer" className="w-[94%] shrink-0 snap-start overflow-hidden rounded-[22px] bg-black">
+          <img src="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/web_SF_1120x426.jpg" alt="Slovenská filharmónia – 78. koncertná sezóna 2026/27" className="block h-auto w-full" />
+        </a>
       </div>
     </section>
 
