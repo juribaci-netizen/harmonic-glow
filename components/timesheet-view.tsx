@@ -123,7 +123,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-[12px] font-semibold">Náhľad PDF</p>
-            <p className="mt-0.5 text-[10px] text-black/35">Originálny formulár EPČ · priebežne vyplnený</p>
+            <p className="mt-0.5 text-[10px] text-black/35">Originálny formulár EPČ 2.1 · živý náhľad</p>
           </div>
           <button onClick={beginEdit} className="rounded-full bg-black/[.045] px-3 py-2 text-[10px] font-semibold">Upraviť</button>
         </div>
@@ -131,7 +131,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <div className="mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#f3f3f3] shadow-[0_8px_28px_rgba(0,0,0,.08)]">
           <iframe
             key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
-            src={"/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"#toolbar=0&navpanes=0&scrollbar=0"}
+            src={"/epc-original.pdf#toolbar=0&navpanes=0&scrollbar=0"}
             title={"EPČ "+monthName}
             className="block h-[560px] w-full bg-white"
           />
