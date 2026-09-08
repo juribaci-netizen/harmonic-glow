@@ -12,7 +12,7 @@ export const translations = {
     myProfile: "Profil", profileSubtitle: "Osobné a orchestrálne údaje", fullName: "Meno a priezvisko", instrument: "Nástroj", section: "Sekcia", position: "Pozícia", phone: "Telefón", save: "Uložiť", saving: "Ukladám...", saved: "Uložené",
     type_rehearsal: "Skúška", type_concert: "Koncert", type_recording: "Nahrávanie", type_dress: "Generálka", type_off: "Voľno", type_ip: "Individuálna príprava", type_other: "Iné",
     status_present: "Prítomný", status_absent: "Neprítomný", status_excused: "Ospravedlnený", logDialogTitle: "Zaznamenať pracovný čas", logDialogDesc: "Potvrďte účasť a počet odpracovaných hodín.", notes: "Poznámka", cancel: "Zrušiť", confirm: "Potvrdiť", delete: "Odstrániť",
-    months: ["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"], weekdays: ["Ne","Po","Ut","St","Št","Pi","So"],
+    months: ["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"], weekdays: ["Po","Ut","St","Št","Pi","So","Ne"],
   },
   en: {
     appName: "Worktime", orchestra: "Slovak Philharmonic", practice: "Practice", concerts: "Concerts", todayWorked: "Worked today",
@@ -25,7 +25,7 @@ export const translations = {
     myProfile: "Profile", profileSubtitle: "Personal and orchestral details", fullName: "Full name", instrument: "Instrument", section: "Section", position: "Position", phone: "Phone", save: "Save", saving: "Saving...", saved: "Saved",
     type_rehearsal: "Rehearsal", type_concert: "Concert", type_recording: "Recording", type_dress: "Dress rehearsal", type_off: "Day off", type_ip: "Individual prep", type_other: "Other",
     status_present: "Present", status_absent: "Absent", status_excused: "Excused", logDialogTitle: "Log work time", logDialogDesc: "Confirm attendance and the number of worked hours.", notes: "Notes", cancel: "Cancel", confirm: "Confirm", delete: "Delete",
-    months: ["January","February","March","April","May","June","July","August","September","October","November","December"], weekdays: ["Su","Mo","Tu","We","Th","Fr","Sa"],
+    months: ["January","February","March","April","May","June","July","August","September","October","November","December"], weekdays: ["Mo","Tu","We","Th","Fr","Sa","Su"],
   },
   de: {
     appName: "Worktime", orchestra: "Slowakische Philharmonie", practice: "Üben", concerts: "Konzerte", todayWorked: "Heute gearbeitet",
@@ -38,7 +38,7 @@ export const translations = {
     myProfile: "Profil", profileSubtitle: "Persönliche und orchestrale Angaben", fullName: "Vor- und Nachname", instrument: "Instrument", section: "Stimmgruppe", position: "Position", phone: "Telefon", save: "Speichern", saving: "Speichert...", saved: "Gespeichert",
     type_rehearsal: "Probe", type_concert: "Konzert", type_recording: "Aufnahme", type_dress: "Generalprobe", type_off: "Frei", type_ip: "Individuelle Vorbereitung", type_other: "Sonstiges",
     status_present: "Anwesend", status_absent: "Abwesend", status_excused: "Entschuldigt", logDialogTitle: "Arbeitszeit erfassen", logDialogDesc: "Anwesenheit und Arbeitsstunden bestätigen.", notes: "Notiz", cancel: "Abbrechen", confirm: "Bestätigen", delete: "Löschen",
-    months: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"], weekdays: ["So","Mo","Di","Mi","Do","Fr","Sa"],
+    months: ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"], weekdays: ["Mo","Di","Mi","Do","Fr","Sa","So"],
   },
 } as const
 
