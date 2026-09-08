@@ -23,10 +23,10 @@ const metalColors: Record<string,string> = {
 }
 
 const metalRingColors: Record<string,string> = {
-  gold: "border-[#b8943f]",
-  silver: "border-[#8f969c]",
-  copper: "border-[#b86f43]",
-  titanium: "border-[#66869d]",
+  gold: "border-[#b57b12]",
+  silver: "border-[#68737d]",
+  copper: "border-[#b84e28]",
+  titanium: "border-[#2f7198]",
 }
 
 const metalGroup = (activity:Activity) => {
@@ -101,10 +101,10 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const items = byDate.get(iso) ?? []
           const active = iso === selected
           const isToday = iso === localIso(today)
-          const groups = [...new Set(items.map(item=>metalGroup(item)).filter((group): group is string => Boolean(group)))]
+          const markers = items.map(item=>metalGroup(item)).filter((group): group is string => Boolean(group))
           return <button key={iso} onClick={()=>setSelected(iso)} className="flex h-[58px] flex-col items-center justify-center rounded-[15px]">
             <span className={"flex h-8 w-8 items-center justify-center rounded-full text-[14px] "+(active?"bg-black text-white":isToday?"ring-1 ring-black/25":"")}>{day}</span>
-            <span className="mt-1 flex h-2 items-center gap-1">{groups.map(group=><i key={group} className={"h-2.5 w-2.5 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/>)}</span>
+            <span className="mt-1 flex h-2 items-center gap-1">{markers.map((group,markerIndex)=><i key={`${group}-${markerIndex}`} className={"h-2.5 w-2.5 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/>)}</span>
           </button>
         })}
       </div>
