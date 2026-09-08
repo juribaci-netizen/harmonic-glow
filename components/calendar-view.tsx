@@ -31,6 +31,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
   const today = new Date()
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [selected, setSelected] = useState(localIso(today))
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const year = cursor.getFullYear()
   const month = cursor.getMonth()
 
@@ -83,6 +84,23 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     setCursor(next)
     setSelected(localIso(next))
   }
+  const moveSelectedDay = (offset:number) => {
+    const current = new Date(selected + "T00:00:00")
+    current.setDate(current.getDate() + offset)
+    const nextIso = localIso(current)
+    setSelected(nextIso)
+    if (current.getFullYear() !== year || current.getMonth() !== month) {
+      setCursor(new Date(current.getFullYear(), current.getMonth(), 1))
+    }
+  }
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    if (touchStartX === null) return
+    const delta = event.changedTouches[0].clientX - touchStartX
+    if (Math.abs(delta) > 45) moveSelectedDay(delta < 0 ? 1 : -1)
+    setTouchStartX(null)
+  }
+
 
   return <div className="pb-5">
     <header className="mb-5 flex items-end justify-between pt-3">
@@ -118,7 +136,11 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
       </div>
     </section>
 
-    <section className="mt-4 overflow-hidden rounded-[24px] border border-black/[.05] bg-white shadow-[0_16px_40px_rgba(0,0,0,.05)]">
+    <section
+      className="mt-4 overflow-hidden rounded-[24px] border border-black/[.05] bg-white shadow-[0_16px_40px_rgba(0,0,0,.05)]"
+      onTouchStart={event=>setTouchStartX(event.touches[0].clientX)}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium capitalize text-black/38">
           {selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}
@@ -130,13 +152,13 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           {selectedActivities.length===0 ? (
             <div className="px-5 pb-5 pt-3 text-[12px] text-black/28">Žiadne udalosti</div>
           ) : (
-            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="divide-y divide-black/[.05]">
               {selectedActivities.map(activity=>{
                 const code=serviceCode(activity)
                 const activityType=code==="A"?"Konkurz":code==="Z"?"Zájazd":typeLabel(activity.type)
                 const program=resolvedProgram(activity)
                 return (
-                  <article key={activity.id} className="min-w-[88%] snap-center rounded-[22px] border border-black/[.06] bg-[#fafafa] px-5 py-4">
+                  <article key={activity.id} className="px-5 py-4">
                     <div className="flex items-baseline justify-between gap-4">
                       <p className="text-[10px] uppercase tracking-[.09em] text-black/28">{activityType}</p>
                       {activity.startTime&&<p className="text-[24px] font-normal tracking-[-.035em] text-black">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
@@ -161,9 +183,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
               })}
             </div>
           )}
-          {selectedActivities.length > 1 && (
-            <p className="px-5 pb-4 pt-1 text-center text-[9px] uppercase tracking-[.1em] text-black/22">Potiahni do strany</p>
-          )}
+          <p className="px-5 pb-4 pt-1 text-center text-[9px] uppercase tracking-[.1em] text-black/18">Potiahni do strany pre ďalší deň</p>
         </div>
       </div>
     </section>
