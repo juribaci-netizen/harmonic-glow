@@ -56,7 +56,8 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
   const cells = useMemo(() => {
     const first = new Date(year, month, 1)
     const days = new Date(year, month + 1, 0).getDate()
-    return [...Array(first.getDay()).fill(null), ...Array.from({length:days},(_,i)=>i+1)]
+    const mondayFirstOffset = (first.getDay() + 6) % 7
+    return [...Array(mondayFirstOffset).fill(null), ...Array.from({length:days},(_,i)=>i+1)]
   }, [year, month])
 
   const selectedActivities = byDate.get(selected) ?? []
