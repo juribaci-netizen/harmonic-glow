@@ -11,6 +11,8 @@ const activities = seasonData.map((a, index) => ({
   title: a.title,
   conductor: a.conductor,
   venue: a.venue,
+  program: a.program,
+  notes: a.notes,
 }))
 
 export default async function DashboardPage() {
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
     <AppShell user={{ name: "", email: "" }}>
       <DashboardView
         name=""
+        activities={activities}
         today={today}
         upcoming={upcoming}
         weekActivities={weekActivities}
