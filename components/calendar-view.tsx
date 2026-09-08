@@ -116,6 +116,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
             </span>
           </button>
         })}
+      </div>
     </section>
 
     <section className="mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)]">
@@ -163,7 +164,6 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           )}
 
         </div>
-      </div>
       </div>
     </section>
   </div>
