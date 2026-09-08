@@ -60,10 +60,10 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     dress:t.type_dress, off:t.type_off, ip:t.type_ip, other:t.type_other,
   } as Record<string,string>)[type] ?? type
   const legendLabels = lang === "sk"
-    ? { gold:"Koncert / generálka", silver:"Skúška / práca", graphite:"Voľno / IP", copper:"Konkurz", titanium:"Zájazd / cesta" }
+    ? { gold:"Koncert / generálka", silver:"Skúška / práca", graphite:"Voľno / IP", copper:"Konkurz", titanium:"Zájazd" }
     : lang === "de"
-      ? { gold:"Konzert / Generalprobe", silver:"Probe / Arbeit", graphite:"Frei / IP", copper:"Probespiel", titanium:"Tournee / Reise" }
-      : { gold:"Concert / dress rehearsal", silver:"Rehearsal / work", graphite:"Day off / IP", copper:"Audition", titanium:"Tour / travel" }
+      ? { gold:"Konzert / Generalprobe", silver:"Probe / Arbeit", graphite:"Frei / IP", copper:"Probespiel", titanium:"Tournee" }
+      : { gold:"Concert / dress rehearsal", silver:"Rehearsal / work", graphite:"Day off / IP", copper:"Audition", titanium:"Tour" }
 
   const moveMonth = (offset:number) => {
     const next = new Date(year, month + offset, 1)
