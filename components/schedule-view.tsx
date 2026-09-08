@@ -184,7 +184,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
 
                       return (
                         <article key={a.id} className={"px-4 py-4 "+(subdued?"bg-[#fafafa]":"bg-white")}>
-                          {itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
+                          {index===0&&itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
                           <div className="flex items-baseline justify-between gap-3">
                             <h3 className={(subdued?"text-[15px] font-medium text-black/48":"text-[18px] font-semibold text-black")+" leading-tight tracking-[-.025em]"}>{label}</h3>
                             {time&&<p className={"shrink-0 tabular-nums "+(subdued?"text-[13px] font-normal text-black/38":"text-[15px] font-medium text-black/68")}>{time}</p>}
