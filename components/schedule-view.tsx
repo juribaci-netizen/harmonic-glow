@@ -133,6 +133,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       const program=cleanProgram(a)
                       const notes=cleanNotes(a)
                       const label=cancelled ? "Zrušená" : off ? "Voľno" : typeLabel(a.type)
+                      const repeatedTitle=a.title.trim().toLocaleLowerCase(locale)===label.trim().toLocaleLowerCase(locale)
 
                       return (
                         <article key={a.id} className={"px-4 py-4 "+(off?"bg-[#fafafa]":"bg-white")}>
@@ -141,7 +142,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                             {time&&<p className="shrink-0 text-[15px] font-medium tabular-nums text-black/68">{time}</p>}
                           </div>
 
-                          {!off&&!cancelled&&a.title!==typeLabel(a.type)&&<p className="mt-1 text-[12px] leading-snug text-black/48">{a.title}</p>}
+                          {!off&&!cancelled&&!repeatedTitle&&<p className="mt-1 text-[12px] leading-snug text-black/48">{a.title}</p>}
 
                           {!off&&!cancelled&&a.conductor&&(
                             <p className="mt-2 text-[13px] font-medium text-black/72">
