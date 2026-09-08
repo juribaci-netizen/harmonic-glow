@@ -130,7 +130,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
             <p className="mt-2 text-[11px] text-black/38">Najbližšie služby podľa aktuálneho času</p>
           </div>
           <a
-            href="https://raw.githubusercontent.com/juribaci-netizen/harmonic-glow/main/public/work-plan-2026-2027.pdf"
+            href="/api/work-plan"
             target="_blank"
             rel="noreferrer"
             aria-label="Otvoriť PDF plán práce"
