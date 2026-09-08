@@ -77,6 +77,13 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
   const timeLabel = (a: Activity) =>
     a.startTime ? a.startTime + (a.endTime ? " – " + a.endTime : "") : ""
 
+  const relativeDayLabel = (date: string) => {
+    const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const targetDay = new Date(date + "T00:00:00")
+    const dayDifference = Math.round((targetDay.getTime() - currentDay.getTime()) / 86_400_000)
+    return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(dayDifference, "day")
+  }
+
   const staffingLabel = (a: Activity) => {
     const text = [a.program, a.notes].filter(Boolean).join(" ")
     return text.match(/Obsadenie(?:\s+sláčikov)?\s+[^.]+\.?/i)?.[0] ?? null
@@ -173,13 +180,14 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       const notes=cleanNotes(a)
                       const label=cancelled ? "Zrušená" : off ? "Voľno" : audition ? a.title : typeLabel(a.type)
                       const repeatedTitle=a.title.trim().toLocaleLowerCase(locale)===label.trim().toLocaleLowerCase(locale)
+                      const subdued=off||audition
 
                       return (
-                        <article key={a.id} className={"px-4 py-4 "+(off?"bg-[#fafafa]":"bg-white")}>
-                          {index===0&&itemIndex===0&&<p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[.12em] text-[#9a6c16]">Najbližšie</p>}
+                        <article key={a.id} className={"px-4 py-4 "+(subdued?"bg-[#fafafa]":"bg-white")}>
+                          {itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
                           <div className="flex items-baseline justify-between gap-3">
-                            <h3 className={"text-[18px] font-semibold leading-tight tracking-[-.025em] "+(audition?"text-[#9b5838]":"text-black")}>{label}</h3>
-                            {time&&<p className="shrink-0 text-[15px] font-medium tabular-nums text-black/68">{time}</p>}
+                            <h3 className={(subdued?"text-[15px] font-medium text-black/48":"text-[18px] font-semibold text-black")+" leading-tight tracking-[-.025em]"}>{label}</h3>
+                            {time&&<p className={"shrink-0 tabular-nums "+(subdued?"text-[13px] font-normal text-black/38":"text-[15px] font-medium text-black/68")}>{time}</p>}
                           </div>
 
                           {!off&&!cancelled&&!repeatedTitle&&<p className="mt-1 text-[12px] leading-snug text-black/48">{a.title}</p>}
