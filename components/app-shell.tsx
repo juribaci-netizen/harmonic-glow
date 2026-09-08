@@ -9,7 +9,7 @@ import { House, CalendarDays, ClipboardCheck, Play, UserRound } from "lucide-rea
 
 const navItems = [
   { href: "/", key: "dashboard", icon: House },
-  { href: "/schedule", key: "schedule", icon: CalendarDays },
+  { href: "/calendar", key: "calendar", icon: CalendarDays },
   { href: "/timesheet", key: "timesheet", icon: ClipboardCheck },
   { href: "/videos", key: "videos", icon: Play },
   { href: "/profile", key: "profile", icon: UserRound },
