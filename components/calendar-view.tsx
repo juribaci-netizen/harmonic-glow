@@ -54,6 +54,30 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     dress:t.type_dress, off:t.type_off, ip:t.type_ip, other:t.type_other,
   } as Record<string,string>)[type] ?? type
 
+  const isProgramPlaceholder = (program:string) =>
+    /^(Pokračovanie|Program koncertu|Dodatočne|Koncert bude|Koncert v spolupráci|Koncert v rámci|Príprava programu|Pracovný plán)/i.test(program.trim())
+
+  const resolvedProgram = (activity:Activity) => {
+    const own = activity.program?.trim()
+    if (own && !isProgramPlaceholder(own)) return own
+
+    const candidates = activities
+      .filter(candidate => candidate.id !== activity.id)
+      .filter(candidate => candidate.program?.trim() && !isProgramPlaceholder(candidate.program!))
+      .filter(candidate => {
+        if (activity.conductor) return candidate.conductor === activity.conductor
+        return candidate.type === activity.type
+      })
+      .map(candidate => ({
+        candidate,
+        distance: Math.abs(new Date(candidate.date).getTime() - new Date(activity.date).getTime())
+      }))
+      .filter(item => item.distance <= 14*24*60*60*1000)
+      .sort((a,b)=>a.distance-b.distance)
+
+    return candidates[0]?.candidate.program?.trim() ?? null
+  }
+
   const moveMonth = (offset:number) => {
     const next = new Date(year, month + offset, 1)
     setCursor(next)
@@ -110,16 +134,17 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
               {selectedActivities.map(activity=>{
                 const code=serviceCode(activity)
                 const activityType=code==="A"?"Konkurz":code==="Z"?"Zájazd":typeLabel(activity.type)
+                const program=resolvedProgram(activity)
                 return (
                   <article key={activity.id} className="px-5 py-4">
                     <div className="flex items-baseline justify-between gap-4">
                       <p className="text-[10px] uppercase tracking-[.09em] text-black/28">{activityType}</p>
                       {activity.startTime&&<p className="text-[24px] font-normal tracking-[-.035em] text-black">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
                     </div>
-                    {activity.type!=="off"&&activity.program&&(
+                    {activity.type!=="off"&&program&&(
                       <details className="mt-3">
                         <summary className="cursor-pointer list-none text-[11px] font-medium text-black/48 [&::-webkit-details-marker]:hidden">Program +</summary>
-                        <p className="mt-2 text-[12px] leading-[1.55] text-black/58">{activity.program}</p>
+                        <p className="mt-2 text-[12px] leading-[1.55] text-black/58">{program}</p>
                       </details>
                     )}
                     {activity.conductor&&<p className="mt-3 text-[11px] text-black/42">Dirigent · {activity.conductor}</p>}
