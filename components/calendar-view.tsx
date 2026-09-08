@@ -22,6 +22,13 @@ const metalColors: Record<string,string> = {
   titanium: "bg-gradient-to-br from-[#c6d5df] via-[#66869d] to-[#294353]",
 }
 
+const metalRingColors: Record<string,string> = {
+  gold: "border-[#b8943f]",
+  silver: "border-[#8f969c]",
+  copper: "border-[#b86f43]",
+  titanium: "border-[#66869d]",
+}
+
 const metalGroup = (activity:Activity) => {
   const text = `${activity.title} ${activity.venue ?? ""}`
   if (/konkurz/i.test(text)) return "copper"
@@ -96,13 +103,13 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const groups = [...new Set(items.map(item=>metalGroup(item)).filter((group): group is string => Boolean(group)))]
           return <button key={iso} onClick={()=>setSelected(iso)} className="flex h-[58px] flex-col items-center justify-center rounded-[15px]">
             <span className={"flex h-8 w-8 items-center justify-center rounded-full text-[14px] "+(active?"bg-black text-white":isToday?"ring-1 ring-black/25":"")}>{day}</span>
-            <span className="mt-1 flex h-2 items-center gap-1">{groups.map(group=><i key={group} className={"h-2 w-2 rounded-full ring-1 ring-black/10 "+metalColors[group]}/>)}</span>
+            <span className="mt-1 flex h-2 items-center gap-1">{groups.map(group=><i key={group} className={"h-2.5 w-2.5 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/>)}</span>
           </button>
         })}
       </div>
 
       <div className="grid grid-cols-2 gap-2 border-t border-black/[.05] bg-[#fafafa] px-4 py-4">
-        {(["gold","silver","copper","titanium"] as const).map(group=><span key={group} className="flex min-w-0 items-center gap-2 rounded-xl bg-white px-2.5 py-2 text-[10px] text-black/55 ring-1 ring-black/[.045]"><i className={"h-3 w-3 shrink-0 rounded-full ring-1 ring-black/10 "+metalColors[group]}/><span>{legendLabels[group]}</span></span>)}
+        {(["gold","silver","copper","titanium"] as const).map(group=><span key={group} className="flex min-w-0 items-center gap-2 rounded-xl bg-white px-2.5 py-2 text-[10px] text-black/55 ring-1 ring-black/[.045]"><i className={"h-3.5 w-3.5 shrink-0 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/><span>{legendLabels[group]}</span></span>)}
       </div>
     </section>
 
@@ -113,7 +120,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const group=metalGroup(activity)
           return <article key={activity.id} className="relative border-b border-black/[.05] px-5 py-4 last:border-0">
           {group&&<i className={"absolute bottom-3 left-0 top-3 w-[3px] rounded-r-full "+metalColors[group]}/>} 
-          <div className="flex items-center gap-2">{group&&<i className={"h-2.5 w-2.5 rounded-full ring-1 ring-black/10 "+metalColors[group]}/>}<span className="text-[9px] uppercase tracking-[.08em] text-black/35">{typeLabel(activity.type)}</span></div>
+          <div className="flex items-center gap-2">{group&&<i className={"h-3 w-3 rounded-full border-[1.25px] bg-transparent "+metalRingColors[group]}/>}<span className="text-[9px] uppercase tracking-[.08em] text-black/35">{typeLabel(activity.type)}</span></div>
           {activity.startTime&&<p className="mt-2 text-[24px] leading-none tracking-[-.035em]">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
           <p className="mt-1 text-[14px] text-black/72">{activity.type === "off" ? typeLabel("off") : activity.title}</p>
           {activity.venue&&<p className="mt-2 flex items-center gap-1.5 text-[10px] text-black/38"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
