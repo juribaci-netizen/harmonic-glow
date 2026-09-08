@@ -13,6 +13,7 @@ type Activity = {
   title: string
   conductor: string | null
   venue: string | null
+  program: string | null
 }
 
 const serviceCode = (activity:Activity) => {
@@ -102,7 +103,16 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           return <article key={activity.id} className="relative border-b border-black/[.05] px-5 py-4 last:border-0">
           <span className="text-[9px] uppercase tracking-[.08em] text-black/35">{activityType}</span>
           {activity.startTime&&<p className="mt-2 text-[24px] leading-none tracking-[-.035em]">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
-          <p className="mt-1 text-[14px] text-black/72">{activity.type === "off" ? typeLabel("off") : activity.title}</p>
+          {activity.type === "off" ? (
+            <p className="mt-1 text-[14px] text-black/72">{typeLabel("off")}</p>
+          ) : activity.program ? (
+            <details className="mt-2 border-t border-black/[.06] pt-2">
+              <summary className="cursor-pointer list-none text-[12px] font-medium text-black/55 [&::-webkit-details-marker]:hidden">Program +</summary>
+              <p className="mt-2 text-[12px] leading-[1.5] text-black/60">{activity.program}</p>
+            </details>
+          ) : (
+            <p className="mt-1 text-[14px] text-black/72">{activity.title}</p>
+          )}
           {activity.venue&&<p className="mt-2 flex items-center gap-1.5 text-[10px] text-black/38"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
         </article>})}
       </div>
