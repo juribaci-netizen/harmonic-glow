@@ -141,11 +141,18 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
                       <p className="text-[10px] uppercase tracking-[.09em] text-black/28">{activityType}</p>
                       {activity.startTime&&<p className="text-[24px] font-normal tracking-[-.035em] text-black">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
                     </div>
-                    {activity.type!=="off"&&program&&(
-                      <details className="mt-3">
-                        <summary className="cursor-pointer list-none text-[11px] font-medium text-black/48 [&::-webkit-details-marker]:hidden">Program +</summary>
-                        <p className="mt-2 text-[12px] leading-[1.55] text-black/58">{program}</p>
-                      </details>
+                    {activity.type!=="off" && (
+                      <>
+                        {code==="A" && <p className="mt-2 text-[14px] leading-snug text-black/72">{activity.title}</p>}
+                        {program ? (
+                          <details className="mt-3">
+                            <summary className="cursor-pointer list-none text-[11px] font-medium text-black/48 [&::-webkit-details-marker]:hidden">Program +</summary>
+                            <p className="mt-2 text-[12px] leading-[1.55] text-black/58">{program}</p>
+                          </details>
+                        ) : code!=="A" ? (
+                          <p className="mt-2 text-[14px] leading-snug text-black/72">{activity.title}</p>
+                        ) : null}
+                      </>
                     )}
                     {activity.conductor&&<p className="mt-3 text-[11px] text-black/42">Dirigent · {activity.conductor}</p>}
                     {activity.venue&&<p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-black/32"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
