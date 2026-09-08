@@ -336,3 +336,16 @@ export async function deleteEntry(id: number) {
   revalidatePath("/")
   return { ok: true }
 }
+
+
+export async function updateTimeEntryHours(id: number, hours: number) {
+  const userId = await getUserId()
+  const safeHours = clampHours(Number(hours))
+  await db
+    .update(timeEntry)
+    .set({ hours: String(safeHours), updatedAt: new Date() })
+    .where(and(eq(timeEntry.id, id), eq(timeEntry.userId, userId)))
+  revalidatePath("/timesheet")
+  revalidatePath("/")
+  return { ok: true }
+}
