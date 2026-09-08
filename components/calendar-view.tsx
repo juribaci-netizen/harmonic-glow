@@ -74,7 +74,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
         <button onClick={()=>moveMonth(1)} aria-label="Nasledujúci mesiac" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4f4f5]"><ChevronRight className="h-4 w-4"/></button>
       </div>
 
-      <div className="grid grid-cols-7 px-3.5 pt-4">
+      <div className="grid grid-cols-7 px-3.5 pb-3 pt-4">
         {t.weekdays.map(day=><span key={day} className="py-2.5 text-center text-[11px] font-medium text-black/32">{day}</span>)}
         {cells.map((day,index) => {
           if (!day) return <span key={"blank-"+index}/>
@@ -91,7 +91,6 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           </button>
         })}
       </div>
-
     </section>
 
     <section className="mt-6">
@@ -101,7 +100,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const code=serviceCode(activity)
           const activityType=code==="A"?"Konkurz":code==="Z"?"Zájazd":typeLabel(activity.type)
           return <article key={activity.id} className="relative border-b border-black/[.05] px-5 py-4 last:border-0">
-          <div className="flex items-center gap-2">{code&&<i className="flex h-4 w-4 items-center justify-center rounded-[4px] bg-black text-[8px] font-semibold not-italic text-white">{code}</i>}<span className="text-[9px] uppercase tracking-[.08em] text-black/35">{activityType}</span></div>
+          <span className="text-[9px] uppercase tracking-[.08em] text-black/35">{activityType}</span>
           {activity.startTime&&<p className="mt-2 text-[24px] leading-none tracking-[-.035em]">{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
           <p className="mt-1 text-[14px] text-black/72">{activity.type === "off" ? typeLabel("off") : activity.title}</p>
           {activity.venue&&<p className="mt-2 flex items-center gap-1.5 text-[10px] text-black/38"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
