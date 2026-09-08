@@ -32,6 +32,8 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [selected, setSelected] = useState(localIso(today))
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  const [swipeDirection, setSwipeDirection] = useState<"left"|"right"|null>(null)
+  const [isAnimating, setIsAnimating] = useState(false)
   const year = cursor.getFullYear()
   const month = cursor.getMonth()
 
@@ -85,19 +87,33 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     setSelected(localIso(next))
   }
   const moveSelectedDay = (offset:number) => {
-    const current = new Date(selected + "T00:00:00")
-    current.setDate(current.getDate() + offset)
-    const nextIso = localIso(current)
-    setSelected(nextIso)
-    if (current.getFullYear() !== year || current.getMonth() !== month) {
-      setCursor(new Date(current.getFullYear(), current.getMonth(), 1))
-    }
+    if (isAnimating) return
+    setSwipeDirection(offset > 0 ? "left" : "right")
+    setIsAnimating(true)
+
+    window.setTimeout(() => {
+      const current = new Date(selected + "T00:00:00")
+      current.setDate(current.getDate() + offset)
+      const nextIso = localIso(current)
+      setSelected(nextIso)
+      if (current.getFullYear() !== year || current.getMonth() !== month) {
+        setCursor(new Date(current.getFullYear(), current.getMonth(), 1))
+      }
+
+      window.requestAnimationFrame(() => {
+        setSwipeDirection(offset > 0 ? "right" : "left")
+        window.requestAnimationFrame(() => {
+          setSwipeDirection(null)
+          setIsAnimating(false)
+        })
+      })
+    }, 150)
   }
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
     if (touchStartX === null) return
     const delta = event.changedTouches[0].clientX - touchStartX
-    if (Math.abs(delta) > 45) moveSelectedDay(delta < 0 ? 1 : -1)
+    if (Math.abs(delta) > 36) moveSelectedDay(delta < 0 ? 1 : -1)
     setTouchStartX(null)
   }
 
@@ -137,10 +153,19 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     </section>
 
     <section
-      className="mt-4 overflow-hidden rounded-[24px] border border-black/[.05] bg-white shadow-[0_16px_40px_rgba(0,0,0,.05)]"
+      className="mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)]"
       onTouchStart={event=>setTouchStartX(event.touches[0].clientX)}
       onTouchEnd={handleTouchEnd}
+      style={{touchAction:"pan-y"}}
     >
+      <div
+        className={
+          "transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] " +
+          (swipeDirection==="left" ? "-translate-x-6 opacity-0 scale-[.985]" :
+           swipeDirection==="right" ? "translate-x-6 opacity-0 scale-[.985]" :
+           "translate-x-0 opacity-100 scale-100")
+        }
+      >
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium capitalize text-black/38">
           {selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}
@@ -183,8 +208,11 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
               })}
             </div>
           )}
-          <p className="px-5 pb-4 pt-1 text-center text-[9px] uppercase tracking-[.1em] text-black/18">Potiahni do strany pre ďalší deň</p>
+          <div className="flex items-center justify-center gap-2 px-5 pb-4 pt-1 text-[9px] uppercase tracking-[.1em] text-black/18">
+            <span>‹</span><span>Potiahni pre ďalší deň</span><span>›</span>
+          </div>
         </div>
+      </div>
       </div>
     </section>
   </div>
