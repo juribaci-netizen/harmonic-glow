@@ -63,6 +63,17 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
   const timeLabel = (a: Activity) =>
     a.startTime ? a.startTime + (a.endTime ? " – " + a.endTime : "") : ""
 
+  const staffingLabel = (a: Activity) => {
+    const text = [a.program, a.notes].filter(Boolean).join(" ")
+    return text.match(/Obsadenie(?:\s+sláčikov)?\s+[^.]+\.?/i)?.[0] ?? null
+  }
+
+  const cleanProgram = (a: Activity) =>
+    a.program?.replace(/Obsadenie(?:\s+sláčikov)?\s+[^.]+\.?/i, "").replace(/\s+/g, " ").trim() || null
+
+  const cleanNotes = (a: Activity) =>
+    a.notes?.replace(/Obsadenie(?:\s+sláčikov)?\s+[^.]+\.?/i, "").replace(/\s+/g, " ").trim() || null
+
   return (
     <div className="mx-auto w-full max-w-[430px] pb-6">
       <header className="sticky top-14 z-20 -mx-5 border-b border-black/[.05] bg-white/92 px-5 pb-4 pt-3 backdrop-blur-2xl">
@@ -100,13 +111,13 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                 </div>
               )}
 
-              <section className="mb-3 overflow-hidden rounded-[22px] border border-black/[.055] bg-white shadow-[0_10px_30px_rgba(0,0,0,.03)]">
+              <section className="mb-3 overflow-hidden rounded-[20px] border border-black/[.07] bg-white">
                 <div className="flex">
-                  <div className="flex w-[76px] shrink-0 flex-col items-center justify-center border-r border-black/[.05] bg-[#f7f7f8] py-3">
+                  <div className="flex w-[66px] shrink-0 flex-col items-center justify-start border-r border-black/[.06] bg-[#f7f7f8] py-4">
                     <span className="text-[10px] font-normal uppercase tracking-[.05em] text-black/38">
                       {d.toLocaleDateString(locale,{weekday:"short"}).replace(".","")}
                     </span>
-                    <span className="text-[38px] font-normal leading-none tracking-[-.04em]">{d.getDate()}</span>
+                    <span className="text-[34px] font-normal leading-none tracking-[-.04em]">{d.getDate()}</span>
                     <span className="mt-1 text-[10px] font-normal uppercase tracking-[.05em] text-black/38">
                       {d.toLocaleDateString(locale,{month:"short"}).replace(".","")}
                     </span>
@@ -118,31 +129,46 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       const audition=/konkurz/i.test(a.title)
                       const cancelled=/zruš/i.test((a.title||"")+" "+(a.notes||""))
                       const time=timeLabel(a)
+                      const staffing=staffingLabel(a)
+                      const program=cleanProgram(a)
+                      const notes=cleanNotes(a)
+                      const label=cancelled ? "Zrušená" : off ? "Voľno" : typeLabel(a.type)
 
                       return (
-                        <article key={a.id} className={"px-4 py-3.5 "+(off?"bg-[#fafafa]":"bg-white")}>
-                          {time && (
-                            <p className={"text-[24px] font-normal leading-none tracking-[-.035em] "+(audition?"text-[#d43a2f]":"text-black")}>
-                              {time}
+                        <article key={a.id} className={"px-4 py-4 "+(off?"bg-[#fafafa]":"bg-white")}>
+                          <div className="flex items-baseline justify-between gap-3">
+                            <h3 className={"text-[18px] font-semibold leading-tight tracking-[-.025em] "+(audition?"text-[#9b5838]":"text-black")}>{label}</h3>
+                            {time&&<p className="shrink-0 text-[15px] font-medium tabular-nums text-black/68">{time}</p>}
+                          </div>
+
+                          {!off&&!cancelled&&a.title!==typeLabel(a.type)&&<p className="mt-1 text-[12px] leading-snug text-black/48">{a.title}</p>}
+
+                          {!off&&!cancelled&&a.conductor&&(
+                            <p className="mt-2 text-[13px] font-medium text-black/72">
+                              <span className="font-normal text-black/35">Dirigent</span> · {a.conductor}
                             </p>
                           )}
-                          <p className={"mt-1 text-[14px] font-normal leading-snug "+(audition?"text-[#d43a2f]":"text-black/72")}>
-                            {cancelled ? "Zrušená" : off ? "Voľno" : a.title}
-                          </p>
 
-                          {!off && !cancelled && (
-                            <div className="mt-2 space-y-1.5">
-                              {a.conductor && <p className="text-[11px] text-black/52">Diriguje: {a.conductor}</p>}
-                              {a.venue && <p className="flex items-center gap-1.5 text-[10px] text-black/38"><MapPin className="h-3 w-3"/>{a.venue}</p>}
-                              {a.program && <details className="pt-1">
-                                <summary className="cursor-pointer list-none text-[10px] font-medium text-black/48">Program +</summary>
-                                <p className="mt-2 text-[10px] leading-5 text-black/42">{a.program}</p>
-                              </details>}
-                              {a.notes && <p className="text-[10px] leading-5 text-black/42">{a.notes}</p>}
+                          {!off && !cancelled && program && (
+                            <div className="mt-3 border-t border-black/[.06] pt-3">
+                              <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-black/35">Skladby</p>
+                              <p className="mt-1.5 text-[13px] leading-[1.55] text-black/78">{program}</p>
                             </div>
                           )}
 
-                          <p className="mt-2 text-[9px] uppercase tracking-[.08em] text-black/25">{typeLabel(a.type)}</p>
+                          {!off && !cancelled && staffing && (
+                            <div className="mt-3 rounded-xl bg-[#f1f1ef] px-3 py-2.5">
+                              <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-black/38">Obsadenie</p>
+                              <p className="mt-1 text-[13px] font-medium text-black/75">{staffing.replace(/^Obsadenie(?:\s+sláčikov)?\s*/i, "")}</p>
+                            </div>
+                          )}
+
+                          {!off && !cancelled && (a.venue || notes) && (
+                            <div className="mt-3 space-y-1 text-[10px] leading-relaxed text-black/42">
+                              {a.venue&&<p className="flex items-center gap-1.5"><MapPin className="h-3 w-3"/>{a.venue}</p>}
+                              {notes&&<p>{notes}</p>}
+                            </div>
+                          )}
                         </article>
                       )
                     })}
