@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useI18n } from "@/components/language-provider"
 import { autoFillMonthFromWorkPlan, confirmSuggestedEntry, deleteEntry } from "@/app/actions/time-entries"
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react"
@@ -46,6 +46,35 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
   const confirm=async(id:number)=>{await confirmSuggestedEntry(id);await load(cursor.getFullYear(),cursor.getMonth())}
   const remove=async(id:number)=>{await deleteEntry(id);setEntries(x=>x.filter(e=>e.id!==id))}
+  const point=(e:React.PointerEvent<HTMLCanvasElement>)=>{
+    const canvas=canvasRef.current!
+    const r=canvas.getBoundingClientRect()
+    return {x:(e.clientX-r.left)*(canvas.width/r.width),y:(e.clientY-r.top)*(canvas.height/r.height)}
+  }
+  const beginSign=(e:React.PointerEvent<HTMLCanvasElement>)=>{
+    const canvas=canvasRef.current!
+    canvas.setPointerCapture(e.pointerId)
+    drawingRef.current=true
+    const p=point(e),ctx=canvas.getContext("2d")!
+    ctx.beginPath();ctx.moveTo(p.x,p.y)
+  }
+  const drawSign=(e:React.PointerEvent<HTMLCanvasElement>)=>{
+    if(!drawingRef.current)return
+    const p=point(e),ctx=canvasRef.current!.getContext("2d")!
+    ctx.lineWidth=2.2;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#111"
+    ctx.lineTo(p.x,p.y);ctx.stroke();setHasInk(true)
+  }
+  const endSign=()=>{drawingRef.current=false}
+  const clearSign=()=>{
+    const canvas=canvasRef.current
+    if(canvas)canvas.getContext("2d")!.clearRect(0,0,canvas.width,canvas.height)
+    setHasInk(false)
+  }
+  const confirmSign=()=>{
+    if(!hasInk)return
+    setSigned(true);setSigning(false)
+  }
+
   const exportCsv=()=>{
     const head=["Dátum","Činnosť","Hodiny","Stav"]
     const rows=entries.map(e=>[e.date,e.title,e.hours,e.status].map(x=>'"'+String(x).replaceAll('"','""')+'"').join(','))
@@ -138,10 +167,31 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="mt-4 grid grid-cols-3 gap-2">
         <button className="rounded-[13px] bg-black/[.045] px-2 py-3 text-[10px] font-semibold">Skontrolovať</button>
         <button className="rounded-[13px] bg-black/[.045] px-2 py-3 text-[10px] font-semibold">Upraviť</button>
-        <button className="rounded-[13px] bg-black px-2 py-3 text-[10px] font-semibold text-white">Vytvoriť PDF</button>
+        <button onClick={()=>setSigning(true)} className="rounded-[13px] bg-black px-2 py-3 text-[10px] font-semibold text-white">{signed?"Podpísané ✓":"Podpísať EPČ"}</button>
       </div>
+      {signed&&<p className="mt-3 text-center text-[10px] font-medium text-black/42">Podpis potvrdený · pripravené na vytvorenie PDF</p>}
     </section>
 
     <button onClick={exportCsv} className="w-full py-2 text-center text-[10px] font-medium text-black/28">Exportovať dáta CSV</button>
+
+    {signing&&<div className="fixed inset-0 z-[100] flex items-end bg-black/20 backdrop-blur-[2px]">
+      <div className="w-full rounded-t-[30px] bg-white px-5 pb-[calc(22px+env(safe-area-inset-bottom))] pt-4 shadow-2xl">
+        <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-black/12"/>
+        <div className="mx-auto max-w-md">
+          <p className="text-[10px] font-medium uppercase tracking-[.09em] text-black/30">EPČ · ${monthName}</p>
+          <h3 className="mt-1 text-[23px] font-semibold tracking-[-.035em]">Podpíšte výkaz</h3>
+          <p className="mt-1 text-[11px] leading-relaxed text-black/42">Podpíšte sa prstom alebo stylusom. Podpis sa použije iba pre tento mesačný výkaz.</p>
+          <div className="mt-5 overflow-hidden rounded-[20px] border border-black/[.07] bg-[#fbfbfa]">
+            <canvas ref={canvasRef} width={720} height={260} onPointerDown={beginSign} onPointerMove={drawSign} onPointerUp={endSign} onPointerCancel={endSign} className="block h-[170px] w-full touch-none"/>
+            <div className="mx-5 border-t border-black/10 pb-3 pt-2 text-center text-[9px] text-black/25">podpis zamestnanca</div>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <button onClick={clearSign} className="px-2 py-2 text-[11px] font-medium text-black/38">Vymazať</button>
+            <button onClick={()=>setSigning(false)} className="px-2 py-2 text-[11px] font-medium text-black/38">Zrušiť</button>
+          </div>
+          <button disabled={!hasInk} onClick={confirmSign} className="mt-2 w-full rounded-[16px] bg-black px-4 py-4 text-[12px] font-semibold text-white disabled:opacity-20">Potvrdiť podpis</button>
+        </div>
+      </div>
+    </div>}
   </div>
 }
