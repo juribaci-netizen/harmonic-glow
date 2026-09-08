@@ -32,8 +32,8 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
   const [selected, setSelected] = useState(localIso(today))
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
-  const [swipeDirection, setSwipeDirection] = useState<"left"|"right"|null>(null)
-  const [isAnimating, setIsAnimating] = useState(false)
+  const [dragX, setDragX] = useState(0)
+  const [isSnapping, setIsSnapping] = useState(false)
   const year = cursor.getFullYear()
   const month = cursor.getMonth()
 
@@ -86,37 +86,48 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     setCursor(next)
     setSelected(localIso(next))
   }
-  const moveSelectedDay = (offset:number) => {
-    if (isAnimating) return
-    setSwipeDirection(offset > 0 ? "left" : "right")
-    setIsAnimating(true)
+  const commitDayChange = (offset:number) => {
+    const current = new Date(selected + "T00:00:00")
+    current.setDate(current.getDate() + offset)
+    const nextIso = localIso(current)
+    setSelected(nextIso)
+    if (current.getFullYear() !== year || current.getMonth() !== month) {
+      setCursor(new Date(current.getFullYear(), current.getMonth(), 1))
+    }
+  }
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLElement>) => {
+    if (touchStartX === null || isSnapping) return
+    const delta = event.touches[0].clientX - touchStartX
+    setDragX(Math.max(-110, Math.min(110, delta)))
+  }
+
+  const handleTouchEnd = () => {
+    if (touchStartX === null || isSnapping) return
+    const threshold = 42
+    if (Math.abs(dragX) < threshold) {
+      setIsSnapping(true)
+      setDragX(0)
+      window.setTimeout(()=>setIsSnapping(false),180)
+      setTouchStartX(null)
+      return
+    }
+
+    const offset = dragX < 0 ? 1 : -1
+    setIsSnapping(true)
+    setDragX(dragX < 0 ? -460 : 460)
 
     window.setTimeout(() => {
-      const current = new Date(selected + "T00:00:00")
-      current.setDate(current.getDate() + offset)
-      const nextIso = localIso(current)
-      setSelected(nextIso)
-      if (current.getFullYear() !== year || current.getMonth() !== month) {
-        setCursor(new Date(current.getFullYear(), current.getMonth(), 1))
-      }
-
+      commitDayChange(offset)
+      setDragX(dragX < 0 ? 90 : -90)
       window.requestAnimationFrame(() => {
-        setSwipeDirection(offset > 0 ? "right" : "left")
-        window.requestAnimationFrame(() => {
-          setSwipeDirection(null)
-          setIsAnimating(false)
-        })
+        setDragX(0)
+        window.setTimeout(()=>setIsSnapping(false),180)
       })
-    }, 150)
-  }
+    }, 160)
 
-  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
-    if (touchStartX === null) return
-    const delta = event.changedTouches[0].clientX - touchStartX
-    if (Math.abs(delta) > 36) moveSelectedDay(delta < 0 ? 1 : -1)
     setTouchStartX(null)
   }
-
 
   return <div className="pb-5">
     <header className="mb-5 flex items-end justify-between pt-3">
@@ -154,17 +165,14 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
 
     <section
       className="mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)]"
-      onTouchStart={event=>setTouchStartX(event.touches[0].clientX)}
+      onTouchStart={event=>{if(!isSnapping){setTouchStartX(event.touches[0].clientX);setDragX(0)}}}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{touchAction:"pan-y"}}
     >
       <div
-        className={
-          "transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] " +
-          (swipeDirection==="left" ? "-translate-x-6 opacity-0 scale-[.985]" :
-           swipeDirection==="right" ? "translate-x-6 opacity-0 scale-[.985]" :
-           "translate-x-0 opacity-100 scale-100")
-        }
+        className={isSnapping ? "transition-transform duration-200 ease-out" : ""}
+        style={{transform:`translate3d(${dragX}px,0,0)`}}
       >
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium capitalize text-black/38">
@@ -208,9 +216,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
               })}
             </div>
           )}
-          <div className="flex items-center justify-center gap-2 px-5 pb-4 pt-1 text-[9px] uppercase tracking-[.1em] text-black/18">
-            <span>‹</span><span>Potiahni pre ďalší deň</span><span>›</span>
-          </div>
+          <div className="px-5 pb-4 pt-1 text-center text-[9px] text-black/16">‹  ›</div>
         </div>
       </div>
       </div>
