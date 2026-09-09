@@ -16,6 +16,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [editing,setEditing]=useState(false)
   const [draftHours,setDraftHours]=useState<Record<number,string>>({})
   const [hasInk,setHasInk]=useState(false)
+  const [selectedDate,setSelectedDate]=useState<string|null>(null)
   const canvasRef=useRef<HTMLCanvasElement|null>(null)
   const drawingRef=useRef(false)
   const locale=lang==="sk"?"sk-SK":lang==="de"?"de-DE":"en-GB"
@@ -106,6 +107,26 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     return hh(start)+"–"+hh(end)
   }
 
+  const selectedEntries=useMemo(()=>selectedDate?confirmed.filter(e=>e.date===selectedDate):[],[selectedDate,confirmed])
+
+  const openDay=(date:string)=>{
+    const next:Record<number,string>={}
+    confirmed.filter(e=>e.date===date).forEach(e=>next[e.id]=String(Number(e.hours)))
+    setDraftHours(next)
+    setSelectedDate(date)
+  }
+
+  const saveSelectedDay=async()=>{
+    for(const e of selectedEntries){
+      const raw=draftHours[e.id]
+      if(raw==null) continue
+      const next=Number(raw)
+      if(Number.isFinite(next) && next!==Number(e.hours)) await updateTimeEntryHours(e.id,next)
+    }
+    await load(cursor.getFullYear(),cursor.getMonth())
+    setSelectedDate(null)
+  }
+
   const visibleDays=grouped.filter(([date])=>{
     const d=new Date(date+"T23:59:59")
     return cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear() && cursor.getMonth()<today.getMonth()) || d<=today
@@ -164,6 +185,21 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                     ]
                   })}
                 </div>
+                <div className="absolute inset-0 z-20">
+                  {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
+                    const date=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
+                    const isPast=cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear()&&cursor.getMonth()<today.getMonth()) || new Date(date+"T23:59:59")<=today
+                    const top=19.34+(day-1)*2.18
+                    return <button
+                      key={date}
+                      disabled={!isPast}
+                      onClick={()=>openDay(date)}
+                      className="absolute left-[9%] right-[6%] rounded-[3px] bg-transparent active:bg-black/[.045] disabled:pointer-events-none"
+                      style={{top:top+"%",height:"2.05%"}}
+                      aria-label={"Otvoriť EPČ "+day+". deň"}
+                    />
+                  })}
+                </div>
               </div>
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-3 block w-full rounded-[13px] bg-black px-3 py-3 text-center text-[10px] font-semibold text-white">
                 Otvoriť živé PDF
@@ -184,6 +220,40 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <button onClick={()=>setSigning(true)} className="mt-4 w-full rounded-[15px] bg-black px-4 py-3.5 text-[11px] font-semibold text-white">{signed?"Podpísané ✓":"Podpísať EPČ"}</button>
       </div>
     </section>
+
+    {selectedDate&&<div className="fixed inset-0 z-[95] flex items-end bg-black/20 backdrop-blur-[2px]">
+      <div className="w-full rounded-t-[30px] bg-white px-5 pb-[calc(22px+env(safe-area-inset-bottom))] pt-4 shadow-2xl">
+        <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-black/12"/>
+        <div className="mx-auto max-w-md">
+          <p className="text-[10px] font-medium uppercase tracking-[.09em] text-black/30">EPČ · {selectedDate}</p>
+          <h3 className="mt-1 text-[23px] font-semibold tracking-[-.035em]">Detail dňa</h3>
+          <p className="mt-1 text-[11px] text-black/42">Ťuknutý riadok z formulára. Služby sa označujú X automaticky podľa pracovného plánu.</p>
+          <div className="mt-5 space-y-2">
+            {selectedEntries.length===0?<div className="rounded-[16px] bg-black/[.03] p-4 text-[11px] text-black/40">Žiadna pracovná udalosť. Tento deň zostáva v EPČ prázdny.</div>:selectedEntries.map(e=><div key={e.id} className="rounded-[16px] bg-black/[.03] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-semibold">{e.type==="individual"||e.type==="ip"?"Individuálna príprava":e.title}</p>
+                  <p className="mt-0.5 text-[9px] text-black/35">{e.type==="individual"||e.type==="ip"?"IP":"Služba · X v EPČ"}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    inputMode="decimal"
+                    value={draftHours[e.id]??String(Number(e.hours))}
+                    onChange={ev=>setDraftHours(x=>({...x,[e.id]:ev.target.value}))}
+                    className="w-14 rounded-lg border border-black/10 bg-white px-2 py-1.5 text-right text-[10px] outline-none"
+                  />
+                  <span className="text-[9px] text-black/30">h</span>
+                </div>
+              </div>
+            </div>)}
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <button onClick={()=>setSelectedDate(null)} className="rounded-[15px] bg-black/[.045] px-4 py-3 text-[11px] font-semibold">Zavrieť</button>
+            <button onClick={saveSelectedDay} className="rounded-[15px] bg-black px-4 py-3 text-[11px] font-semibold text-white">Uložiť</button>
+          </div>
+        </div>
+      </div>
+    </div>}
 
     {signing&&<div className="fixed inset-0 z-[100] flex items-end bg-black/20 backdrop-blur-[2px]">
       <div className="w-full rounded-t-[30px] bg-white px-5 pb-[calc(22px+env(safe-area-inset-bottom))] pt-4 shadow-2xl">
