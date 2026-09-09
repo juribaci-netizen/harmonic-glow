@@ -160,7 +160,7 @@
   width:10px;height:10px;border-radius:999px;background:#1f49ff;
 }
 
-/* EPČ header alignment: month, year and employee name lowered onto the printed lines. */
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(1){ top:5.380% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:5.380% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:8.767% !important; }
+/* EPČ header alignment: month, year and employee name lowered and reduced to fit the printed lines. */
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(1){ top:5.750% !important; font-size:clamp(5px,.85vw,10px) !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:5.750% !important; font-size:clamp(5px,.85vw,10px) !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:9.140% !important; font-size:clamp(6px,.95vw,11px) !important; }
