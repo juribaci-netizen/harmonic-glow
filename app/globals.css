@@ -159,3 +159,8 @@
 .art-dot{
   width:10px;height:10px;border-radius:999px;background:#1f49ff;
 }
+
+/* EPČ header alignment: lower month, year and employee name slightly on the printed lines. */
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(1){ top:4.690% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:4.690% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:8.077% !important; }
