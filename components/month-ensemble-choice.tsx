@@ -19,24 +19,24 @@ const OPTIONS: EnsembleOption[] = [
     label: "Orchester",
     labelLeft: "59.4235%",
     labelWidth: "7.7676%",
-    frameLeft: "58.95%",
-    frameWidth: "8.72%",
+    frameLeft: "58.40%",
+    frameWidth: "9.82%",
   },
   {
     value: "zbor",
     label: "Zbor",
     labelLeft: "70.0905%",
     labelWidth: "3.6553%",
-    frameLeft: "69.62%",
-    frameWidth: "4.60%",
+    frameLeft: "69.22%",
+    frameWidth: "5.40%",
   },
   {
     value: "sko",
     label: "SKO",
     labelLeft: "78.5822%",
     labelWidth: "3.7586%",
-    frameLeft: "78.10%",
-    frameWidth: "4.72%",
+    frameLeft: "77.70%",
+    frameWidth: "5.52%",
   },
 ]
 
@@ -94,7 +94,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       Object.assign(cover.style, {
         position: "absolute",
         left: "58.15%",
-        top: "8.30%",
+        top: "11.67%",
         width: "25.25%",
         height: "2.55%",
         background: "#fff",
@@ -108,7 +108,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         Object.assign(label.style, {
           position: "absolute",
           left: option.labelLeft,
-          top: "9.1448%",
+          top: "12.5148%",
           width: option.labelWidth,
           height: "1.2543%",
           display: "flex",
@@ -129,7 +129,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       frame.id = "epc-ensemble-selection-frame"
       Object.assign(frame.style, {
         position: "absolute",
-        top: "8.82%",
+        top: "12.19%",
         height: "1.95%",
         border: "1px solid #111",
         boxSizing: "border-box",
@@ -178,7 +178,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         Object.assign(hit.style, {
           position: "absolute",
           left: "58.05%",
-          top: "8.24%",
+          top: "11.61%",
           width: "25.45%",
           height: "2.72%",
           zIndex: "40",
