@@ -29,11 +29,21 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     await autoFillMonthFromWorkPlan(y,m)
     const res=await fetch("/api/timesheet?year="+y+"&month="+m)
     if(res.ok)setEntries(await res.json())
+    try{
+      const saved=window.localStorage.getItem("epc-signature:"+y+"-"+m)
+      setSignatureData(saved)
+      setSigned(!!saved)
+    }catch{
+      setSignatureData(null)
+      setSigned(false)
+    }
   }
 
   useEffect(()=>{load(cursor.getFullYear(),cursor.getMonth())},[cursor])
 
   const monthName=cursor.toLocaleDateString(locale,{month:"long",year:"numeric"})
+  const epcMonths=["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"]
+  const epcMonthName=epcMonths[cursor.getMonth()]
   const confirmed=useMemo(()=>entries.filter(e=>e.status!=="suggested"&&e.status!=="removed"),[entries])
   const total=useMemo(()=>confirmed.reduce((s,e)=>s+Number(e.hours),0),[confirmed])
   const grouped=useMemo(()=>Array.from(confirmed.reduce((m,e)=>{
@@ -88,7 +98,10 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const confirmSign=()=>{
     if(!hasInk)return
     const canvas=canvasRef.current
-    if(canvas)setSignatureData(canvas.toDataURL("image/png"))
+    if(!canvas)return
+    const data=canvas.toDataURL("image/png")
+    try{window.localStorage.setItem("epc-signature:"+cursor.getFullYear()+"-"+cursor.getMonth(),data)}catch{}
+    setSignatureData(data)
     setSigned(true);setSigning(false)
   }
 
@@ -176,53 +189,97 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           {(()=>{
             const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()
             return <>
-              <div className={"relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white "+(pdfEditing?"ring-2 ring-black/10":"")}>
+              <div className={"relative mx-auto aspect-[595.32/841.92] w-full overflow-hidden bg-white "+(pdfEditing?"ring-2 ring-black/10":"")}>
                 <img
                   src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ"
-                  alt="EPČ"
+                  alt="Originálny formulár EPČ 2.1"
                   className="absolute inset-0 h-full w-full object-fill"
                 />
-                <div className={"absolute inset-0 text-black "+(pdfEditing?"pointer-events-auto":"pointer-events-none")}>
-                  <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
-                  <span className="absolute left-[56.5%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[44.5%] top-[9.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
-                  <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
+
+                {/* Header fields — exact rectangles from the original AcroForm */}
+                <div className="pointer-events-none absolute inset-0 text-black">
+                  <span className="absolute left-[38.948%] top-[5.304%] -translate-x-1/2 -translate-y-1/2 text-[clamp(6px,1.05vw,12px)] font-medium">{epcMonthName}</span>
+                  <span className="absolute left-[54.340%] top-[5.304%] -translate-x-1/2 -translate-y-1/2 text-[clamp(6px,1.05vw,12px)] font-medium">{cursor.getFullYear()}</span>
+                  <span className="absolute left-[38.949%] top-[8.693%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.15vw,13px)] font-medium">Marek Juráň</span>
+                  <span className="absolute left-[58.759%] top-[8.527%] h-[2.096%] w-[9.221%] rounded-[1px] border border-black/65" />
                   {signed&&signatureData&&<img
                     src={signatureData}
                     alt="Podpis zamestnanca"
-                    className="absolute left-[58.5%] top-[86.9%] h-[4.2%] w-[22%] object-contain"
+                    className="absolute left-[54.298%] top-[86.172%] h-[3.246%] w-[30.426%] object-contain object-left"
                   />}
-                  {visibleDays.flatMap(([date,es])=>{
-                    const day=Number(date.slice(-2))
-                    const y=20.45+(day-1)*2.18
-                    const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
-                    const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
-                    const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
-                    return [
-                      ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                      ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[29.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                      ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
-                    ]
-                  })}
                 </div>
-                <div className="absolute inset-0 z-20">
-                  {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
-                    const date=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
-                    const isPast=cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear()&&cursor.getMonth()<today.getMonth()) || new Date(date+"T23:59:59")<=today
-                    const top=19.34+(day-1)*2.18
-                    return <button
-                      key={date}
+
+                {/* Exact original form controls */}
+                {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
+                  const date=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
+                  const isPast=cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear()&&cursor.getMonth()<today.getMonth()) || new Date(date+"T23:59:59")<=today
+                  const dayEntries=entries.filter(e=>e.date===date&&e.status!=="suggested")
+                  const work=dayEntries.filter(e=>e.type!=="individual"&&e.type!=="ip").sort((a,b)=>String(a.startTime??"").localeCompare(String(b.startTime??"")))
+                  const ips=dayEntries.filter(e=>e.type==="individual"||e.type==="ip").sort((a,b)=>String(a.startTime??"").localeCompare(String(b.startTime??"")))
+                  const rowTop=17.186+(day-1)*2.0829
+                  const cb1=!!work[0]&&work[0].status!=="removed"
+                  const cb2=!!work[1]&&work[1].status!=="removed"
+                  const ip1=ips[0]&&ips[0].status!=="removed"&&ips[0].startTime&&ips[0].endTime ? ips[0].startTime+"-"+ips[0].endTime : ""
+                  const ip2=ips[1]&&ips[1].status!=="removed"&&ips[1].startTime&&ips[1].endTime ? ips[1].startTime+"-"+ips[1].endTime : ""
+                  const morningOpts=["","04:00-08:00","06:00-10:00","08:00-12:00","10:00-14:00"]
+                  const afternoonOpts=["","12:00-16:00","14:00-18:00","16:00-20:00","18:00-22:00","20:00-24:00"]
+                  const saveRange=async(slot:1|2,value:string)=>{
+                    const parts=value?value.split("-"):["",""]
+                    await setManualIpTime(date,slot,parts[0]||null,parts[1]||null)
+                    await load(cursor.getFullYear(),cursor.getMonth())
+                  }
+                  return <div key={date}>
+                    <button
+                      disabled={!pdfEditing||!isPast}
+                      onClick={async()=>{await setManualService(date,1,!cb1);await load(cursor.getFullYear(),cursor.getMonth())}}
+                      className={"absolute flex items-center justify-center disabled:pointer-events-none "+(pdfEditing?"hover:bg-black/[.04]":"")}
+                      style={{left:"16.960%",top:rowTop+"%",width:"7.648%",height:"1.987%"}}
+                      aria-label={date+" 1. služba"}
+                    >
+                      {cb1&&<span className="text-[clamp(7px,1.35vw,12px)] font-bold leading-none">X</span>}
+                    </button>
+                    <button
+                      disabled={!pdfEditing||!isPast}
+                      onClick={async()=>{await setManualService(date,2,!cb2);await load(cursor.getFullYear(),cursor.getMonth())}}
+                      className={"absolute flex items-center justify-center disabled:pointer-events-none "+(pdfEditing?"hover:bg-black/[.04]":"")}
+                      style={{left:"24.760%",top:(rowTop+.026)+"%",width:"7.641%",height:"1.970%"}}
+                      aria-label={date+" 2. služba"}
+                    >
+                      {cb2&&<span className="text-[clamp(7px,1.35vw,12px)] font-bold leading-none">X</span>}
+                    </button>
+
+                    {pdfEditing?<select
                       disabled={!isPast}
-                      onClick={()=>openDay(date)}
-                      className="absolute left-[9%] right-[6%] rounded-[3px] bg-transparent active:bg-black/[.045] disabled:pointer-events-none"
-                      style={{top:top+"%",height:"2.05%"}}
-                      aria-label={"Otvoriť EPČ "+day+". deň"}
-                    />
-                  })}
-                </div>
+                      value={ip1}
+                      onChange={e=>saveRange(1,e.target.value)}
+                      className="absolute appearance-none border-0 bg-transparent px-[2px] text-[clamp(4px,.85vw,8px)] outline-none"
+                      style={{left:"38.394%",top:(rowTop-.017)+"%",width:"20.524%",height:"2.004%"}}
+                      aria-label={date+" individuálna príprava 1"}
+                    >
+                      {morningOpts.map(v=><option key={v} value={v}>{v}</option>)}
+                    </select>:ip1&&<span
+                      className="pointer-events-none absolute flex items-center px-[2px] text-[clamp(4px,.85vw,8px)]"
+                      style={{left:"38.394%",top:(rowTop-.017)+"%",width:"20.524%",height:"2.004%"}}
+                    >{ip1}</span>}
+
+                    {pdfEditing?<select
+                      disabled={!isPast}
+                      value={ip2}
+                      onChange={e=>saveRange(2,e.target.value)}
+                      className="absolute appearance-none border-0 bg-transparent px-[2px] text-[clamp(4px,.85vw,8px)] outline-none"
+                      style={{left:"64.867%",top:(rowTop+.052)+"%",width:"20.047%",height:"1.918%"}}
+                      aria-label={date+" individuálna príprava 2"}
+                    >
+                      {afternoonOpts.map(v=><option key={v} value={v}>{v}</option>)}
+                    </select>:ip2&&<span
+                      className="pointer-events-none absolute flex items-center px-[2px] text-[clamp(4px,.85vw,8px)]"
+                      style={{left:"64.867%",top:(rowTop+.052)+"%",width:"20.047%",height:"1.918%"}}
+                    >{ip2}</span>}
+                  </div>
+                })}
               </div>
               <button onClick={()=>setPdfEditing(v=>!v)} className="mt-3 block w-full rounded-[13px] bg-black/[.06] px-3 py-3 text-center text-[10px] font-semibold">
-                {pdfEditing?"Hotovo":"Upraviť priamo v EPČ"}
+                {pdfEditing?"Hotovo":"Upraviť originálne polia"}
               </button>
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-3 block w-full rounded-[13px] bg-black px-3 py-3 text-center text-[10px] font-semibold text-white">
                 Otvoriť živé PDF
