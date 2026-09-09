@@ -53,7 +53,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       Object.assign(clean.style, {
         position: "absolute",
         left: "57.65%",
-        top: "7.72%",
+        top: "8.20%",
         width: "11.35%",
         height: "3.65%",
         background: "#fff",
