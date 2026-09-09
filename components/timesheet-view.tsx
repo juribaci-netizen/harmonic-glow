@@ -190,7 +190,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   {signed&&signatureData&&<img
                     src={signatureData}
                     alt="Podpis zamestnanca"
-                    className="absolute left-[61.5%] top-[86.9%] h-[4.2%] w-[22%] object-contain"
+                    className="absolute left-[58.5%] top-[86.9%] h-[4.2%] w-[22%] object-contain"
                   />}
                   {visibleDays.flatMap(([date,es])=>{
                     const day=Number(date.slice(-2))
