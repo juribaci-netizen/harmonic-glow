@@ -14,6 +14,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [signing,setSigning]=useState(false)
   const [signed,setSigned]=useState(false)
   const [editing,setEditing]=useState(false)
+  const [pdfEditing,setPdfEditing]=useState(false)
   const [draftHours,setDraftHours]=useState<Record<number,string>>({})
   const [hasInk,setHasInk]=useState(false)
   const [selectedDate,setSelectedDate]=useState<string|null>(null)
@@ -161,13 +162,13 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           {(()=>{
             const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()
             return <>
-              <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white">
+              <div className={"relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white "+(pdfEditing?"ring-2 ring-black/10":"")}>
                 <img
                   src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ"
                   alt="EPČ"
                   className="absolute inset-0 h-full w-full object-fill"
                 />
-                <div className="pointer-events-none absolute inset-0 text-black">
+                <div className={"absolute inset-0 text-black "+(pdfEditing?"pointer-events-auto":"pointer-events-none")}>
                   <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
                   <span className="absolute left-[56.5%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
                   <span className="absolute left-[44.5%] top-[9.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
@@ -201,6 +202,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   })}
                 </div>
               </div>
+              <button onClick={()=>setPdfEditing(v=>!v)} className="mt-3 block w-full rounded-[13px] bg-black/[.06] px-3 py-3 text-center text-[10px] font-semibold">
+                {pdfEditing?"Hotovo":"Upraviť priamo v EPČ"}
+              </button>
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-3 block w-full rounded-[13px] bg-black px-3 py-3 text-center text-[10px] font-semibold text-white">
                 Otvoriť živé PDF
               </a>
