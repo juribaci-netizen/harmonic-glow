@@ -141,8 +141,8 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
             <span className="text-[11px] font-semibold">EPČ · {monthName}</span>
             <span className="text-[9px] text-white/45">priebežný náhľad</span>
           </div>
-          <div className="max-h-[72vh] overflow-auto p-3 [webkit-overflow-scrolling:touch]">
-            <div className="relative mx-auto aspect-[768/1024] w-full min-w-[520px] overflow-hidden bg-white shadow-[0_8px_30px_rgba(0,0,0,.45)]">
+          <div className="p-3">
+            <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white shadow-[0_8px_30px_rgba(0,0,0,.45)]">
               <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
               <div className="pointer-events-none absolute inset-0 text-black">
                 <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
