@@ -4,10 +4,40 @@ import { useEffect, useState } from "react"
 
 type Ensemble = "orchester" | "zbor" | "sko"
 
-const OPTIONS: { value: Ensemble; label: string }[] = [
-  { value: "orchester", label: "Orchester" },
-  { value: "zbor", label: "Zbor" },
-  { value: "sko", label: "SKO" },
+type EnsembleOption = {
+  value: Ensemble
+  label: string
+  labelLeft: string
+  labelWidth: string
+  frameLeft: string
+  frameWidth: string
+}
+
+const OPTIONS: EnsembleOption[] = [
+  {
+    value: "orchester",
+    label: "Orchester",
+    labelLeft: "59.4235%",
+    labelWidth: "7.7676%",
+    frameLeft: "58.95%",
+    frameWidth: "8.72%",
+  },
+  {
+    value: "zbor",
+    label: "Zbor",
+    labelLeft: "70.0905%",
+    labelWidth: "3.6553%",
+    frameLeft: "69.62%",
+    frameWidth: "4.60%",
+  },
+  {
+    value: "sko",
+    label: "SKO",
+    labelLeft: "78.5822%",
+    labelWidth: "3.7586%",
+    frameLeft: "78.10%",
+    frameWidth: "4.72%",
+  },
 ]
 
 const MONTHS = [
@@ -15,7 +45,10 @@ const MONTHS = [
   "júl", "august", "september", "október", "november", "december",
 ]
 
-const ensembleKey = (year: number, month: number) => `epc-ensemble-v2:${year}-${month}`
+const ensembleKey = (year: number, month: number) => `epc-ensemble-v3:${year}-${month}`
+
+const isEnsemble = (value: string | null): value is Ensemble =>
+  value === "orchester" || value === "zbor" || value === "sko"
 
 export function MonthEnsembleChoice({ year, month }: { year: number; month: number }) {
   const [open, setOpen] = useState(false)
@@ -44,45 +77,82 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       }
     }
 
-    const ensureCleanOrchester = (overlay: HTMLElement) => {
-      let clean = overlay.querySelector<HTMLDivElement>("#epc-orchester-clean-cover")
-      if (clean) return clean
+    const ensureCleanLayer = (overlay: HTMLElement) => {
+      let layer = overlay.querySelector<HTMLDivElement>("#epc-ensemble-clean-layer")
+      if (layer) return layer
 
-      clean = document.createElement("div")
-      clean.id = "epc-orchester-clean-cover"
-      Object.assign(clean.style, {
+      layer = document.createElement("div")
+      layer.id = "epc-ensemble-clean-layer"
+      Object.assign(layer.style, {
         position: "absolute",
-        left: "59.10%",
-        top: "9.10%",
-        width: "11.35%",
-        height: "3.65%",
-        background: "#fff",
+        inset: "0",
         zIndex: "18",
         pointerEvents: "none",
-        boxSizing: "border-box",
       })
 
-      const label = document.createElement("span")
-      label.textContent = "Orchester"
-      Object.assign(label.style, {
+      const cover = document.createElement("div")
+      Object.assign(cover.style, {
         position: "absolute",
-        left: "10%",
-        right: "4%",
-        top: "29%",
-        height: "44%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#111",
-        fontFamily: "Arial, Helvetica, sans-serif",
-        fontSize: "clamp(5px,.82vw,9px)",
-        fontWeight: "400",
-        lineHeight: "1",
-        whiteSpace: "nowrap",
+        left: "58.15%",
+        top: "8.30%",
+        width: "25.25%",
+        height: "2.55%",
+        background: "#fff",
       })
-      clean.appendChild(label)
-      overlay.appendChild(clean)
-      return clean
+      layer.appendChild(cover)
+
+      OPTIONS.forEach(option => {
+        const label = document.createElement("span")
+        label.textContent = option.label
+        label.dataset.epcEnsembleLabel = option.value
+        Object.assign(label.style, {
+          position: "absolute",
+          left: option.labelLeft,
+          top: "9.1448%",
+          width: option.labelWidth,
+          height: "1.2543%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#111",
+          fontFamily: "Arial, Helvetica, sans-serif",
+          fontSize: "clamp(5px,.82vw,9px)",
+          fontWeight: "400",
+          lineHeight: "1",
+          whiteSpace: "nowrap",
+          zIndex: "19",
+        })
+        layer.appendChild(label)
+      })
+
+      const frame = document.createElement("div")
+      frame.id = "epc-ensemble-selection-frame"
+      Object.assign(frame.style, {
+        position: "absolute",
+        top: "8.82%",
+        height: "1.95%",
+        border: "1px solid #111",
+        boxSizing: "border-box",
+        display: "none",
+        zIndex: "20",
+      })
+      layer.appendChild(frame)
+
+      overlay.appendChild(layer)
+      return layer
+    }
+
+    const setFrame = (layer: HTMLElement, value: Ensemble | null) => {
+      const frame = layer.querySelector<HTMLElement>("#epc-ensemble-selection-frame")
+      if (!frame) return
+      const option = value ? OPTIONS.find(item => item.value === value) : undefined
+      if (!option) {
+        frame.style.display = "none"
+        return
+      }
+      frame.style.left = option.frameLeft
+      frame.style.width = option.frameWidth
+      frame.style.display = "block"
     }
 
     const sync = () => {
@@ -91,18 +161,13 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
 
       setActiveYear(shownYear)
       setActiveMonth(shownMonth)
-      ensureCleanOrchester(overlay)
+      delete document.documentElement.dataset.epcEnsemble
 
-      const saved = window.localStorage.getItem(ensembleKey(shownYear, shownMonth)) as Ensemble | null
-      const valid = saved === "orchester" || saved === "zbor" || saved === "sko"
-
-      if (valid) {
-        document.documentElement.dataset.epcEnsemble = saved
-        setSelected(saved)
-      } else {
-        delete document.documentElement.dataset.epcEnsemble
-        setSelected(null)
-      }
+      const layer = ensureCleanLayer(overlay)
+      const saved = window.localStorage.getItem(ensembleKey(shownYear, shownMonth))
+      const value = isEnsemble(saved) ? saved : null
+      setSelected(value)
+      setFrame(layer, value)
 
       let hit = overlay.querySelector<HTMLButtonElement>("#epc-ensemble-hit-area")
       if (!hit) {
@@ -112,10 +177,10 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         hit.setAttribute("aria-label", "Vybrať súbor: Orchester, Zbor alebo SKO")
         Object.assign(hit.style, {
           position: "absolute",
-          left: "57.8%",
-          top: "8.0%",
-          width: "26.2%",
-          height: "3.4%",
+          left: "58.05%",
+          top: "8.24%",
+          width: "25.45%",
+          height: "2.72%",
           zIndex: "40",
           pointerEvents: "auto",
           background: "transparent",
@@ -129,8 +194,8 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         warning.textContent = "!"
         Object.assign(warning.style, {
           position: "absolute",
-          right: "-5%",
-          top: "-24%",
+          right: "-2px",
+          top: "-7px",
           width: "16px",
           height: "16px",
           borderRadius: "999px",
@@ -148,18 +213,18 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         hit.appendChild(warning)
         hit.addEventListener("click", () => {
           const current = readDisplayedMonth()
-          const currentSaved = window.localStorage.getItem(ensembleKey(current.shownYear, current.shownMonth)) as Ensemble | null
-          const currentValid = currentSaved === "orchester" || currentSaved === "zbor" || currentSaved === "sko"
+          const currentSaved = window.localStorage.getItem(ensembleKey(current.shownYear, current.shownMonth))
+          const currentValue = isEnsemble(currentSaved) ? currentSaved : null
           setActiveYear(current.shownYear)
           setActiveMonth(current.shownMonth)
-          setSelected(currentValid ? currentSaved : null)
+          setSelected(currentValue)
           setOpen(true)
         })
         overlay.appendChild(hit)
       }
 
       const warning = hit.querySelector<HTMLElement>('[data-epc-ensemble-warning="true"]')
-      if (warning) warning.style.display = valid ? "none" : "flex"
+      if (warning) warning.style.display = value ? "none" : "flex"
     }
 
     const attach = () => {
@@ -176,7 +241,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       cleanupOverlay = () => {
         observer?.disconnect()
         overlay.querySelector("#epc-ensemble-hit-area")?.remove()
-        overlay.querySelector("#epc-orchester-clean-cover")?.remove()
+        overlay.querySelector("#epc-ensemble-clean-layer")?.remove()
       }
     }
 
@@ -186,10 +251,23 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
 
   const choose = (value: Ensemble) => {
     window.localStorage.setItem(ensembleKey(activeYear, activeMonth), value)
-    document.documentElement.dataset.epcEnsemble = value
     setSelected(value)
-    const warning = document.querySelector<HTMLElement>('[data-epc-ensemble-warning="true"]')
+
+    const overlay = document.querySelector<HTMLElement>(
+      '[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]'
+    )
+    const layer = overlay?.querySelector<HTMLElement>("#epc-ensemble-clean-layer")
+    const frame = layer?.querySelector<HTMLElement>("#epc-ensemble-selection-frame")
+    const option = OPTIONS.find(item => item.value === value)
+    if (frame && option) {
+      frame.style.left = option.frameLeft
+      frame.style.width = option.frameWidth
+      frame.style.display = "block"
+    }
+
+    const warning = overlay?.querySelector<HTMLElement>('[data-epc-ensemble-warning="true"]')
     if (warning) warning.style.display = "none"
+
     window.dispatchEvent(new CustomEvent("epc-ensemble-change", {
       detail: { year: activeYear, month: activeMonth, value },
     }))
