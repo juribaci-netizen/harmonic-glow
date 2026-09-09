@@ -44,12 +44,54 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       }
     }
 
+    const ensureCleanOrchester = (overlay: HTMLElement) => {
+      let clean = overlay.querySelector<HTMLDivElement>("#epc-orchester-clean-cover")
+      if (clean) return clean
+
+      clean = document.createElement("div")
+      clean.id = "epc-orchester-clean-cover"
+      Object.assign(clean.style, {
+        position: "absolute",
+        left: "57.65%",
+        top: "7.72%",
+        width: "11.35%",
+        height: "3.65%",
+        background: "#fff",
+        zIndex: "18",
+        pointerEvents: "none",
+        boxSizing: "border-box",
+      })
+
+      const label = document.createElement("span")
+      label.textContent = "Orchester"
+      Object.assign(label.style, {
+        position: "absolute",
+        left: "10%",
+        right: "4%",
+        top: "29%",
+        height: "44%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#111",
+        fontFamily: "Arial, Helvetica, sans-serif",
+        fontSize: "clamp(5px,.82vw,9px)",
+        fontWeight: "400",
+        lineHeight: "1",
+        whiteSpace: "nowrap",
+      })
+      clean.appendChild(label)
+      overlay.appendChild(clean)
+      return clean
+    }
+
     const sync = () => {
       const { overlay, shownYear, shownMonth } = readDisplayedMonth()
       if (!overlay) return
 
       setActiveYear(shownYear)
       setActiveMonth(shownMonth)
+      ensureCleanOrchester(overlay)
 
       const saved = window.localStorage.getItem(ensembleKey(shownYear, shownMonth)) as Ensemble | null
       const valid = saved === "orchester" || saved === "zbor" || saved === "sko"
@@ -134,6 +176,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       cleanupOverlay = () => {
         observer?.disconnect()
         overlay.querySelector("#epc-ensemble-hit-area")?.remove()
+        overlay.querySelector("#epc-orchester-clean-cover")?.remove()
       }
     }
 
