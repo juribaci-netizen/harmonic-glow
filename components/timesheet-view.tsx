@@ -139,9 +139,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <div className="w-full bg-white">
           <iframe
             key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
-            src={"/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&v="+Date.now()+"#toolbar=0&navpanes=0&view=FitH"}
+            src={"/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&v="+Date.now()+"#toolbar=0&navpanes=0&scrollbar=0&view=Fit"}
             title={"EPČ "+monthName}
-            className="block h-[72vh] min-h-[620px] w-full border-0 bg-white"
+            className="block h-[86vh] min-h-[760px] w-full border-0 bg-white"
           />
         </div>
 
