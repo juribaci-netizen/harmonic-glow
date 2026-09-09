@@ -13,6 +13,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [entries,setEntries]=useState(initialEntries)
   const [signing,setSigning]=useState(false)
   const [signed,setSigned]=useState(false)
+  const [signatureData,setSignatureData]=useState<string|null>(null)
   const [editing,setEditing]=useState(false)
   const [pdfEditing,setPdfEditing]=useState(false)
   const [draftHours,setDraftHours]=useState<Record<number,string>>({})
@@ -86,6 +87,8 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   }
   const confirmSign=()=>{
     if(!hasInk)return
+    const canvas=canvasRef.current
+    if(canvas)setSignatureData(canvas.toDataURL("image/png"))
     setSigned(true);setSigning(false)
   }
 
@@ -184,6 +187,11 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   <span className="absolute left-[56.5%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
                   <span className="absolute left-[44.5%] top-[9.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
                   <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
+                  {signed&&signatureData&&<img
+                    src={signatureData}
+                    alt="Podpis zamestnanca"
+                    className="absolute left-[69%] top-[89.2%] h-[4.2%] w-[22%] object-contain"
+                  />}
                   {visibleDays.flatMap(([date,es])=>{
                     const day=Number(date.slice(-2))
                     const y=20.45+(day-1)*2.18
