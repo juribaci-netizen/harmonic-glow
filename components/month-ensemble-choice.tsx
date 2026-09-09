@@ -15,6 +15,8 @@ const MONTHS = [
   "júl", "august", "september", "október", "november", "december",
 ]
 
+const ensembleKey = (year: number, month: number) => `epc-ensemble-v2:${year}-${month}`
+
 export function MonthEnsembleChoice({ year, month }: { year: number; month: number }) {
   const [open, setOpen] = useState(false)
   const [activeYear, setActiveYear] = useState(year)
@@ -49,8 +51,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       setActiveYear(shownYear)
       setActiveMonth(shownMonth)
 
-      const key = `epc-ensemble:${shownYear}-${shownMonth}`
-      const saved = window.localStorage.getItem(key) as Ensemble | null
+      const saved = window.localStorage.getItem(ensembleKey(shownYear, shownMonth)) as Ensemble | null
       const valid = saved === "orchester" || saved === "zbor" || saved === "sko"
 
       if (valid) {
@@ -105,8 +106,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         hit.appendChild(warning)
         hit.addEventListener("click", () => {
           const current = readDisplayedMonth()
-          const currentKey = `epc-ensemble:${current.shownYear}-${current.shownMonth}`
-          const currentSaved = window.localStorage.getItem(currentKey) as Ensemble | null
+          const currentSaved = window.localStorage.getItem(ensembleKey(current.shownYear, current.shownMonth)) as Ensemble | null
           const currentValid = currentSaved === "orchester" || currentSaved === "zbor" || currentSaved === "sko"
           setActiveYear(current.shownYear)
           setActiveMonth(current.shownMonth)
@@ -142,7 +142,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
   }, [year, month])
 
   const choose = (value: Ensemble) => {
-    window.localStorage.setItem(`epc-ensemble:${activeYear}-${activeMonth}`, value)
+    window.localStorage.setItem(ensembleKey(activeYear, activeMonth), value)
     document.documentElement.dataset.epcEnsemble = value
     setSelected(value)
     const warning = document.querySelector<HTMLElement>('[data-epc-ensemble-warning="true"]')
