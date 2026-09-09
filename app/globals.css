@@ -165,11 +165,11 @@
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:6.150% !important; font-size:clamp(5px,.85vw,10px) !important; }
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:9.540% !important; font-size:clamp(6px,.95vw,11px) !important; }
 
-/* Hide the original AcroForm rectangle around Orchester until the user explicitly picks a body. */
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(4){ left:58.55% !important; top:8.34% !important; width:9.65% !important; height:.30% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(5){ left:58.55% !important; top:10.47% !important; width:9.65% !important; height:.30% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(6){ left:58.55% !important; top:8.34% !important; width:.30% !important; height:2.43% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(7){ left:67.90% !important; top:8.34% !important; width:.30% !important; height:2.43% !important; }
+/* Fully mask the original AcroForm rectangle around Orchester; keep only the printed word. */
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(4){ left:58.38% !important; top:8.18% !important; width:10.05% !important; height:.52% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(5){ left:58.38% !important; top:10.36% !important; width:10.05% !important; height:.52% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(6){ left:58.38% !important; top:8.18% !important; width:.52% !important; height:2.70% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(7){ left:67.91% !important; top:8.18% !important; width:.52% !important; height:2.70% !important; }
 
 /* EPČ service marks: visually align X slightly higher and use regular weight. */
 button[aria-label$="služba"] > span {
@@ -181,7 +181,7 @@ button[aria-label$="služba"] > span {
 html[data-epc-ensemble] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
   content:"";
   position:absolute;
-  top:9.25%;
+  top:9.72%;
   height:2.25%;
   box-sizing:border-box;
   border:1px solid #111;
@@ -190,16 +190,16 @@ html[data-epc-ensemble] [class*="pointer-events-none"][class*="absolute"][class*
 }
 
 html[data-epc-ensemble="orchester"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:59.45%;
+  left:60.10%;
   width:9.35%;
 }
 
 html[data-epc-ensemble="zbor"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:70.16%;
+  left:70.81%;
   width:5.00%;
 }
 
 html[data-epc-ensemble="sko"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:78.66%;
+  left:79.31%;
   width:5.10%;
 }
