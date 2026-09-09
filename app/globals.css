@@ -181,7 +181,7 @@ button[aria-label$="služba"] > span {
 html[data-epc-ensemble] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
   content:"";
   position:absolute;
-  top:8.46%;
+  top:9.25%;
   height:2.25%;
   box-sizing:border-box;
   border:1px solid #111;
@@ -190,16 +190,16 @@ html[data-epc-ensemble] [class*="pointer-events-none"][class*="absolute"][class*
 }
 
 html[data-epc-ensemble="orchester"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:58.70%;
+  left:59.45%;
   width:9.35%;
 }
 
 html[data-epc-ensemble="zbor"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:69.41%;
+  left:70.16%;
   width:5.00%;
 }
 
 html[data-epc-ensemble="sko"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:77.91%;
+  left:78.66%;
   width:5.10%;
 }
