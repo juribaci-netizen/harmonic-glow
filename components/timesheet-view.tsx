@@ -136,27 +136,32 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           <button onClick={beginEdit} className="rounded-full bg-black/[.045] px-3 py-2 text-[10px] font-semibold">Upraviť</button>
         </div>
 
-        <div className="mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#ececef] p-2 shadow-[0_8px_28px_rgba(0,0,0,.08)]">
-          <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white shadow-sm">
-            <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
-            <div className="pointer-events-none absolute inset-0 text-black">
-              <span className="absolute left-[41.5%] top-[6.45%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold ">{cursor.toLocaleDateString("sk-SK",{month:"long",year:undefined}).replace("september","September")}</span>
-              <span className="absolute left-[56.2%] top-[6.45%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold">{cursor.getFullYear()}</span>
-              <span className="absolute left-[43.5%] top-[10.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.2vw,9px)] font-medium">Marek Juráň</span>
-              <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(6px,1.3vw,10px)] font-bold">X</span>
-              {visibleDays.flatMap(([date,es])=>{
-                const day=Number(date.slice(-2))
-                const y=20.45+(day-1)*2.18
-                const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
-                const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
-                const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
-                const hasWork=work.length>0
-                return [
-                  ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                  ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[29.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                  ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-1/2 text-[clamp(4px,1vw,7px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,hasWork)}</span>]:[])
-                ]
-              })}
+        <div className="relative mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#202124] shadow-[0_8px_28px_rgba(0,0,0,.10)]">
+          <div className="flex h-12 items-center justify-between bg-[#111] px-4 text-white">
+            <span className="text-[11px] font-semibold">EPČ · {monthName}</span>
+            <span className="text-[9px] text-white/45">priebežný náhľad</span>
+          </div>
+          <div className="max-h-[72vh] overflow-auto p-3 [webkit-overflow-scrolling:touch]">
+            <div className="relative mx-auto aspect-[768/1024] w-full min-w-[520px] overflow-hidden bg-white shadow-[0_8px_30px_rgba(0,0,0,.45)]">
+              <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
+              <div className="pointer-events-none absolute inset-0 text-black">
+                <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
+                <span className="absolute left-[56.5%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
+                <span className="absolute left-[44.5%] top-[9.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
+                <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
+                {visibleDays.flatMap(([date,es])=>{
+                  const day=Number(date.slice(-2))
+                  const y=20.45+(day-1)*2.18
+                  const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
+                  const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
+                  const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
+                  return [
+                    ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
+                    ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[29.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
+                    ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
+                  ]
+                })}
+              </div>
             </div>
           </div>
         </div>
