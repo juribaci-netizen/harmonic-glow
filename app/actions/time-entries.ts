@@ -101,7 +101,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
 
   for (const [weekKey, weekEntries] of weeks) {
     const total = weekEntries
-      .filter(e => e.status !== "suggested")
+      .filter(e => e.status !== "suggested" && e.status !== "removed")
       .reduce((sum, e) => sum + Number(e.hours), 0)
 
     let missing = Math.max(0, 40 - total)
@@ -110,7 +110,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     const monday = new Date(`${weekKey}T00:00:00`)
     const dayHours = new Map<string, number>()
     for (const e of weekEntries) {
-      if (e.status === "suggested") continue
+      if (e.status === "suggested" || e.status === "removed") continue
       dayHours.set(e.date, (dayHours.get(e.date) ?? 0) + Number(e.hours))
     }
 
@@ -133,7 +133,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
 
     for (const candidate of candidates) {
       if (missing < 0.5) break
-      const existingAutoIp = weekEntries.find(e => e.date === candidate.date && e.type === "individual" && e.status === "auto")
+      const existingAutoIp = weekEntries.find(e => e.date === candidate.date && e.type === "individual")
       if (existingAutoIp) continue
       const capacity = Math.min(3, 8 - candidate.existing)
       const hours = Math.min(capacity, Math.ceil(Math.min(missing, capacity) * 2) / 2)
@@ -345,6 +345,133 @@ export async function updateTimeEntryHours(id: number, hours: number) {
     .update(timeEntry)
     .set({ hours: String(safeHours), updatedAt: new Date() })
     .where(and(eq(timeEntry.id, id), eq(timeEntry.userId, userId)))
+  revalidatePath("/timesheet")
+  revalidatePath("/")
+  return { ok: true }
+}
+
+
+export async function setEntryPresent(id: number, present: boolean) {
+  const userId = await getUserId()
+  const rows = await db
+    .select()
+    .from(timeEntry)
+    .where(and(eq(timeEntry.id, id), eq(timeEntry.userId, userId)))
+    .limit(1)
+  if (!rows.length) return { ok: false }
+  const entry = rows[0]
+  const hours = present ? scheduledHours(entry.startTime, entry.endTime) : 0
+  await db
+    .update(timeEntry)
+    .set({
+      status: present ? "manual" : "removed",
+      hours: String(hours),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(timeEntry.id, id), eq(timeEntry.userId, userId)))
+  revalidatePath("/timesheet")
+  revalidatePath("/")
+  return { ok: true }
+}
+
+export async function updateEntryTime(id: number, startTime: string | null, endTime: string | null) {
+  const userId = await getUserId()
+  const start = startTime?.trim() || null
+  const end = endTime?.trim() || null
+  const hours = scheduledHours(start, end)
+  await db
+    .update(timeEntry)
+    .set({
+      startTime: start,
+      endTime: end,
+      hours: String(hours),
+      status: "manual",
+      updatedAt: new Date(),
+    })
+    .where(and(eq(timeEntry.id, id), eq(timeEntry.userId, userId)))
+  revalidatePath("/timesheet")
+  revalidatePath("/")
+  return { ok: true }
+}
+
+export async function setManualService(date: string, slot: 1 | 2, present: boolean) {
+  const userId = await getUserId()
+  const dayEntries = await db
+    .select()
+    .from(timeEntry)
+    .where(and(eq(timeEntry.userId, userId), eq(timeEntry.date, date)))
+
+  const work = dayEntries
+    .filter(e => e.type !== "individual" && e.type !== "ip")
+    .sort((a,b) => String(a.startTime ?? "").localeCompare(String(b.startTime ?? "")))
+
+  const target = work[slot - 1]
+  if (target) return setEntryPresent(target.id, present)
+
+  if (!present) return { ok: true }
+
+  await db.insert(timeEntry).values({
+    userId,
+    activityId: null,
+    date,
+    type: "manual-service",
+    title: slot === 1 ? "Manuálne pridaná 1. služba" : "Manuálne pridaná 2. služba",
+    startTime: null,
+    endTime: null,
+    hours: "0",
+    status: "manual",
+    notes: "Manuálne označená prítomnosť v EPČ.",
+  })
+  revalidatePath("/timesheet")
+  revalidatePath("/")
+  return { ok: true }
+}
+
+export async function setManualIpTime(date: string, slot: 1 | 2, startTime: string | null, endTime: string | null) {
+  const userId = await getUserId()
+  const dayEntries = await db
+    .select()
+    .from(timeEntry)
+    .where(and(eq(timeEntry.userId, userId), eq(timeEntry.date, date)))
+
+  const ips = dayEntries
+    .filter(e => e.type === "individual" || e.type === "ip")
+    .sort((a,b) => String(a.startTime ?? "").localeCompare(String(b.startTime ?? "")))
+
+  const target = ips[slot - 1]
+  const start = startTime?.trim() || null
+  const end = endTime?.trim() || null
+
+  if (!start && !end) {
+    if (target) {
+      await db.update(timeEntry)
+        .set({ status: "removed", hours: "0", startTime: null, endTime: null, updatedAt: new Date() })
+        .where(and(eq(timeEntry.id, target.id), eq(timeEntry.userId, userId)))
+    }
+    revalidatePath("/timesheet")
+    revalidatePath("/")
+    return { ok: true }
+  }
+
+  const hours = scheduledHours(start, end)
+  if (target) {
+    await db.update(timeEntry)
+      .set({ startTime: start, endTime: end, hours: String(hours), status: "manual", updatedAt: new Date() })
+      .where(and(eq(timeEntry.id, target.id), eq(timeEntry.userId, userId)))
+  } else {
+    await db.insert(timeEntry).values({
+      userId,
+      activityId: null,
+      date,
+      type: "individual",
+      title: "Individuálna príprava",
+      startTime: start,
+      endTime: end,
+      hours: String(hours),
+      status: "manual",
+      notes: "Manuálne upravené priamo v EPČ.",
+    })
+  }
   revalidatePath("/timesheet")
   revalidatePath("/")
   return { ok: true }
