@@ -186,10 +186,10 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   className="absolute inset-0 h-full w-full object-fill"
                 />
                 <div className={"absolute inset-0 text-black "+(pdfEditing?"pointer-events-auto":"pointer-events-none")}>
-                  <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
-                  <span className="absolute left-[56.5%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[44.5%] top-[9.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
-                  <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
+                  <span className="absolute left-[38.95%] top-[5.43%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
+                  <span className="absolute left-[54.33%] top-[5.43%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
+                  <span className="absolute left-[38.96%] top-[8.60%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
+                  <span className="absolute left-[63.37%] top-[9.58%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
                   {signed&&signatureData&&<img
                     src={signatureData}
                     alt="Podpis zamestnanca"
@@ -197,14 +197,14 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   />}
                   {visibleDays.flatMap(([date,es])=>{
                     const day=Number(date.slice(-2))
-                    const y=20.45+(day-1)*2.18
+                    const y=18.17+(day-1)*2.09
                     const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
                     const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
                     const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
                     return [
-                      ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                      ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[29.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                      ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
+                      ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.78%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
+                      ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[28.59%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
+                      ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[74.88%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
                     ]
                   })}
                 </div>
@@ -212,13 +212,13 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
                     const date=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
                     const isPast=cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear()&&cursor.getMonth()<today.getMonth()) || new Date(date+"T23:59:59")<=today
-                    const top=19.34+(day-1)*2.18
+                    const top=17.18+(day-1)*2.09
                     return <button
                       key={date}
                       disabled={!isPast}
                       onClick={()=>openDay(date)}
-                      className="absolute left-[9%] right-[6%] rounded-[3px] bg-transparent active:bg-black/[.045] disabled:pointer-events-none"
-                      style={{top:top+"%",height:"2.05%"}}
+                      className="absolute left-[16.9%] right-[15%] rounded-[3px] bg-transparent active:bg-black/[.045] disabled:pointer-events-none"
+                      style={{top:top+"%",height:"2.00%"}}
                       aria-label={"Otvoriť EPČ "+day+". deň"}
                     />
                   })}
