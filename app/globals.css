@@ -161,6 +161,6 @@
 }
 
 /* EPČ header alignment: month, year and employee name lowered onto the printed lines. */
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(1){ top:5.150% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:5.150% !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:8.537% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(1){ top:5.380% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:5.380% !important; }
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:8.767% !important; }
