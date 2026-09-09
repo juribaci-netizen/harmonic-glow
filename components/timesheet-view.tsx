@@ -191,21 +191,24 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
             return <>
               <div className={"relative mx-auto aspect-[595.32/841.92] w-full overflow-hidden bg-white "+(pdfEditing?"ring-2 ring-black/10":"")}>
                 <img
-                  src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ"
+                  src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/2306003c-8cd1-4fa1-a5bf-9e35edfa0575.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzdkNzdjN2IxODQ0M2M3ZCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTEyMDg5MX0.PR1OWzZLJoTYf5nRDNickMH8UvccEbDQEcuq7s78Wic"
                   alt="Originálny formulár EPČ 2.1"
                   className="absolute inset-0 h-full w-full object-fill"
                 />
 
                 {/* Header fields — exact rectangles from the original AcroForm */}
                 <div className="pointer-events-none absolute inset-0 text-black">
-                  <span className="absolute left-[35.2%] top-[5.43%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{epcMonthName}</span>
-                  <span className="absolute left-[51.7%] top-[5.43%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[32.4%] top-[8.88%] -translate-y-full text-[clamp(7px,1.15vw,13px)] font-medium leading-none">Marek Juráň</span>
+                  <span className="absolute left-[17.15%] top-[5.64%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{epcMonthName}</span>
+                  <span className="absolute left-[35.75%] top-[5.64%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{cursor.getFullYear()}</span>
+                  <span className="absolute left-[19.45%] top-[8.02%] -translate-y-full text-[clamp(7px,1.15vw,13px)] font-medium leading-none">Marek Juráň</span>
                   <span className="absolute left-[58.759%] top-[8.527%] h-[2.096%] w-[9.221%] rounded-[1px] border border-black/65" />
+                  <span aria-hidden className="absolute left-[41.3%] top-[6.55%] h-[1.9%] w-[8.5%] bg-white" />
+                  <span aria-hidden className="absolute left-[41.65%] top-[7.20%] text-[clamp(5px,.85vw,9px)] font-normal">Orchester</span>
+                  {/* EPČ plain ensemble label */}
                   {signed&&signatureData&&<img
                     src={signatureData}
                     alt="Podpis zamestnanca"
-                    className="absolute left-[54.298%] top-[86.172%] h-[3.246%] w-[30.426%] object-contain object-left"
+                    className="absolute left-[57.3%] top-[89.2%] h-[3.1%] w-[29%] object-contain object-left"
                   />}
                 </div>
 
