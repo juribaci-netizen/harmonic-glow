@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useI18n } from "@/components/language-provider"
 import { autoFillMonthFromWorkPlan, updateTimeEntryHours, setManualService, setManualIpTime } from "@/app/actions/time-entries"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { EpcPdfCanvas } from "@/components/epc-pdf-canvas"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null;startTime?:string|null;endTime?:string|null}
 
@@ -187,14 +188,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
         <div className="w-full bg-white">
           {(()=>{
-            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&native=1"
+            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&native=1&rev="+entries.map(e=>e.id+":"+e.hours+":"+e.status+":"+(e.startTime||"")+":"+(e.endTime||"")).join("|")
             return <>
-              <iframe
-                key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
-                src={pdfUrl+"#toolbar=0&navpanes=0&view=FitH"}
-                title={"EPČ "+epcMonthName}
-                className="block h-[86vh] min-h-[760px] w-full border-0 bg-white"
-              />
+              <EpcPdfCanvas url={pdfUrl} title={"EPČ "+epcMonthName}/>
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-3 block w-full rounded-[13px] bg-black px-3 py-3 text-center text-[10px] font-semibold text-white">
                 Otvoriť EPČ PDF
               </a>
