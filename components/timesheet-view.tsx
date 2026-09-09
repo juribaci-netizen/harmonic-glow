@@ -136,13 +136,13 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           <button onClick={beginEdit} className="rounded-full bg-black/[.045] px-3 py-2 text-[10px] font-semibold">Upraviť</button>
         </div>
 
-        <div className="relative mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-white shadow-[0_8px_28px_rgba(0,0,0,.06)]">
-          <div className="flex h-12 items-center justify-between border-b border-black/[.05] bg-white px-4 text-black">
+        <div className="relative mx-auto w-full overflow-hidden bg-white">
+          <div className="flex h-12 items-center justify-between bg-white px-4 text-black">
             <span className="text-[11px] font-semibold">EPČ · {monthName}</span>
             <span className="text-[9px] text-black/35">priebežný náhľad</span>
           </div>
           <div className="p-3">
-            <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white shadow-[0_8px_24px_rgba(0,0,0,.08)]">
+            <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white ">
               <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
               <div className="pointer-events-none absolute inset-0 text-black">
                 <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
