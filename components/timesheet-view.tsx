@@ -196,15 +196,18 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   className="absolute inset-0 h-full w-full object-fill"
                 />
 
-                {/* Header fields — exact rectangles from the original AcroForm */}
+                {/* Header fields — exact AcroForm rectangles from the working EPČ */}
                 <div className="pointer-events-none absolute inset-0 text-black">
-                  <span className="absolute left-[17.15%] top-[5.64%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{epcMonthName}</span>
-                  <span className="absolute left-[35.75%] top-[5.64%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[19.45%] top-[8.02%] -translate-y-full text-[clamp(7px,1.15vw,13px)] font-medium leading-none">Marek Juráň</span>
-                  <span className="absolute left-[58.759%] top-[8.527%] h-[2.096%] w-[9.221%] rounded-[1px] border border-black/65" />
-                  <span aria-hidden className="absolute left-[41.3%] top-[6.55%] h-[1.9%] w-[8.5%] bg-white" />
-                  <span aria-hidden className="absolute left-[41.65%] top-[7.20%] text-[clamp(5px,.85vw,9px)] font-normal">Orchester</span>
-                  {/* EPČ plain ensemble label */}
+                  <span className="absolute left-[32.764%] top-[4.240%] flex h-[2.129%] w-[12.363%] items-center justify-center text-[clamp(6px,1.05vw,12px)] font-normal leading-none">{epcMonthName}</span>
+                  <span className="absolute left-[50.431%] top-[4.240%] flex h-[2.129%] w-[7.819%] items-center justify-center text-[clamp(6px,1.05vw,12px)] font-normal leading-none">{cursor.getFullYear()}</span>
+                  <span className="absolute left-[28.101%] top-[7.627%] flex h-[2.129%] w-[21.696%] items-center justify-center text-[clamp(7px,1.15vw,13px)] font-normal leading-none">Marek Juráň</span>
+
+                  {/* Remove only the original Orchester widget border; keep the original printed word underneath. */}
+                  <span aria-hidden className="absolute left-[58.70%] top-[8.46%] h-[0.16%] w-[9.35%] bg-white" />
+                  <span aria-hidden className="absolute left-[58.70%] top-[10.55%] h-[0.16%] w-[9.35%] bg-white" />
+                  <span aria-hidden className="absolute left-[58.70%] top-[8.46%] h-[2.25%] w-[0.16%] bg-white" />
+                  <span aria-hidden className="absolute left-[67.89%] top-[8.46%] h-[2.25%] w-[0.16%] bg-white" />
+
                   {signed&&signatureData&&<img
                     src={signatureData}
                     alt="Podpis zamestnanca"
