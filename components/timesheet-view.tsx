@@ -198,9 +198,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
                 {/* Header fields — exact rectangles from the original AcroForm */}
                 <div className="pointer-events-none absolute inset-0 text-black">
-                  <span className="absolute left-[39.0%] top-[5.12%] -translate-x-1/2 -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{epcMonthName}</span>
-                  <span className="absolute left-[54.35%] top-[5.12%] -translate-x-1/2 -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[39.0%] top-[8.48%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.15vw,13px)] font-medium leading-none">Marek Juráň</span>
+                  <span className="absolute left-[35.2%] top-[5.43%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{epcMonthName}</span>
+                  <span className="absolute left-[51.7%] top-[5.43%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{cursor.getFullYear()}</span>
+                  <span className="absolute left-[32.4%] top-[8.88%] -translate-y-full text-[clamp(7px,1.15vw,13px)] font-medium leading-none">Marek Juráň</span>
                   <span className="absolute left-[58.759%] top-[8.527%] h-[2.096%] w-[9.221%] rounded-[1px] border border-black/65" />
                   {signed&&signatureData&&<img
                     src={signatureData}
