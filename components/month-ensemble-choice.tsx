@@ -52,8 +52,8 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       clean.id = "epc-orchester-clean-cover"
       Object.assign(clean.style, {
         position: "absolute",
-        left: "57.65%",
-        top: "8.20%",
+        left: "59.10%",
+        top: "9.10%",
         width: "11.35%",
         height: "3.65%",
         background: "#fff",
