@@ -5,7 +5,7 @@ import { useI18n } from "@/components/language-provider"
 import { autoFillMonthFromWorkPlan, updateTimeEntryHours } from "@/app/actions/time-entries"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null}
+type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null;startTime?:string|null;endTime?:string|null}
 
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth}:{initialEntries:Entry[];year:number;month:number}){
   const {t,lang}=useI18n()
@@ -98,6 +98,14 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   }
 
   const today=new Date()
+  const ipLabel=(hours:number,hasWork:boolean)=>{
+    const minutes=Math.max(30,Math.round(hours*60))
+    const start=hasWork?17*60:10*60
+    const end=start+minutes
+    const hh=(n:number)=>String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")
+    return hh(start)+"–"+hh(end)
+  }
+
   const visibleDays=grouped.filter(([date])=>{
     const d=new Date(date+"T23:59:59")
     return cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear() && cursor.getMonth()<today.getMonth()) || d<=today
@@ -128,13 +136,29 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           <button onClick={beginEdit} className="rounded-full bg-black/[.045] px-3 py-2 text-[10px] font-semibold">Upraviť</button>
         </div>
 
-        <div className="mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#f3f3f3] shadow-[0_8px_28px_rgba(0,0,0,.08)]">
-          <iframe
-            key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
-            src={"/epc-original.pdf#toolbar=0&navpanes=0&scrollbar=0"}
-            title={"EPČ "+monthName}
-            className="block h-[560px] w-full bg-white"
-          />
+        <div className="mx-auto w-full overflow-hidden rounded-[12px] border border-black/10 bg-[#ececef] p-2 shadow-[0_8px_28px_rgba(0,0,0,.08)]">
+          <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white shadow-sm">
+            <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
+            <div className="pointer-events-none absolute inset-0 text-black">
+              <span className="absolute left-[41.5%] top-[6.1%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold lowercase">{cursor.toLocaleDateString("sk-SK",{month:"long"})}</span>
+              <span className="absolute left-[56.2%] top-[6.1%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold">{cursor.getFullYear()}</span>
+              <span className="absolute left-[43.5%] top-[9.9%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.2vw,9px)] font-medium">Marek Juráň</span>
+              <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(6px,1.3vw,10px)] font-bold">X</span>
+              {visibleDays.flatMap(([date,es])=>{
+                const day=Number(date.slice(-2))
+                const y=20.45+(day-1)*2.18
+                const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
+                const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
+                const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
+                const hasWork=work.length>0
+                return [
+                  ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
+                  ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[29.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
+                  ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-1/2 text-[clamp(4px,1vw,7px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,hasWork)}</span>]:[])
+                ]
+              })}
+            </div>
+          </div>
         </div>
 
         <p className="mt-3 text-center text-[9px] leading-relaxed text-black/35">Budúce dni zostávajú prázdne. Po skončení dňa sa služby a doplnená IP automaticky objavia v náhľade.</p>
