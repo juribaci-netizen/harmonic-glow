@@ -145,9 +145,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
             <div className="relative mx-auto aspect-[768/1024] w-[106%] max-w-none -translate-x-[2.8%] overflow-hidden bg-white ">
               <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
               <div className="pointer-events-none absolute inset-0 text-black">
-                <span className="absolute left-[42%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
-                <span className="absolute left-[56.5%] top-[5.85%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
-                <span className="absolute left-[44.5%] top-[9.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
+                <span className="absolute left-[42%] top-[6.25%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
+                <span className="absolute left-[56.5%] top-[6.25%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
+                <span className="absolute left-[44.5%] top-[9.75%] -translate-x-1/2 -translate-y-full text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
                 <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
                 {visibleDays.flatMap(([date,es])=>{
                   const day=Number(date.slice(-2))
@@ -158,7 +158,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   return [
                     ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
                     ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[29.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                    ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
+                    ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[79.5%] -translate-x-1/2 -translate-y-[85%] text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
                   ]
                 })}
               </div>
