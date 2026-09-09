@@ -19,6 +19,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
   const [open, setOpen] = useState(false)
   const [activeYear, setActiveYear] = useState(year)
   const [activeMonth, setActiveMonth] = useState(month)
+  const [selected, setSelected] = useState<Ensemble | null>(null)
 
   useEffect(() => {
     let cleanupOverlay: (() => void) | undefined
@@ -52,8 +53,13 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       const saved = window.localStorage.getItem(key) as Ensemble | null
       const valid = saved === "orchester" || saved === "zbor" || saved === "sko"
 
-      if (valid) document.documentElement.dataset.epcEnsemble = saved
-      else delete document.documentElement.dataset.epcEnsemble
+      if (valid) {
+        document.documentElement.dataset.epcEnsemble = saved
+        setSelected(saved)
+      } else {
+        delete document.documentElement.dataset.epcEnsemble
+        setSelected(null)
+      }
 
       let hit = overlay.querySelector<HTMLButtonElement>("#epc-ensemble-hit-area")
       if (!hit) {
@@ -99,8 +105,12 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         hit.appendChild(warning)
         hit.addEventListener("click", () => {
           const current = readDisplayedMonth()
+          const currentKey = `epc-ensemble:${current.shownYear}-${current.shownMonth}`
+          const currentSaved = window.localStorage.getItem(currentKey) as Ensemble | null
+          const currentValid = currentSaved === "orchester" || currentSaved === "zbor" || currentSaved === "sko"
           setActiveYear(current.shownYear)
           setActiveMonth(current.shownMonth)
+          setSelected(currentValid ? currentSaved : null)
           setOpen(true)
         })
         overlay.appendChild(hit)
@@ -134,6 +144,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
   const choose = (value: Ensemble) => {
     window.localStorage.setItem(`epc-ensemble:${activeYear}-${activeMonth}`, value)
     document.documentElement.dataset.epcEnsemble = value
+    setSelected(value)
     const warning = document.querySelector<HTMLElement>('[data-epc-ensemble-warning="true"]')
     if (warning) warning.style.display = "none"
     window.dispatchEvent(new CustomEvent("epc-ensemble-change", {
@@ -149,19 +160,24 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       <div className="w-full max-w-[390px] rounded-[28px] bg-white p-5 shadow-2xl" onClick={event => event.stopPropagation()}>
         <p className="text-[11px] font-semibold uppercase tracking-[.12em] text-black/35">EPČ</p>
         <h2 className="mt-2 text-[24px] font-semibold tracking-[-.04em]">Vyberte súbor</h2>
-        <p className="mt-1 text-[13px] leading-5 text-black/45">Voľbu môžete neskôr zmeniť opätovným kliknutím na Orchester / Zbor / SKO v EPČ.</p>
+        <p className="mt-1 text-[13px] leading-5 text-black/45">Vybrať môžete iba jednu možnosť. Nový výber automaticky nahradí predchádzajúci.</p>
 
-        <div className="mt-5 grid grid-cols-3 gap-2">
-          {OPTIONS.map(option => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => choose(option.value)}
-              className="flex min-h-14 items-center justify-center rounded-[18px] border border-black/[.08] bg-black/[.025] px-3 text-[15px] font-medium tracking-[-.02em] hover:bg-black/[.06]"
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="mt-5 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Súbor EPČ">
+          {OPTIONS.map(option => {
+            const active = selected === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => choose(option.value)}
+                className={"flex min-h-14 items-center justify-center rounded-[18px] border px-3 text-[15px] font-medium tracking-[-.02em] " + (active ? "border-black bg-black text-white" : "border-black/[.08] bg-black/[.025] hover:bg-black/[.06]")}
+              >
+                {option.label}
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>
