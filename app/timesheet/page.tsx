@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell"
 import { TimesheetView } from "@/components/timesheet-view"
 import { MonthEnsembleChoice } from "@/components/month-ensemble-choice"
+import { EpcDirectEditor } from "@/components/epc-direct-editor"
 import { getMonthEntries } from "@/app/actions/time-entries"
 import { getSessionUser } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -16,6 +17,7 @@ export default async function TimesheetPage() {
   return (
     <AppShell user={{ name: user.name, email: user.email }}>
       <MonthEnsembleChoice year={year} month={month} />
+      <EpcDirectEditor year={year} month={month} />
       <TimesheetView initialEntries={entries} year={year} month={month} />
     </AppShell>
   )
