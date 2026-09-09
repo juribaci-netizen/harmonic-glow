@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useI18n } from "@/components/language-provider"
 import { autoFillMonthFromWorkPlan, updateTimeEntryHours, setManualService, setManualIpTime } from "@/app/actions/time-entries"
-import { getEpcSignature, saveEpcSignature } from "@/app/actions/epc-signature"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null;startTime?:string|null;endTime?:string|null}
@@ -91,7 +90,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     const canvas=canvasRef.current
     if(!canvas)return
     const data=canvas.toDataURL("image/png")
-    await saveEpcSignature(cursor.getFullYear(),cursor.getMonth(),data)
+    try{window.localStorage.setItem("epc-signature:"+cursor.getFullYear()+"-"+cursor.getMonth(),data)}catch{}
     setSignatureData(data)
     setSigned(true);setSigning(false)
   }
