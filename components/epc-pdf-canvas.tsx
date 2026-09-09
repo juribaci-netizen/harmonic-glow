@@ -11,11 +11,10 @@ export function EpcPdfCanvas({url,title}:{url:string;title:string}){
     ;(async()=>{
       try{
         const pdfjs=await import("pdfjs-dist/legacy/build/pdf.mjs")
-        pdfjs.GlobalWorkerOptions.workerSrc="https://unpkg.com/pdfjs-dist@5.4.149/build/pdf.worker.min.mjs"
-        const res=await fetch(url,{cache:"no-store"})
+                const res=await fetch(url,{cache:"no-store"})
         if(!res.ok)throw new Error("PDF fetch failed")
         const data=new Uint8Array(await res.arrayBuffer())
-        const doc=await pdfjs.getDocument({data}).promise
+        const doc=await pdfjs.getDocument({data,disableWorker:true}).promise
         const page=await doc.getPage(1)
         const canvas=canvasRef.current
         if(!canvas||cancelled)return
