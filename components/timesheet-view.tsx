@@ -145,13 +145,13 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
             <div className="relative mx-auto aspect-[768/1024] w-[106%] max-w-none -translate-x-[2.8%] overflow-hidden bg-white ">
               <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
               <div className="pointer-events-none absolute inset-0 text-black">
-                <span className="absolute left-[42%] top-[6.72%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
-                <span className="absolute left-[56.5%] top-[6.72%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
-                <span className="absolute left-[44.5%] top-[10.35%] -translate-x-1/2 -translate-y-full text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
+                <span className="absolute left-[42%] top-[7.15%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
+                <span className="absolute left-[56.5%] top-[7.15%] -translate-x-1/2 -translate-y-full text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
+                <span className="absolute left-[44.5%] top-[10.85%] -translate-x-1/2 -translate-y-full text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
                 <span className="absolute left-[69.2%] top-[10.55%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
                 {visibleDays.flatMap(([date,es])=>{
                   const day=Number(date.slice(-2))
-                  const y=20.72+(day-1)*2.178
+                  const y=21.25+(day-1)*2.178
                   const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
                   const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
                   const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
