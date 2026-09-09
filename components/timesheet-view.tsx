@@ -138,23 +138,16 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
         <div className="w-full bg-white">
           {(()=>{
-            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&refresh="+Date.now()+"#toolbar=0&navpanes=0&scrollbar=0&view=Fit"
+            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()
             return <>
-              <object
+              <iframe
                 key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
-                data={pdfUrl}
-                type="application/pdf"
-                className="block h-[86vh] min-h-[760px] w-full bg-white"
-                aria-label={"EPČ "+monthName}
-              >
-                <iframe
-                  src={pdfUrl}
-                  title={"EPČ "+monthName}
-                  className="block h-[86vh] min-h-[760px] w-full border-0 bg-white"
-                />
-              </object>
+                src={pdfUrl+"#toolbar=0&navpanes=0&scrollbar=0&view=Fit"}
+                title={"EPČ "+monthName}
+                className="block h-[86vh] min-h-[760px] w-full border-0 bg-white"
+              />
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-2 block w-full rounded-[13px] bg-black/[.045] px-3 py-2.5 text-center text-[10px] font-semibold">
-                Otvoriť PDF na celej obrazovke
+                Otvoriť EPČ PDF
               </a>
             </>
           })()}
