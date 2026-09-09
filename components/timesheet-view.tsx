@@ -187,105 +187,16 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
         <div className="w-full bg-white">
           {(()=>{
-            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()
+            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&native=1"
             return <>
-              <div className={"relative mx-auto aspect-[595.32/841.92] w-full overflow-hidden bg-white "+(pdfEditing?"ring-2 ring-black/10":"")}>
-                <img
-                  src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/2306003c-8cd1-4fa1-a5bf-9e35edfa0575.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzdkNzdjN2IxODQ0M2M3ZCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTEyMDg5MX0.PR1OWzZLJoTYf5nRDNickMH8UvccEbDQEcuq7s78Wic"
-                  alt="Originálny formulár EPČ 2.1"
-                  className="absolute inset-0 h-full w-full object-fill"
-                />
-
-                {/* Header fields — exact rectangles from the original AcroForm */}
-                <div className="pointer-events-none absolute inset-0 text-black">
-                  <span className="absolute left-[17.15%] top-[5.64%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{epcMonthName}</span>
-                  <span className="absolute left-[35.75%] top-[5.64%] -translate-y-full text-[clamp(6px,1.05vw,12px)] font-medium leading-none">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[19.45%] top-[8.02%] -translate-y-full text-[clamp(7px,1.15vw,13px)] font-medium leading-none">Marek Juráň</span>
-                  <span className="absolute left-[58.759%] top-[8.527%] h-[2.096%] w-[9.221%] rounded-[1px] border border-black/65" />
-                  <span aria-hidden className="absolute left-[41.3%] top-[6.55%] h-[1.9%] w-[8.5%] bg-white" />
-                  <span aria-hidden className="absolute left-[41.65%] top-[7.20%] text-[clamp(5px,.85vw,9px)] font-normal">Orchester</span>
-                  {/* EPČ plain ensemble label */}
-                  {signed&&signatureData&&<img
-                    src={signatureData}
-                    alt="Podpis zamestnanca"
-                    className="absolute left-[57.3%] top-[89.2%] h-[3.1%] w-[29%] object-contain object-left"
-                  />}
-                </div>
-
-                {/* Exact original form controls */}
-                {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
-                  const date=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
-                  const isPast=cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear()&&cursor.getMonth()<today.getMonth()) || new Date(date+"T23:59:59")<=today
-                  const dayEntries=entries.filter(e=>e.date===date&&e.status!=="suggested")
-                  const work=dayEntries.filter(e=>e.type!=="individual"&&e.type!=="ip").sort((a,b)=>String(a.startTime??"").localeCompare(String(b.startTime??"")))
-                  const ips=dayEntries.filter(e=>e.type==="individual"||e.type==="ip").sort((a,b)=>String(a.startTime??"").localeCompare(String(b.startTime??"")))
-                  const rowTop=17.186+(day-1)*2.0829
-                  const cb1=!!work[0]&&work[0].status!=="removed"
-                  const cb2=!!work[1]&&work[1].status!=="removed"
-                  const ip1=ips[0]&&ips[0].status!=="removed"&&ips[0].startTime&&ips[0].endTime ? ips[0].startTime+"-"+ips[0].endTime : ""
-                  const ip2=ips[1]&&ips[1].status!=="removed"&&ips[1].startTime&&ips[1].endTime ? ips[1].startTime+"-"+ips[1].endTime : ""
-                  const morningOpts=["","04:00-08:00","06:00-10:00","08:00-12:00","10:00-14:00"]
-                  const afternoonOpts=["","12:00-16:00","14:00-18:00","16:00-20:00","18:00-22:00","20:00-24:00"]
-                  const saveRange=async(slot:1|2,value:string)=>{
-                    const parts=value?value.split("-"):["",""]
-                    await setManualIpTime(date,slot,parts[0]||null,parts[1]||null)
-                    await load(cursor.getFullYear(),cursor.getMonth())
-                  }
-                  return <div key={date}>
-                    <button
-                      disabled={!pdfEditing||!isPast}
-                      onClick={async()=>{await setManualService(date,1,!cb1);await load(cursor.getFullYear(),cursor.getMonth())}}
-                      className={"absolute flex items-center justify-center disabled:pointer-events-none "+(pdfEditing?"hover:bg-black/[.04]":"")}
-                      style={{left:"16.960%",top:rowTop+"%",width:"7.648%",height:"1.987%"}}
-                      aria-label={date+" 1. služba"}
-                    >
-                      {cb1&&<span className="text-[clamp(7px,1.35vw,12px)] font-bold leading-none">X</span>}
-                    </button>
-                    <button
-                      disabled={!pdfEditing||!isPast}
-                      onClick={async()=>{await setManualService(date,2,!cb2);await load(cursor.getFullYear(),cursor.getMonth())}}
-                      className={"absolute flex items-center justify-center disabled:pointer-events-none "+(pdfEditing?"hover:bg-black/[.04]":"")}
-                      style={{left:"24.760%",top:(rowTop+.026)+"%",width:"7.641%",height:"1.970%"}}
-                      aria-label={date+" 2. služba"}
-                    >
-                      {cb2&&<span className="text-[clamp(7px,1.35vw,12px)] font-bold leading-none">X</span>}
-                    </button>
-
-                    {pdfEditing?<select
-                      disabled={!isPast}
-                      value={ip1}
-                      onChange={e=>saveRange(1,e.target.value)}
-                      className="absolute appearance-none border-0 bg-transparent px-[2px] text-[clamp(4px,.85vw,8px)] outline-none"
-                      style={{left:"38.394%",top:(rowTop-.017)+"%",width:"20.524%",height:"2.004%"}}
-                      aria-label={date+" individuálna príprava 1"}
-                    >
-                      {morningOpts.map(v=><option key={v} value={v}>{v}</option>)}
-                    </select>:ip1&&<span
-                      className="pointer-events-none absolute flex items-center px-[2px] text-[clamp(4px,.85vw,8px)]"
-                      style={{left:"38.394%",top:(rowTop-.017)+"%",width:"20.524%",height:"2.004%"}}
-                    >{ip1}</span>}
-
-                    {pdfEditing?<select
-                      disabled={!isPast}
-                      value={ip2}
-                      onChange={e=>saveRange(2,e.target.value)}
-                      className="absolute appearance-none border-0 bg-transparent px-[2px] text-[clamp(4px,.85vw,8px)] outline-none"
-                      style={{left:"64.867%",top:(rowTop+.052)+"%",width:"20.047%",height:"1.918%"}}
-                      aria-label={date+" individuálna príprava 2"}
-                    >
-                      {afternoonOpts.map(v=><option key={v} value={v}>{v}</option>)}
-                    </select>:ip2&&<span
-                      className="pointer-events-none absolute flex items-center px-[2px] text-[clamp(4px,.85vw,8px)]"
-                      style={{left:"64.867%",top:(rowTop+.052)+"%",width:"20.047%",height:"1.918%"}}
-                    >{ip2}</span>}
-                  </div>
-                })}
-              </div>
-              <button onClick={()=>setPdfEditing(v=>!v)} className="mt-3 block w-full rounded-[13px] bg-black/[.06] px-3 py-3 text-center text-[10px] font-semibold">
-                {pdfEditing?"Hotovo":"Upraviť originálne polia"}
-              </button>
+              <iframe
+                key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
+                src={pdfUrl+"#toolbar=0&navpanes=0&view=FitH"}
+                title={"EPČ "+epcMonthName}
+                className="block h-[86vh] min-h-[760px] w-full border-0 bg-white"
+              />
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-3 block w-full rounded-[13px] bg-black px-3 py-3 text-center text-[10px] font-semibold text-white">
-                Otvoriť živé PDF
+                Otvoriť EPČ PDF
               </a>
             </>
           })()}
