@@ -29,11 +29,21 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     await autoFillMonthFromWorkPlan(y,m)
     const res=await fetch("/api/timesheet?year="+y+"&month="+m)
     if(res.ok)setEntries(await res.json())
+    try{
+      const saved=window.localStorage.getItem("epc-signature:"+y+"-"+m)
+      setSignatureData(saved)
+      setSigned(!!saved)
+    }catch{
+      setSignatureData(null)
+      setSigned(false)
+    }
   }
 
   useEffect(()=>{load(cursor.getFullYear(),cursor.getMonth())},[cursor])
 
   const monthName=cursor.toLocaleDateString(locale,{month:"long",year:"numeric"})
+  const skMonths=["Január","Február","Marec","Apríl","Máj","Jún","Júl","August","September","Október","November","December"]
+  const epcMonthName=skMonths[cursor.getMonth()]
   const confirmed=useMemo(()=>entries.filter(e=>e.status!=="suggested"&&e.status!=="removed"),[entries])
   const total=useMemo(()=>confirmed.reduce((s,e)=>s+Number(e.hours),0),[confirmed])
   const grouped=useMemo(()=>Array.from(confirmed.reduce((m,e)=>{
@@ -186,9 +196,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
                   className="absolute inset-0 h-full w-full object-fill"
                 />
                 <div className={"absolute inset-0 text-black "+(pdfEditing?"pointer-events-auto":"pointer-events-none")}>
-                  <span className="absolute left-[38.95%] top-[5.43%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{monthName.split(" ")[0]}</span>
-                  <span className="absolute left-[54.33%] top-[5.43%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[38.96%] top-[8.60%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
+                  <span className="absolute left-[40.4%] top-[5.72%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{epcMonthName}</span>
+                  <span className="absolute left-[54.7%] top-[5.72%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
+                  <span className="absolute left-[39.8%] top-[8.92%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
                   <span className="absolute left-[63.37%] top-[9.58%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
                   {signed&&signatureData&&<img
                     src={signatureData}
