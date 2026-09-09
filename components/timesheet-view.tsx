@@ -140,9 +140,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
           <div className="relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white shadow-sm">
             <img src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ" alt="Originálny formulár EPČ 2.1" className="absolute inset-0 h-full w-full object-fill" />
             <div className="pointer-events-none absolute inset-0 text-black">
-              <span className="absolute left-[41.5%] top-[6.1%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold lowercase">{cursor.toLocaleDateString("sk-SK",{month:"long"})}</span>
-              <span className="absolute left-[56.2%] top-[6.1%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold">{cursor.getFullYear()}</span>
-              <span className="absolute left-[43.5%] top-[9.9%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.2vw,9px)] font-medium">Marek Juráň</span>
+              <span className="absolute left-[41.5%] top-[6.45%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold ">{cursor.toLocaleDateString("sk-SK",{month:"long",year:undefined}).replace("september","September")}</span>
+              <span className="absolute left-[56.2%] top-[6.45%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.15vw,9px)] font-semibold">{cursor.getFullYear()}</span>
+              <span className="absolute left-[43.5%] top-[10.25%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1.2vw,9px)] font-medium">Marek Juráň</span>
               <span className="absolute left-[69.2%] top-[10.2%] -translate-x-1/2 -translate-y-1/2 text-[clamp(6px,1.3vw,10px)] font-bold">X</span>
               {visibleDays.flatMap(([date,es])=>{
                 const day=Number(date.slice(-2))
