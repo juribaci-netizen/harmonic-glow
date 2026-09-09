@@ -170,3 +170,30 @@ button[aria-label$="služba"] > span {
   transform: translateY(-12%);
   font-weight: 400 !important;
 }
+
+/* EPČ monthly ensemble: frame only the selected printed body label. */
+html[data-epc-ensemble] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
+  content:"";
+  position:absolute;
+  top:8.46%;
+  height:2.25%;
+  box-sizing:border-box;
+  border:1px solid #111;
+  pointer-events:none;
+  z-index:20;
+}
+
+html[data-epc-ensemble="orchester"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
+  left:58.70%;
+  width:9.35%;
+}
+
+html[data-epc-ensemble="zbor"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
+  left:69.41%;
+  width:5.00%;
+}
+
+html[data-epc-ensemble="sko"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
+  left:77.91%;
+  width:5.10%;
+}
