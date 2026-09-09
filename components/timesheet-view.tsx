@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useI18n } from "@/components/language-provider"
-import { autoFillMonthFromWorkPlan, updateTimeEntryHours } from "@/app/actions/time-entries"
+import { autoFillMonthFromWorkPlan, updateTimeEntryHours, setManualService, setManualIpTime } from "@/app/actions/time-entries"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type Entry={id:number;date:string;type:string;title:string;hours:string;status:string;notes:string|null;startTime?:string|null;endTime?:string|null}
@@ -16,6 +16,8 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [editing,setEditing]=useState(false)
   const [pdfEditing,setPdfEditing]=useState(false)
   const [draftHours,setDraftHours]=useState<Record<number,string>>({})
+  const [serviceSlots,setServiceSlots]=useState<[boolean,boolean]>([false,false])
+  const [ipSlots,setIpSlots]=useState<[string,string,string,string]>(["","","",""])
   const [hasInk,setHasInk]=useState(false)
   const [selectedDate,setSelectedDate]=useState<string|null>(null)
   const canvasRef=useRef<HTMLCanvasElement|null>(null)
@@ -31,7 +33,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   useEffect(()=>{load(cursor.getFullYear(),cursor.getMonth())},[cursor])
 
   const monthName=cursor.toLocaleDateString(locale,{month:"long",year:"numeric"})
-  const confirmed=useMemo(()=>entries.filter(e=>e.status!=="suggested"),[entries])
+  const confirmed=useMemo(()=>entries.filter(e=>e.status!=="suggested"&&e.status!=="removed"),[entries])
   const total=useMemo(()=>confirmed.reduce((s,e)=>s+Number(e.hours),0),[confirmed])
   const grouped=useMemo(()=>Array.from(confirmed.reduce((m,e)=>{
     const a=m.get(e.date)||[]
@@ -108,22 +110,31 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     return hh(start)+"–"+hh(end)
   }
 
-  const selectedEntries=useMemo(()=>selectedDate?confirmed.filter(e=>e.date===selectedDate):[],[selectedDate,confirmed])
+  const selectedEntries=useMemo(()=>selectedDate?entries.filter(e=>e.date===selectedDate&&e.status!=="suggested"):[],[selectedDate,entries])
 
   const openDay=(date:string)=>{
-    const next:Record<number,string>={}
-    confirmed.filter(e=>e.date===date).forEach(e=>next[e.id]=String(Number(e.hours)))
-    setDraftHours(next)
+    const dayEntries=entries.filter(e=>e.date===date&&e.status!=="suggested")
+    const work=dayEntries.filter(e=>e.type!=="individual"&&e.type!=="ip").sort((a,b)=>String(a.startTime??"").localeCompare(String(b.startTime??"")))
+    const ips=dayEntries.filter(e=>e.type==="individual"||e.type==="ip").sort((a,b)=>String(a.startTime??"").localeCompare(String(b.startTime??"")))
+    setServiceSlots([
+      !!work[0]&&work[0].status!=="removed",
+      !!work[1]&&work[1].status!=="removed",
+    ])
+    setIpSlots([
+      ips[0]?.status==="removed"?"":(ips[0]?.startTime??""),
+      ips[0]?.status==="removed"?"":(ips[0]?.endTime??""),
+      ips[1]?.status==="removed"?"":(ips[1]?.startTime??""),
+      ips[1]?.status==="removed"?"":(ips[1]?.endTime??""),
+    ])
     setSelectedDate(date)
   }
 
   const saveSelectedDay=async()=>{
-    for(const e of selectedEntries){
-      const raw=draftHours[e.id]
-      if(raw==null) continue
-      const next=Number(raw)
-      if(Number.isFinite(next) && next!==Number(e.hours)) await updateTimeEntryHours(e.id,next)
-    }
+    if(!selectedDate)return
+    await setManualService(selectedDate,1,serviceSlots[0])
+    await setManualService(selectedDate,2,serviceSlots[1])
+    await setManualIpTime(selectedDate,1,ipSlots[0]||null,ipSlots[1]||null)
+    await setManualIpTime(selectedDate,2,ipSlots[2]||null,ipSlots[3]||null)
     await load(cursor.getFullYear(),cursor.getMonth())
     setSelectedDate(null)
   }
@@ -230,30 +241,47 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-black/12"/>
         <div className="mx-auto max-w-md">
           <p className="text-[10px] font-medium uppercase tracking-[.09em] text-black/30">EPČ · {selectedDate}</p>
-          <h3 className="mt-1 text-[23px] font-semibold tracking-[-.035em]">Detail dňa</h3>
-          <p className="mt-1 text-[11px] text-black/42">Ťuknutý riadok z formulára. Služby sa označujú X automaticky podľa pracovného plánu.</p>
-          <div className="mt-5 space-y-2">
-            {selectedEntries.length===0?<div className="rounded-[16px] bg-black/[.03] p-4 text-[11px] text-black/40">Žiadna pracovná udalosť. Tento deň zostáva v EPČ prázdny.</div>:selectedEntries.map(e=><div key={e.id} className="rounded-[16px] bg-black/[.03] p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-semibold">{e.type==="individual"||e.type==="ip"?"Individuálna príprava":e.title}</p>
-                  <p className="mt-0.5 text-[9px] text-black/35">{e.type==="individual"||e.type==="ip"?"IP":"Služba · X v EPČ"}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <input
-                    inputMode="decimal"
-                    value={draftHours[e.id]??String(Number(e.hours))}
-                    onChange={ev=>setDraftHours(x=>({...x,[e.id]:ev.target.value}))}
-                    className="w-14 rounded-lg border border-black/10 bg-white px-2 py-1.5 text-right text-[10px] outline-none"
-                  />
-                  <span className="text-[9px] text-black/30">h</span>
-                </div>
+          <h3 className="mt-1 text-[23px] font-semibold tracking-[-.035em]">Upraviť priamo v EPČ</h3>
+          <p className="mt-1 text-[11px] text-black/42">Ťuknutím pridáš alebo odstrániš X. Časy môžeš prepísať alebo úplne vymazať.</p>
+
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            {[0,1].map(i=><button
+              key={i}
+              onClick={()=>setServiceSlots(s=>i===0?[!s[0],s[1]]:[s[0],!s[1]])}
+              className={"rounded-[16px] border px-4 py-4 text-center "+(serviceSlots[i]?"border-black bg-black text-white":"border-black/10 bg-white text-black")}
+            >
+              <div className="text-[20px] font-bold leading-none">{serviceSlots[i]?"X":"+"}</div>
+              <div className="mt-1 text-[9px] font-semibold">{i+1}. služba</div>
+            </button>)}
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {[0,1].map(i=><div key={i} className="rounded-[16px] bg-black/[.03] p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[10px] font-semibold">Individuálna príprava {i+1}</p>
+                <button onClick={()=>setIpSlots(v=>i===0?["","",v[2],v[3]]:[v[0],v[1],"",""])} className="text-[9px] font-medium text-black/35">Vymazať</button>
+              </div>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <input
+                  type="time"
+                  value={ipSlots[i*2]}
+                  onChange={e=>setIpSlots(v=>{const n=[...v] as [string,string,string,string];n[i*2]=e.target.value;return n})}
+                  className="min-w-0 rounded-[12px] border border-black/10 bg-white px-3 py-2 text-[11px] outline-none"
+                />
+                <span className="text-[10px] text-black/30">–</span>
+                <input
+                  type="time"
+                  value={ipSlots[i*2+1]}
+                  onChange={e=>setIpSlots(v=>{const n=[...v] as [string,string,string,string];n[i*2+1]=e.target.value;return n})}
+                  className="min-w-0 rounded-[12px] border border-black/10 bg-white px-3 py-2 text-[11px] outline-none"
+                />
               </div>
             </div>)}
           </div>
+
           <div className="mt-5 grid grid-cols-2 gap-2">
-            <button onClick={()=>setSelectedDate(null)} className="rounded-[15px] bg-black/[.045] px-4 py-3 text-[11px] font-semibold">Zavrieť</button>
-            <button onClick={saveSelectedDay} className="rounded-[15px] bg-black px-4 py-3 text-[11px] font-semibold text-white">Uložiť</button>
+            <button onClick={()=>setSelectedDate(null)} className="rounded-[15px] bg-black/[.045] px-4 py-3 text-[11px] font-semibold">Zrušiť</button>
+            <button onClick={saveSelectedDay} className="rounded-[15px] bg-black px-4 py-3 text-[11px] font-semibold text-white">Uložiť do EPČ</button>
           </div>
         </div>
       </div>
