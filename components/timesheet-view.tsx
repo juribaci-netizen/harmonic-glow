@@ -187,58 +187,16 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
 
         <div className="w-full bg-white">
           {(()=>{
-            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()
+            const pdfUrl="/api/epc-pdf?year="+cursor.getFullYear()+"&month="+cursor.getMonth()+"&v=2"
             return <>
-              <div className={"relative mx-auto aspect-[768/1024] w-full overflow-hidden bg-white "+(pdfEditing?"ring-2 ring-black/10":"")}>
-                <img
-                  src="https://d2jqrm6oza8nb6.cloudfront.net/datasets/782e1996-0e57-4913-acfa-bb7ef190db2a.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzZhOTJmYmYyMDk3MWM3NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc4OTA5NDk3NX0.-q7mt5YO58etpmgdTHFjADNJHIM2XdO6nU6TpltXNfQ"
-                  alt="EPČ"
-                  className="absolute inset-0 h-full w-full object-fill"
-                />
-                <div className={"absolute inset-0 text-black "+(pdfEditing?"pointer-events-auto":"pointer-events-none")}>
-                  <span className="absolute left-[40.4%] top-[5.72%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{epcMonthName}</span>
-                  <span className="absolute left-[54.7%] top-[5.72%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.05vw,13px)] font-semibold">{cursor.getFullYear()}</span>
-                  <span className="absolute left-[39.8%] top-[8.92%] -translate-x-1/2 -translate-y-1/2 text-[clamp(8px,1.2vw,15px)] font-semibold">Marek Juráň</span>
-                  <span className="absolute left-[63.37%] top-[9.58%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.3vw,11px)] font-bold">X</span>
-                  {signed&&signatureData&&<img
-                    src={signatureData}
-                    alt="Podpis zamestnanca"
-                    className="absolute left-[58.5%] top-[86.9%] h-[4.2%] w-[22%] object-contain"
-                  />}
-                  {visibleDays.flatMap(([date,es])=>{
-                    const day=Number(date.slice(-2))
-                    const y=18.17+(day-1)*2.09
-                    const work=es.filter(e=>e.type!=="individual"&&e.type!=="ip")
-                    const ip=es.filter(e=>e.type==="individual"||e.type==="ip")
-                    const ipHours=ip.reduce((s,e)=>s+Number(e.hours),0)
-                    return [
-                      ...(work.length>=1?[<span key={date+"-s1"} className="absolute left-[20.78%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                      ...(work.length>=2?[<span key={date+"-s2"} className="absolute left-[28.59%] -translate-x-1/2 -translate-y-1/2 text-[clamp(7px,1.45vw,11px)] font-bold" style={{top:y+"%"}}>X</span>]:[]),
-                      ...(ipHours>0?[<span key={date+"-ip"} className="absolute left-[74.88%] -translate-x-1/2 -translate-y-1/2 text-[clamp(5px,1vw,8px)] font-medium" style={{top:y+"%"}}>{ipLabel(ipHours,work.length>0)}</span>]:[])
-                    ]
-                  })}
-                </div>
-                <div className="absolute inset-0 z-20">
-                  {Array.from({length:new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate()},(_,i)=>i+1).map(day=>{
-                    const date=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
-                    const isPast=cursor.getFullYear()<today.getFullYear() || (cursor.getFullYear()===today.getFullYear()&&cursor.getMonth()<today.getMonth()) || new Date(date+"T23:59:59")<=today
-                    const top=17.18+(day-1)*2.09
-                    return <button
-                      key={date}
-                      disabled={!isPast}
-                      onClick={()=>openDay(date)}
-                      className="absolute left-[16.9%] right-[15%] rounded-[3px] bg-transparent active:bg-black/[.045] disabled:pointer-events-none"
-                      style={{top:top+"%",height:"2.00%"}}
-                      aria-label={"Otvoriť EPČ "+day+". deň"}
-                    />
-                  })}
-                </div>
-              </div>
-              <button onClick={()=>setPdfEditing(v=>!v)} className="mt-3 block w-full rounded-[13px] bg-black/[.06] px-3 py-3 text-center text-[10px] font-semibold">
-                {pdfEditing?"Hotovo":"Upraviť priamo v EPČ"}
-              </button>
+              <iframe
+                key={cursor.getFullYear()+"-"+cursor.getMonth()+"-"+entries.map(e=>e.id+":"+e.hours+":"+e.status).join("|")}
+                src={pdfUrl+"#toolbar=0&navpanes=0&view=FitH"}
+                title={"EPČ "+epcMonthName}
+                className="block h-[82vh] min-h-[720px] w-full border-0 bg-white"
+              />
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="mt-3 block w-full rounded-[13px] bg-black px-3 py-3 text-center text-[10px] font-semibold text-white">
-                Otvoriť živé PDF
+                Otvoriť originálne EPČ PDF
               </a>
             </>
           })()}
