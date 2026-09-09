@@ -84,13 +84,14 @@ export async function GET(request:Request){
   }
 
   // Exact original EPČ field rectangles.
-  textField("Mesiac",monthNames[month],195.065,788.3,73.6,17.922,10)
-  textField("Rok",String(year),300.221,788.3,46.546,17.922,10)
-  textField("Meno",user.name||"Marek Juráň",167.292,759.774,129.163,17.923,10)
+  textField("Mesiac",monthNames[month],204.65,774.15,73.60,17.93,10)
+  textField("Rok",String(year),309.80,774.15,46.55,17.93,10)
+  textField("Meno",user.name||"Marek Juráň",176.87,745.63,129.17,17.92,10)
 
-  // Keep the original "Orchester" visual: selected by a clean outline around the label.
-  const orchestra=form.createButton("Orchester")
-  orchestra.addToPage("Orchester",page,{x:349.806,y:752.49,width:54.892,height:17.643,borderWidth:1,borderColor:black,textColor:black,font,size:9})
+  // The original PDF has an Orchester widget rectangle. Do not show a selection box.
+  // Cover only the widget area and redraw the plain label.
+  page.drawRectangle({x:358.8,y:738.0,width:56.2,height:19.0,color:rgb(1,1,1)})
+  page.drawText("Orchester",{x:361.5,y:744.0,size:9,font,color:black})
 
   const byDay=new Map<number,any[]>()
   for(const e of visible){
@@ -99,18 +100,18 @@ export async function GET(request:Request){
   }
 
   for(const [day,dayEntries] of byDay){
-    const rowY=680.502-(day-1)*17.6
+    const rowY=666.36-(day-1)*17.455
     const work=dayEntries.filter(e=>serviceTypes.has(e.type))
-    if(work.length>=1) xField(`Check Box ${day}.1`,100.964,rowY,45.528,16.872)
-    if(work.length>=2) xField(`Check Box ${day}.2`,147.401,rowY,45.491,16.872)
+    if(work.length>=1) xField(`Check Box ${day}.1`,110.55,rowY,45.52,16.72)
+    if(work.length>=2) xField(`Check Box ${day}.2`,156.98,rowY,45.49,16.59)
 
     const ipHours=dayEntries.filter(e=>e.type==="individual"||e.type==="ip").reduce((s,e)=>s+Number(e.hours),0)
     const range=ipRange(dayEntries,ipHours)
     if(range){
       const label=range[0]+"-"+range[1]
       const start=minutes(range[0])||0
-      if(start<12*60) textField(`Dropdown ${day}.1`,label,228.565,rowY,122.181,16.872,9)
-      else textField(`Dropdown ${day}.2`,label,386.164,rowY,119.346,16.145,9)
+      if(start<12*60) textField(`Dropdown ${day}.1`,label,238.15,rowY,122.18,16.87,9)
+      else textField(`Dropdown ${day}.2`,label,395.75,rowY,119.34,16.15,9)
     }
   }
 
