@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 export function EpcPdfCanvas({url,title}:{url:string;title:string}){
   const canvasRef=useRef<HTMLCanvasElement|null>(null)
-  const [error,setError]=useState(false)
+  const [error,setError]=useState<string|null>(null)
 
   useEffect(()=>{
     let cancelled=false
@@ -33,7 +33,7 @@ export function EpcPdfCanvas({url,title}:{url:string;title:string}){
         if(!ctx)throw new Error("No canvas context")
         ctx.setTransform(dpr,0,0,dpr,0,0)
         await page.render({canvasContext:ctx,viewport}).promise
-        if(!cancelled)setError(false)
+        if(!cancelled)setError(null)
       }catch{
         if(!cancelled)setError(true)
       }
