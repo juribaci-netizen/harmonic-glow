@@ -190,10 +190,12 @@ html[data-epc-ensemble="orchester"] [class*="pointer-events-none"][class*="absol
 
 html[data-epc-ensemble="zbor"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
   left:69.41%;
+  top:8.72%;
   width:5.00%;
 }
 
 html[data-epc-ensemble="sko"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
   left:77.91%;
+  top:8.72%;
   width:5.10%;
 }
