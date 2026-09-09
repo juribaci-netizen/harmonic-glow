@@ -105,3 +105,14 @@ export const concertVideo = pgTable("concert_video", {
   thumbnailUrl: text("thumbnailUrl"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
+
+
+export const epcSignature = pgTable("epc_signature", {
+  id: serial("id").primaryKey(),
+  userId: text("userId").notNull(),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  signatureData: text("signatureData").notNull(),
+  signedAt: timestamp("signedAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+})
