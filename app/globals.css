@@ -165,29 +165,8 @@
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:6.150% !important; font-size:clamp(5px,.85vw,10px) !important; }
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:9.540% !important; font-size:clamp(6px,.95vw,11px) !important; }
 
-/* Completely cover the baked-in Orchester AcroForm frame, then redraw only its label. */
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(4){
-  left:58.18% !important;
-  top:8.02% !important;
-  width:10.48% !important;
-  height:3.05% !important;
-  background:#fff !important;
-  z-index:10 !important;
-  display:block !important;
-}
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(4)::after{
-  content:"Orchester";
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#111;
-  font-size:clamp(5px,.82vw,9px);
-  font-weight:400;
-  line-height:1;
-  transform:translateY(3%);
-}
+/* The ensemble row is now rebuilt by MonthEnsembleChoice; hide the old four Orchester mask strips. */
+[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(4),
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(5),
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(6),
 [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(7){
@@ -198,31 +177,4 @@
 button[aria-label$="služba"] > span {
   transform: translateY(-12%);
   font-weight: 400 !important;
-}
-
-/* EPČ ensemble: nothing is framed until a valid single selection exists. */
-html[data-epc-ensemble] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  content:"";
-  position:absolute;
-  top:9.72%;
-  height:2.25%;
-  box-sizing:border-box;
-  border:1px solid #111;
-  pointer-events:none;
-  z-index:20;
-}
-
-html[data-epc-ensemble="orchester"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:60.10%;
-  width:9.35%;
-}
-
-html[data-epc-ensemble="zbor"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:70.81%;
-  width:5.00%;
-}
-
-html[data-epc-ensemble="sko"] [class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]::after {
-  left:79.31%;
-  width:5.10%;
 }
