@@ -7,37 +7,14 @@ type Ensemble = "orchester" | "zbor" | "sko"
 type EnsembleOption = {
   value: Ensemble
   label: string
-  labelLeft: string
-  labelWidth: string
   frameLeft: string
   frameWidth: string
 }
 
 const OPTIONS: EnsembleOption[] = [
-  {
-    value: "orchester",
-    label: "Orchester",
-    labelLeft: "60.0235%",
-    labelWidth: "7.7676%",
-    frameLeft: "59.00%",
-    frameWidth: "9.82%",
-  },
-  {
-    value: "zbor",
-    label: "Zbor",
-    labelLeft: "70.6905%",
-    labelWidth: "3.6553%",
-    frameLeft: "69.82%",
-    frameWidth: "5.40%",
-  },
-  {
-    value: "sko",
-    label: "SKO",
-    labelLeft: "79.1822%",
-    labelWidth: "3.7586%",
-    frameLeft: "78.30%",
-    frameWidth: "5.52%",
-  },
+  { value: "orchester", label: "Orchester", frameLeft: "59.00%", frameWidth: "9.82%" },
+  { value: "zbor", label: "Zbor", frameLeft: "69.82%", frameWidth: "5.40%" },
+  { value: "sko", label: "SKO", frameLeft: "78.30%", frameWidth: "5.52%" },
 ]
 
 const MONTHS = [
@@ -77,52 +54,18 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       }
     }
 
-    const ensureCleanLayer = (overlay: HTMLElement) => {
-      let layer = overlay.querySelector<HTMLDivElement>("#epc-ensemble-clean-layer")
+    const ensureFrameLayer = (overlay: HTMLElement) => {
+      let layer = overlay.querySelector<HTMLDivElement>("#epc-ensemble-frame-layer")
       if (layer) return layer
 
       layer = document.createElement("div")
-      layer.id = "epc-ensemble-clean-layer"
+      layer.id = "epc-ensemble-frame-layer"
       Object.assign(layer.style, {
         position: "absolute",
         inset: "0",
         zIndex: "18",
         pointerEvents: "none",
-      })
-
-      const cover = document.createElement("div")
-      Object.assign(cover.style, {
-        position: "absolute",
-        left: "58.75%",
-        top: "9.9865%",
-        width: "25.25%",
-        height: "2.55%",
-        background: "#fff",
-      })
-      layer.appendChild(cover)
-
-      OPTIONS.forEach(option => {
-        const label = document.createElement("span")
-        label.textContent = option.label
-        label.dataset.epcEnsembleLabel = option.value
-        Object.assign(label.style, {
-          position: "absolute",
-          left: option.labelLeft,
-          top: "10.8313%",
-          width: option.labelWidth,
-          height: "1.2543%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#111",
-          fontFamily: "Arial, Helvetica, sans-serif",
-          fontSize: "clamp(5px,.82vw,9px)",
-          fontWeight: "400",
-          lineHeight: "1",
-          whiteSpace: "nowrap",
-          zIndex: "19",
-        })
-        layer.appendChild(label)
+        background: "transparent",
       })
 
       const frame = document.createElement("div")
@@ -132,12 +75,12 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
         top: "10.5065%",
         height: "1.95%",
         border: "1px solid #111",
+        background: "transparent",
         boxSizing: "border-box",
         display: "none",
         zIndex: "20",
       })
       layer.appendChild(frame)
-
       overlay.appendChild(layer)
       return layer
     }
@@ -163,7 +106,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       setActiveMonth(shownMonth)
       delete document.documentElement.dataset.epcEnsemble
 
-      const layer = ensureCleanLayer(overlay)
+      const layer = ensureFrameLayer(overlay)
       const saved = window.localStorage.getItem(ensembleKey(shownYear, shownMonth))
       const value = isEnsemble(saved) ? saved : null
       setSelected(value)
@@ -241,7 +184,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
       cleanupOverlay = () => {
         observer?.disconnect()
         overlay.querySelector("#epc-ensemble-hit-area")?.remove()
-        overlay.querySelector("#epc-ensemble-clean-layer")?.remove()
+        overlay.querySelector("#epc-ensemble-frame-layer")?.remove()
       }
     }
 
@@ -256,7 +199,7 @@ export function MonthEnsembleChoice({ year, month }: { year: number; month: numb
     const overlay = document.querySelector<HTMLElement>(
       '[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"]'
     )
-    const layer = overlay?.querySelector<HTMLElement>("#epc-ensemble-clean-layer")
+    const layer = overlay?.querySelector<HTMLElement>("#epc-ensemble-frame-layer")
     const frame = layer?.querySelector<HTMLElement>("#epc-ensemble-selection-frame")
     const option = OPTIONS.find(item => item.value === value)
     if (frame && option) {
