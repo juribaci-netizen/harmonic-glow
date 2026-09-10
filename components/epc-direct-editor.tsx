@@ -57,6 +57,27 @@ function displayRange(entry: Entry | undefined) {
   return `${entry.startTime}-${entry.endTime}`
 }
 
+function localDateKey(now: Date) {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+}
+
+function serviceIsMarked(entry: Entry | undefined, date: string, now: Date) {
+  if (!entry || entry.status === "removed") return false
+
+  // A manual correction is always shown immediately.
+  if (entry.status === "manual" || entry.type === "manual-service") return true
+
+  const today = localDateKey(now)
+  if (date < today) return true
+  if (date > today) return false
+
+  // On the current day, automatic X appears only after the scheduled service ends.
+  if (!entry.endTime) return false
+  const [hour, minute] = entry.endTime.split(":").map(Number)
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return false
+  return now.getHours() * 60 + now.getMinutes() >= hour * 60 + minute
+}
+
 export function EpcDirectEditor({ year, month }: { year: number; month: number }) {
   const [overlay, setOverlay] = useState<HTMLElement | null>(null)
   const [activeYear, setActiveYear] = useState(year)
@@ -65,6 +86,7 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
   const [drafts, setDrafts] = useState<DraftMap>({})
   const [invalid, setInvalid] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState<Record<string, boolean>>({})
+  const [now, setNow] = useState(() => new Date())
 
   const readDisplayedMonth = () => {
     const node = document.querySelector<HTMLElement>(overlaySelector)
@@ -137,6 +159,15 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
     load(activeYear, activeMonth)
   }, [activeYear, activeMonth])
 
+  // Keep the sheet live: when a service end time passes, its X appears without reopening the app.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date())
+      load(activeYear, activeMonth)
+    }, 60_000)
+    return () => window.clearInterval(timer)
+  }, [activeYear, activeMonth])
+
   const days = useMemo(
     () => Array.from({ length: new Date(activeYear, activeMonth + 1, 0).getDate() }, (_, index) => index + 1),
     [activeYear, activeMonth],
@@ -148,6 +179,7 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
     try {
       await setManualService(date, slot, !active)
       await load(activeYear, activeMonth)
+      setNow(new Date())
     } finally {
       setSaving(state => ({ ...state, [key]: false }))
     }
@@ -185,8 +217,8 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
           .filter(entry => entry.type === "individual" || entry.type === "ip")
           .sort((a, b) => String(a.startTime ?? "").localeCompare(String(b.startTime ?? "")))
         const rowTop = 17.186 + (day - 1) * 2.0829
-        const service1 = !!work[0] && work[0].status !== "removed"
-        const service2 = !!work[1] && work[1].status !== "removed"
+        const service1 = serviceIsMarked(work[0], date, now)
+        const service2 = serviceIsMarked(work[1], date, now)
         const ip1Key = rangeKey(date, 1)
         const ip2Key = rangeKey(date, 2)
 
@@ -196,7 +228,7 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
               type="button"
               aria-label={`${date} 1. služba – kliknutím prepnete X`}
               onClick={() => toggleService(date, 1, service1)}
-              className="pointer-events-auto absolute flex items-center justify-center bg-white text-black outline-none focus:ring-1 focus:ring-black/30"
+              className="pointer-events-auto absolute flex items-center justify-center bg-transparent text-black outline-none focus:ring-1 focus:ring-black/30"
               style={{ left: "17.06%", top: `${rowTop + 0.10}%`, width: "7.45%", height: "1.78%" }}
             >
               <span className="text-[clamp(7px,1.35vw,12px)] font-normal leading-none">{service1 ? "X" : ""}</span>
@@ -206,7 +238,7 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
               type="button"
               aria-label={`${date} 2. služba – kliknutím prepnete X`}
               onClick={() => toggleService(date, 2, service2)}
-              className="pointer-events-auto absolute flex items-center justify-center bg-white text-black outline-none focus:ring-1 focus:ring-black/30"
+              className="pointer-events-auto absolute flex items-center justify-center bg-transparent text-black outline-none focus:ring-1 focus:ring-black/30"
               style={{ left: "24.86%", top: `${rowTop + 0.12}%`, width: "7.44%", height: "1.76%" }}
             >
               <span className="text-[clamp(7px,1.35vw,12px)] font-normal leading-none">{service2 ? "X" : ""}</span>
@@ -232,7 +264,7 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
                   event.currentTarget.blur()
                 }
               }}
-              className={`pointer-events-auto absolute bg-white px-[2px] text-[clamp(4px,.85vw,8px)] text-black outline-none ${invalid[ip1Key] ? "ring-1 ring-red-500" : "focus:ring-1 focus:ring-black/25"}`}
+              className={`pointer-events-auto absolute bg-transparent px-[2px] text-[clamp(4px,.85vw,8px)] text-black outline-none ${invalid[ip1Key] ? "ring-1 ring-red-500" : "focus:ring-1 focus:ring-black/25"}`}
               style={{ left: "38.55%", top: `${rowTop + 0.12}%`, width: "20.18%", height: "1.72%" }}
             />
 
@@ -256,7 +288,7 @@ export function EpcDirectEditor({ year, month }: { year: number; month: number }
                   event.currentTarget.blur()
                 }
               }}
-              className={`pointer-events-auto absolute bg-white px-[2px] text-[clamp(4px,.85vw,8px)] text-black outline-none ${invalid[ip2Key] ? "ring-1 ring-red-500" : "focus:ring-1 focus:ring-black/25"}`}
+              className={`pointer-events-auto absolute bg-transparent px-[2px] text-[clamp(4px,.85vw,8px)] text-black outline-none ${invalid[ip2Key] ? "ring-1 ring-red-500" : "focus:ring-1 focus:ring-black/25"}`}
               style={{ left: "65.02%", top: `${rowTop + 0.15}%`, width: "19.72%", height: "1.68%" }}
             />
 
