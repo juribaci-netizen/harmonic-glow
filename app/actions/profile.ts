@@ -34,6 +34,21 @@ export async function saveProfile(input: ProfileInput) {
   }
 
   revalidatePath("/profile")
+  revalidatePath("/timesheet")
   revalidatePath("/")
   return { ok: true }
+}
+
+export async function saveEpcName(fullName: string) {
+  if (typeof fullName !== 'string' || !fullName.trim() || fullName.trim().length > 150) {
+    throw new Error('Zadajte meno a priezvisko (najviac 150 znakov).')
+  }
+  const userId = await getUserId()
+  const name = fullName.trim().normalize('NFC')
+  await db.insert(profile).values({ userId, fullName: name })
+    .onConflictDoUpdate({ target: profile.userId, set: { fullName: name, updatedAt: new Date() } })
+  revalidatePath('/profile')
+  revalidatePath('/timesheet')
+  revalidatePath('/')
+  return { fullName: name }
 }

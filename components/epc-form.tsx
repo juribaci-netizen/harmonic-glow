@@ -17,13 +17,13 @@ function TimeCell({name,value,disabled,onSave,onDirty}:{name:string;value:string
     if(draft===latest.current){onDirty(false);return}
     try {await onSave(draft);setError(false);onDirty(false)}catch{setError(true);onDirty(true)}
   }
-  return <input data-epc-field={name} className={`${styles.field} ${styles.range}`} style={position(name)}
-    aria-label={name.replace(/Dropdown (\d+)\.([12])/, "$1. deň – individuálna príprava $2")} aria-invalid={error} title="Čas od–do, napríklad 08:00-12:00. Prázdne pole čas vymaže."
+  return <input data-epc-field={name} className={`${styles.field} ${name==='Meno'?styles.name:styles.range}`} style={position(name)}
+    aria-label={name==='Meno'?'Meno a priezvisko v EPČ':name.replace(/Dropdown (\d+)\.([12])/, "$1. deň – individuálna príprava $2")} aria-invalid={error} title={name==='Meno'?'Oprava sa uloží aj do profilu. Potvrďte klávesom Enter alebo kliknutím mimo poľa.':'Čas od–do, napríklad 08:00-12:00. Prázdne pole čas vymaže.'}
     autoComplete="off" spellCheck={false} value={draft} disabled={disabled}
     onFocus={()=>{focused.current=true}} onChange={e=>{setDraft(e.target.value);setError(false);onDirty(e.target.value!==latest.current)}}
     onBlur={save} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur()}if(e.key==='Escape'){setDraft(value);setError(false);onDirty(false)}}}/>
 }
-export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,busy,onService,onRange,onDirty}:{entries:Entry[];year:number;month:number;name:string;signatureData:string|null;ensemble:Ensemble|null;zoom:number;busy:boolean;onService:(date:string,slot:Slot,value:boolean)=>Promise<void>;onRange:(date:string,slot:Slot,value:string)=>Promise<void>;onDirty:(key:string,dirty:boolean)=>void}) {
+export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,busy,onService,onRange,onName,onDirty}:{entries:Entry[];year:number;month:number;name:string;signatureData:string|null;ensemble:Ensemble|null;zoom:number;busy:boolean;onService:(date:string,slot:Slot,value:boolean)=>Promise<void>;onRange:(date:string,slot:Slot,value:string)=>Promise<void>;onName:(value:string)=>Promise<void>;onDirty:(key:string,dirty:boolean)=>void}) {
   const host=useRef<HTMLDivElement>(null),[width,setWidth]=useState(geometry.width),[now,setNow]=useState(()=>bratislavaNow())
   useEffect(()=>{const node=host.current;if(!node)return;const observer=new ResizeObserver(([entry])=>setWidth(entry.contentRect.width));observer.observe(node);return()=>observer.disconnect()},[])
   useEffect(()=>{const timer=setInterval(()=>setNow(bratislavaNow()),30000);return()=>clearInterval(timer)},[])
@@ -32,7 +32,8 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
     <div style={{width:geometry.width*scale,height:geometry.height*scale}}>
       <div className={styles.paper} data-epc-paper style={{width:geometry.width,height:geometry.height,transform:`scale(${scale})`}}>
         <img className={styles.background} src="/epc-blank.png" alt="Prázdny originálny formulár EPČ" draggable={false}/>
-        {[['Mesiac',MONTHS[month]],['Rok',String(year)],['Meno',name]].map(([key,value])=><div key={key} data-epc-field={key} className={`${styles.field} ${styles.header}`} style={position(key)}>{value}</div>)}
+        {[['Mesiac',MONTHS[month]],['Rok',String(year)]].map(([key,value])=><div key={key} data-epc-field={key} className={`${styles.field} ${styles.header}`} style={position(key)}>{value}</div>)}
+        <TimeCell name="Meno" value={name} disabled={busy} onSave={onName} onDirty={value=>onDirty('name',value)}/>
         {ensemble&&<span data-epc-ensemble className={styles.ensemble} style={position({orchester:'Orchester',zbor:'Zbor',sko:'SKO'}[ensemble])}/>}
         {Array.from({length:31},(_,i)=>i+1).map(day=>{
           const date=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`

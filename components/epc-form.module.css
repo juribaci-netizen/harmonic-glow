@@ -5,6 +5,9 @@
 .field { position:absolute;box-sizing:border-box;margin:0;border:0;border-radius:0;padding:0;background:transparent;color:black; }
 .header { display:flex;align-items:center;background:white;padding:0 1px;font-size:10px;line-height:1;white-space:nowrap;overflow:hidden; }
 .range { padding:0 1px;font:9px EpcSans,Arial,sans-serif;line-height:normal;min-width:0;outline:none; }
+.name { padding:0 1px;font:10px EpcSans,Arial,sans-serif;background:white;min-width:0;outline:none; }
+.name:focus { outline:1px solid #8b6f4b;background:#fffcf4; }
+.name[aria-invalid=true] { outline:1px solid #b42318;background:#fff2f0; }
 .range:focus { outline:1px solid #8b6f4b;background:#fffcf4; }
 .range[aria-invalid=true] { outline:1px solid #b42318;background:#fff2f0; }
 .checkbox { display:flex;align-items:center;justify-content:center; }

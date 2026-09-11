@@ -21,5 +21,5 @@ export async function GET(request:Request) {
     readFile(path.join(process.cwd(),'public','fonts','EpcSans.ttf')),
   ])
   const bytes=await createEpcPdf({template,fontBytes,year,month,name:profile?.fullName??user.name,entries,...report})
-  return new NextResponse(new Uint8Array(bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`inline; filename="EPC-${year}-${String(month+1).padStart(2,'0')}.pdf"`,'Cache-Control':'no-store, max-age=0'}})
+  return new NextResponse(new Uint8Array(bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`${params.get('download')==='1'?'attachment':'inline'}; filename="EPC-${year}-${String(month+1).padStart(2,'0')}.pdf"`,'Cache-Control':'no-store, max-age=0'}})
 }
