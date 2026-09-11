@@ -38,7 +38,21 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
   useImperativeHandle(editorRef,()=>({saveChanges:async()=>{for(const save of [...saves.current.values()])if(!await save())return false;return true}}),[])
   const host=useRef<HTMLDivElement>(null),[width,setWidth]=useState(geometry.width),[now,setNow]=useState(()=>bratislavaNow())
   useEffect(()=>{const node=host.current;if(!node)return;const observer=new ResizeObserver(([entry])=>setWidth(entry.contentRect.width));observer.observe(node);return()=>observer.disconnect()},[])
-  useEffect(()=>{const timer=setInterval(()=>setNow(bratislavaNow()),30000);return()=>clearInterval(timer)},[])
+  useEffect(()=>{
+    let timer:ReturnType<typeof setTimeout>
+    const refresh=()=>{
+      clearTimeout(timer)
+      setNow(bratislavaNow())
+      // Plan times have minute precision. Align updates to the clock rather
+      // than delaying a completed service until the next polling interval.
+      timer=setTimeout(refresh,60000-(Date.now()%60000)+10)
+    }
+    const resume=()=>{if(document.visibilityState==='visible')refresh()}
+    refresh()
+    window.addEventListener('focus',refresh)
+    document.addEventListener('visibilitychange',resume)
+    return()=>{clearTimeout(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',resume)}
+  },[])
   const visibleWidth=geometry.width-previewCrop.left-previewCrop.right,visibleHeight=geometry.height-previewCrop.top-previewCrop.bottom
   const scale=width/visibleWidth*zoom,days=new Date(year,month+1,0).getDate()
   return <div ref={host} className={styles.viewport} tabIndex={0} aria-label="Formulár EPČ; pri priblížení posúvajte do strán">
