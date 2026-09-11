@@ -117,9 +117,9 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="flex flex-wrap gap-2">
         {pdfEditor&&<button type="button" disabled={locked||savingAll} onPointerDown={e=>e.preventDefault()} onClick={()=>void saveChanges(true)} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-black/15 px-3 text-xs font-medium disabled:opacity-40"><ArrowLeft className="h-4 w-4" aria-hidden="true"/>Späť do aplikácie</button>}
       </div>
-      <p aria-live="polite" className="mt-1.5 text-xs text-black/60">{error||((savingAll||saving)?'Ukladám zmeny…':hasDrafts?'Máte neuložené zmeny.':status||'Zmeny sa ukladajú aj priebežne.')}</p>
+      <p aria-live="polite" className="mt-1.5 text-xs text-black/60 empty:hidden">{error||((savingAll||saving)?'Ukladám zmeny…':hasDrafts?'Máte neuložené zmeny.':status)}</p>
     </div>}
-    <header className="pt-1"><p className="modern-kicker text-black/50">Evidencia pracovného času</p><h1 className="ios-title mt-1">{pdfEditor?'Úprava PDF':'EPČ'}</h1>{pdfEditor&&<p className="mt-2 text-sm text-black/60">Tento editor je prepojený s aplikáciou. Potvrdené opravy sa ukladajú na stránku.</p>}</header>
+    <header className="pt-1"><p className="modern-kicker text-black/50">Evidencia pracovného času</p><h1 className="ios-title mt-1">{pdfEditor?'Úprava PDF':'EPČ'}</h1></header>
     <section className="rounded-[22px] border border-black/10 bg-white">
       <div className="grid grid-cols-[44px_1fr_44px] items-center border-b border-black/10 p-3">
         <button aria-label="Predchádzajúci mesiac" disabled={locked||hasDrafts} onClick={()=>changeMonth(-1)} className="flex h-11 items-center justify-center rounded-full disabled:opacity-30"><ChevronLeft/></button>
@@ -129,23 +129,19 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
         <label className="text-xs">Priblíženie <select aria-label="Priblíženie formulára" value={zoom} onChange={e=>setZoom(Number(e.target.value))} className="rounded-lg border border-black/15 p-2">{[1,1.5,2,3].map(v=><option key={v} value={v}>{v===1?'Celá strana':`${v*100}%`}</option>)}</select></label>
       </div>
-      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravy sa ukladajú priebežne po stlačení Enter alebo kliknutí mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 09:00-13:00. Na mobile si formulár priblížte.</p>
       {error&&<p role="alert" className="mx-3 mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
-      <p role="status" aria-live="polite" className="min-h-6 px-3 text-xs text-black/60">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Rozpísaná zmena – potvrďte alebo opravte pole.':status}</p>
+      <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
-        <p className="text-xs leading-relaxed text-black/60">EPČ sa dopĺňa automaticky po každej skončenej službe označenej Hrám v pláne práce. Netreba ho ručne potvrdiť; po návrate do aplikácie sa údaje obnovia. Pri Nehrám alebo nevybranej účasti zostávajú iba časy IP. Ručné opravy X sú výnimkou pre konkrétnu službu. IP sa rozvrhuje medzi 09:00 a 21:00 do voľných časov s cieľom 40 hodín týždenne spolu s hranými službami. Pri Nehrám čas služby IP neobmedzuje. Bežne sú bloky IP do 3 hodín. Dlhší blok, najviac 4 hodiny, sa navrhne nanajvýš raz týždenne a v ten deň bude jediným IP. Navrhnuté časy IP môžete upraviť.</p>
-        {!!report.shortfalls?.length&&<details className="rounded-xl bg-black/5 p-3 text-xs"><summary className="cursor-pointer">Niektoré týždne nedosahujú 40 hodín</summary><p className="mt-2">Pri kratších blokoch IP zostávajú tieto hodiny nerozvrhnuté:</p><ul className="mt-2 space-y-1">{report.shortfalls.map(s=><li key={s.weekStart}>Týždeň od {s.weekStart.split('-').reverse().join('.')}: chýba {s.missingHours} h</li>)}</ul></details>}
+        {!!report.shortfalls?.length&&<details className="rounded-xl bg-black/5 p-3 text-xs"><summary className="cursor-pointer">Niektoré týždne nedosahujú 40 hodín</summary><ul className="mt-2 space-y-1">{report.shortfalls.map(s=><li key={s.weekStart}>Týždeň od {s.weekStart.split('-').reverse().join('.')}: chýba {s.missingHours} h</li>)}</ul></details>}
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
-        <p className="text-xs leading-relaxed text-black/60">PDF obsahuje uložené údaje a je pripravené na tlač alebo odovzdanie.</p>
       </div>
     </section>
     {signing&&<div role="dialog" aria-modal="true" aria-labelledby="signature-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-5">
         <h2 id="signature-title" className="text-xl font-semibold">Podpis · {MONTHS[month]} {year}</h2>
-        <p className="my-3 text-sm text-black/60">Podpis sa uloží len k tomuto zamestnancovi a mesiacu.</p>
-        <canvas aria-label="Podpis zamestnanca" ref={canvas} width={720} height={260} onPointerDown={startSign} onPointerMove={drawSign} onPointerUp={()=>{drawing.current=false}} onPointerCancel={()=>{drawing.current=false}} className="h-[170px] w-full touch-none rounded-xl border border-black/20"/>
+        <canvas aria-label="Podpis zamestnanca" ref={canvas} width={720} height={260} onPointerDown={startSign} onPointerMove={drawSign} onPointerUp={()=>{drawing.current=false}} onPointerCancel={()=>{drawing.current=false}} className="mt-3 h-[170px] w-full touch-none rounded-xl border border-black/20"/>
         <div className="mt-3 flex justify-between text-sm"><button disabled={saving} onClick={()=>{canvas.current?.getContext('2d')?.clearRect(0,0,720,260);setHasInk(false)}}>Vymazať kresbu</button><button disabled={saving} onClick={()=>setSigning(false)}>Zrušiť</button></div>
         {error&&<p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
         <button disabled={!hasInk||saving} onClick={confirmSign} className="mt-4 w-full rounded-xl bg-black p-3 text-sm text-white disabled:opacity-40">{saving?'Ukladám…':'Uložiť podpis'}</button>

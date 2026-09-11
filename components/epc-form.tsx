@@ -2,7 +2,7 @@
 import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { geometry, fieldRect, dayValues, MONTHS, bratislavaNow, type Entry, type Slot, type Ensemble } from '@/lib/epc/model'
 import styles from './epc-form.module.css'
-import {headerRect,headerFontSize,previewCrop,signatureRect} from '@/lib/epc/layout'
+import {headerRect,headerFontSize,previewCrop,signatureRect,rangeBaseline,rangeFontSize,rangeInputPadding} from '@/lib/epc/layout'
 
 function position(name:string):CSSProperties {
   const r=name==='Podpis'?signatureRect():headerRect(name)??fieldRect(name)
@@ -26,11 +26,14 @@ function TimeCell({name,value,disabled,onSave,onDirty,registerSave}:{name:string
     return pending.current
   }
   useEffect(()=>{registerSave(name,draft!==value?save:null);return()=>registerSave(name,null)},[name,draft,value,onSave,registerSave])
-  return <input data-epc-field={name} className={`${styles.field} ${name==='Meno'?styles.name:styles.range}`} style={position(name)}
-    aria-label={name==='Meno'?'Meno a priezvisko v EPČ':name.replace(/Dropdown (\d+)\.([12])/, "$1. deň – individuálna príprava $2")} aria-invalid={error} title={name==='Meno'?'Oprava sa uloží aj do profilu. Potvrďte klávesom Enter alebo kliknutím mimo poľa.':'Čas od–do, napríklad 09:00-13:00. Prázdne pole čas vymaže.'}
+  const range=name.startsWith('Dropdown '),rect=range?fieldRect(name):null
+  return <><input data-epc-field={name} className={`${styles.field} ${name==='Meno'?styles.name:styles.range}`} style={{...position(name),...(range?{paddingTop:rangeInputPadding(name)}:{})}}
+    aria-label={name==='Meno'?'Meno a priezvisko v EPČ':name.replace(/Dropdown (\d+)\.([12])/, "$1. deň – individuálna príprava $2")} aria-invalid={error}
     autoComplete="off" spellCheck={false} value={draft} disabled={disabled}
     onFocus={()=>{focused.current=true}} onChange={e=>{setDraft(e.target.value);setError(false);onDirty(e.target.value!==latest.current)}}
     onBlur={save} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur()}if(e.key==='Escape'){setDraft(value);setError(false);onDirty(false)}}}/>
+    {range&&rect&&<svg aria-hidden="true" data-epc-value={name} className={`${styles.field} ${styles.rangeValue}`} style={position(name)}><text x={rect.width/2} y={rect.height-(rangeBaseline(name)-rect.y)} textAnchor="middle" fontSize={rangeFontSize}>{draft}</text></svg>}
+  </>
 }
 export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,busy,onService,onRange,onName,onEnsemble,onDirty,editorRef}:{entries:Entry[];year:number;month:number;name:string;signatureData:string|null;ensemble:Ensemble|null;zoom:number;busy:boolean;onService:(date:string,slot:Slot,value:boolean)=>Promise<void>;onRange:(date:string,slot:Slot,value:string)=>Promise<void>;onName:(value:string)=>Promise<void>;onEnsemble:(value:Ensemble)=>Promise<void>;onDirty:(key:string,dirty:boolean)=>void;editorRef?:Ref<EpcFormHandle>}) {
   const saves=useRef(new Map<string,()=>Promise<boolean>>())

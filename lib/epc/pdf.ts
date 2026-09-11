@@ -1,6 +1,6 @@
 import { PDFDocument, TextAlignment, rgb, drawLine, drawText, degrees, pushGraphicsState, popGraphicsState } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import {headerRect,headerFontSize,rangeFontSize,signatureRect} from './layout'
+import {headerRect,headerFontSize,rangeFontSize,signatureRect,rangeBaseline} from './layout'
 import { bratislavaNow, fieldRect, dayValues, MONTHS, validateMonth, type Entry, type Ensemble } from './model'
 
 export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8Array;year:number;month:number;name:string;entries:Entry[];signatureData?:string|null;ensemble?:Ensemble|null;now?:Date}) {
@@ -17,7 +17,7 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
     field.setFontSize(size)
     if(key.startsWith('Dropdown '))field.setAlignment(TextAlignment.Center)
     if(header)field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:1,y:4,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
-    if(key.startsWith('Dropdown '))field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:(r.width-font.widthOfTextAtSize(value,size))/2,y:(r.height-font.heightAtSize(size,{descender:false}))/2,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
+    if(key.startsWith('Dropdown '))field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:(r.width-font.widthOfTextAtSize(value,size))/2,y:rangeBaseline(key)-r.y,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
     return field
   }
   text('Mesiac',MONTHS[month],headerFontSize);text('Rok',String(year),headerFontSize);text('Meno',name,headerFontSize)
@@ -43,6 +43,9 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
   const signature=text('Podpis','',10)
   if(signatureData) {
     const png=await pdf.embedPng(signatureData)
+    const r=signatureRect(),dimensions=png.scaleToFit(r.width,r.height)
+    signature.acroField.getWidgets()[0].setRectangle({x:r.x,y:r.y,width:r.width,height:dimensions.height})
+    signature.setAlignment(TextAlignment.Center)
     signature.setImage(png)
     signature.enableReadOnly()
   }

@@ -30,7 +30,6 @@ function ParticipationButtons({value,pending,label,onChange}:{value:boolean|null
       const selected=value===choice,Icon=choice?Check:X
       return <button key={String(choice)} type="button" aria-pressed={selected} disabled={pending}
         onClick={()=>onChange(selected?null:choice)}
-        title={selected?'Kliknutím zrušiť výber':choice?'Hrám':'Nehrám'}
         className={`flex min-h-11 items-center justify-center gap-2 rounded-lg border px-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b6f4b] disabled:opacity-50 ${selected?(choice?'border-emerald-700 bg-emerald-700 text-white':'border-rose-700 bg-rose-700 text-white'):'border-black/15 bg-white text-black/65 hover:bg-black/5'}`}>
         <Icon aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={2.5}/>{choice?'Hrám':'Nehrám'}
       </button>
@@ -50,8 +49,7 @@ function ProgramChoice({ program }: { program: NonNullable<Activity['workProgram
     <h2 className="mt-1 text-sm font-semibold leading-snug">{program.title}</h2>
     <p className="mt-1 text-[11px] text-black/55">{program.start.split('-').reverse().join('.')} – {program.end.split('-').reverse().join('.')}</p>
     <ParticipationButtons label={`Účasť na programe ${program.title}`} value={program.playing} pending={pending} onChange={choose}/>
-    <p className="mt-2 text-[10px] text-black/50">Opätovným kliknutím výber zrušíte.</p>
-    <p role="status" className="mt-2 text-[11px] leading-relaxed text-black/60">{pending?'Ukladám…':`Platí pre celý program aj skúšky. ${program.playing===true?'X po skončení služby.':'Bez X, iba IP.'}`}</p>
+    <p role="status" className="mt-2 text-[11px] leading-relaxed text-black/60 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
   </div>
 }
@@ -62,7 +60,7 @@ function ParticipationChoice({ activity }: { activity: Activity }) {
     <ParticipationButtons label={`Účasť služby ${activity.date} ${activity.startTime}`} pending={pending}
       value={activity.participationOverride?activity.playing:null}
       onChange={value=>startTransition(async()=>{setError('');try{await setActivityParticipation(activity.id,value)}catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}})}/>
-    <p role="status" className="mt-2 text-[10px] text-black/50">{pending?'Ukladám…':activity.participationOverride?'Opätovným kliknutím sa vrátite k voľbe programu.':'Podľa programu'}</p>
+    <p role="status" className="mt-2 text-[10px] text-black/50 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
   </details>
 }
@@ -174,14 +172,12 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
             <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
-            <p className="mt-2 text-[11px] text-black/50">Účasť vyberte raz pre celý program. Bez výberu sa X nezapíše.</p>
           </div>
           <a
             href="/api/work-plan"
             target="_blank"
             rel="noreferrer"
             aria-label="Otvoriť PDF plán práce"
-            title="Otvoriť PDF plán práce"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-transform active:scale-95"
           >
             <Download className="h-[18px] w-[18px]" />
