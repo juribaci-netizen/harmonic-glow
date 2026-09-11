@@ -111,7 +111,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     }finally{setSavingAll(false)}
   }
   return <div className="space-y-5">
-    {pdfEditor&&<div className="sticky top-14 z-20 -mx-5 border-b border-black/10 bg-white/95 px-5 py-3 backdrop-blur-xl">
+    {pdfEditor&&<div className="sticky top-14 z-20 -mx-2 border-b border-black/10 bg-white/95 px-2 py-3 sm:-mx-5 sm:px-5 backdrop-blur-xl">
       <div className="flex flex-wrap gap-2">
         {pdfEditor&&<button type="button" disabled={locked||savingAll} onPointerDown={e=>e.preventDefault()} onClick={()=>void saveChanges(true)} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-black/15 px-3 text-xs font-medium disabled:opacity-40"><ArrowLeft className="h-4 w-4" aria-hidden="true"/>Späť do aplikácie</button>}
       </div>

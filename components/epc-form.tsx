@@ -2,9 +2,10 @@
 import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { geometry, fieldRect, dayValues, MONTHS, bratislavaNow, type Entry, type Slot, type Ensemble } from '@/lib/epc/model'
 import styles from './epc-form.module.css'
+import {headerRect,headerFontSize,previewCrop} from '@/lib/epc/layout'
 
 function position(name:string):CSSProperties {
-  const r=fieldRect(name)
+  const r=headerRect(name)??fieldRect(name)
   return {left:r.x,top:r.top,width:r.width,height:r.height}
 }
 type RegisterSave = (name:string, save:(()=>Promise<boolean>)|null)=>void
@@ -38,12 +39,13 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
   const host=useRef<HTMLDivElement>(null),[width,setWidth]=useState(geometry.width),[now,setNow]=useState(()=>bratislavaNow())
   useEffect(()=>{const node=host.current;if(!node)return;const observer=new ResizeObserver(([entry])=>setWidth(entry.contentRect.width));observer.observe(node);return()=>observer.disconnect()},[])
   useEffect(()=>{const timer=setInterval(()=>setNow(bratislavaNow()),30000);return()=>clearInterval(timer)},[])
-  const scale=width/geometry.width*zoom,days=new Date(year,month+1,0).getDate()
+  const visibleWidth=geometry.width-previewCrop.left-previewCrop.right,visibleHeight=geometry.height-previewCrop.top-previewCrop.bottom
+  const scale=width/visibleWidth*zoom,days=new Date(year,month+1,0).getDate()
   return <div ref={host} className={styles.viewport} tabIndex={0} aria-label="Formulár EPČ; pri priblížení posúvajte do strán">
-    <div style={{width:geometry.width*scale,height:geometry.height*scale}}>
-      <div className={styles.paper} data-epc-paper style={{width:geometry.width,height:geometry.height,transform:`scale(${scale})`}}>
+    <div style={{position:"relative",overflow:"hidden",width:visibleWidth*scale,height:visibleHeight*scale}}>
+      <div className={styles.paper} data-epc-paper style={{position:"absolute",left:-previewCrop.left*scale,top:-previewCrop.top*scale,width:geometry.width,height:geometry.height,transform:`scale(${scale})`}}>
         <img className={styles.background} src="/epc-blank.png" alt="Prázdny originálny formulár EPČ" draggable={false}/>
-        {[['Mesiac',MONTHS[month]],['Rok',String(year)]].map(([key,value])=><div key={key} data-epc-field={key} className={`${styles.field} ${styles.header}`} style={position(key)}>{value}</div>)}
+        {[['Mesiac',MONTHS[month]],['Rok',String(year)]].map(([key,value])=><svg key={key} data-epc-field={key} className={`${styles.field} ${styles.header}`} style={position(key)}><text x="1" y="14" fontSize={headerFontSize}>{value}</text></svg>)}
         <TimeCell registerSave={registerSave} name="Meno" value={name} disabled={busy} onSave={onName} onDirty={value=>onDirty('name',value)}/>
         <div role="group" aria-label="Výber súboru EPČ">
           {(['orchester','zbor','sko'] as const).map(value=>{

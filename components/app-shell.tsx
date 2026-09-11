@@ -18,10 +18,11 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode; user: { name: string; email: string } }) {
   const pathname = usePathname()
   const { t } = useI18n()
+  const isEpc=pathname.startsWith("/timesheet")
 
   return (
     <div className="min-h-svh bg-white">
-      <div className="mx-auto min-h-svh w-full max-w-[460px]">
+      <div className={cn("mx-auto min-h-svh w-full",isEpc?"max-w-[900px]":"max-w-[460px]")}>
         <header className="sticky top-0 z-30 bg-white/84 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
           <div className="relative flex h-14 items-center justify-between px-5">
             <p className="text-[15px] font-medium tracking-[-.03em]">Worktime</p>
@@ -33,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
         </header>
 
         <main className="pb-[98px]">
-          <div className="px-5 pb-6 pt-2">{children}</div>
+          <div className={cn("pb-6 pt-2",isEpc?"px-2 sm:px-5":"px-5")}>{children}</div>
         </main>
 
         <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[460px] -translate-x-1/2 border-t border-black/[.06] bg-white/86 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">

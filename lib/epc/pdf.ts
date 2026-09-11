@@ -1,5 +1,6 @@
-import { PDFDocument, rgb, drawLine, pushGraphicsState, popGraphicsState } from 'pdf-lib'
+import { PDFDocument, rgb, drawLine, drawText, degrees, pushGraphicsState, popGraphicsState } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
+import {headerRect,headerFontSize} from './layout'
 import { bratislavaNow, fieldRect, dayValues, MONTHS, validateMonth, type Entry, type Ensemble } from './model'
 
 export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8Array;year:number;month:number;name:string;entries:Entry[];signatureData?:string|null;ensemble?:Ensemble|null;now?:Date}) {
@@ -10,13 +11,14 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
   const font=await pdf.embedFont(fontBytes,{subset:true})
   const page=pdf.getPages()[0],form=pdf.getForm(),black=rgb(0,0,0)
   const text=(key:string,value:string,size=9)=>{
-    const r=fieldRect(key),field=form.createTextField(key)
+    const header=headerRect(key),r=header??fieldRect(key),field=form.createTextField(key)
     field.setText(value)
-    field.addToPage(page,{x:r.x,y:r.y,width:r.width,height:r.height,borderWidth:0,borderColor:undefined,textColor:black,backgroundColor:['Mesiac','Rok','Meno'].includes(key)?rgb(1,1,1):undefined,font})
+    field.addToPage(page,{x:r.x,y:r.y,width:r.width,height:r.height,borderWidth:0,borderColor:undefined,textColor:black,backgroundColor:undefined,font})
     field.setFontSize(size)
+    if(header)field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:1,y:4,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
     return field
   }
-  text('Mesiac',MONTHS[month],10);text('Rok',String(year),10);text('Meno',name,10)
+  text('Mesiac',MONTHS[month],headerFontSize);text('Rok',String(year),headerFontSize);text('Meno',name,headerFontSize)
   for(let day=1;day<=31;day++) {
     const valid=day<=new Date(year,month+1,0).getDate()
     const date=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`

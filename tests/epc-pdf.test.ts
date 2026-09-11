@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile,writeFile,mkdir } from 'node:fs/promises'
 import { PDFDocument } from 'pdf-lib'
+import {headerRect} from '../lib/epc/layout'
 import { createEpcPdf } from '../lib/epc/pdf'
 import { type Entry,geometry } from '../lib/epc/model'
 async function main(){
@@ -22,7 +23,7 @@ async function main(){
  assert.equal(form.getTextField('Dropdown 1.2').getText(),'15:15-17:45')
  assert.equal(form.getTextField('Meno').getText(),'Žofia Juráňová')
  for(const f of form.getFields()) {
-   const r=(geometry.fields as Record<string,number[]>)[f.getName()],rect=f.acroField.getWidgets()[0].getRectangle()
+   const h=headerRect(f.getName()),r=h?[h.x,h.y,h.x+h.width,h.y+h.height]:(geometry.fields as Record<string,number[]>)[f.getName()],rect=f.acroField.getWidgets()[0].getRectangle()
    assert.ok(Math.abs(rect.x-r[0])<.001&&Math.abs(rect.y-r[1])<.001&&Math.abs(rect.width-(r[2]-r[0]))<.001)
    assert.ok(f.acroField.getWidgets()[0].getAppearances()?.normal)
  }
@@ -30,6 +31,6 @@ async function main(){
  const empty=await createEpcPdf({...options,name:'',entries:[]})
  const emptyForm=(await PDFDocument.load(empty)).getForm()
  assert.ok(emptyForm.getFields().filter(f=>f.getName().startsWith('Check Box')).every(f=>!emptyForm.getCheckBox(f.getName()).isChecked()))
- console.log('PDF: 128 editable fields, exact original rectangles, Unicode, slot 2, removed/future exclusions and appearances passed.')
+ console.log('PDF: 128 editable fields, preserved grid, aligned headers, Unicode, slot 2, removed/future exclusions and appearances passed.')
 }
 main()
