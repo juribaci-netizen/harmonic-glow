@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { db, pool } from './db'
 import { participationChoice, timeEntry } from './db/schema'
 import { seasonData } from './season-data-2026-27'
-import { canChooseParticipation, plannedHours } from './work-plan'
+import { canChooseParticipation, plannedHours, isAudition } from './work-plan'
 import { programByActivity, workPrograms } from './work-programs'
 import { isService, automaticRange, type Entry } from './epc/model'
 
@@ -44,6 +44,7 @@ export async function readParticipation(userId:string) {
 }
 export function applyParticipation<T extends Entry & {activityId?:number|null}>(entries:T[],participation:Map<number,Participation>,overrides=new Set<number>()):T[] {
   return entries.map(entry=>{
+    if(isAudition(entry))return {...entry,status:'removed',hours:'0'}
     if(!isService(entry))return entry.status==='auto'&&!entry.startTime?{...entry,ipRange:automaticRange(entry,entries.filter(row=>row.date===entry.date))}:entry
     if(entry.activityId==null&&(entry.status==='manual'||entry.status==='present'))return entry
     const playing=entry.activityId==null?null:participation.get(entry.activityId)??null

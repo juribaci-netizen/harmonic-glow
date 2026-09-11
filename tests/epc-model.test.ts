@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import { assignedSlots,dayValues,parseRange,visible,bratislavaNow,slotNote,fieldRect,geometry,type Entry } from '../lib/epc/model'
 const e=(patch:Partial<Entry>):Entry=>({id:1,date:'2026-06-01',type:'rehearsal',title:'Skúška',hours:'3',status:'auto',notes:null,startTime:'09:00',endTime:'12:00',...patch})
+const audition=e({type:'other',title:'Konkurz na miesto trubkára',status:'manual'})
+assert.equal(visible(audition,{date:'2026-06-02',minutes:0}),false)
+assert.deepEqual(dayValues([audition],'2026-06-01',{date:'2026-06-02',minutes:0}).services,[false,false])
 const now={date:'2026-06-01',minutes:11*60}
 assert.equal(visible(e({}),now),false)
 assert.equal(visible(e({}),{...now,minutes:720}),true)

@@ -1,4 +1,5 @@
 import geometry from './geometry.json'
+import { isAudition } from '../work-plan'
 
 export { geometry }
 export const MONTHS = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December']
@@ -6,7 +7,7 @@ export type Slot = 1 | 2
 export type Ensemble = 'orchester' | 'zbor' | 'sko'
 export type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string; notes:string|null; startTime?:string|null; endTime?:string|null;activityId?:number|null;ipRange?:string }
 export const isIp = (entry:Entry) => entry.type === 'individual' || entry.type === 'ip'
-export const isService = (entry:Entry) => !isIp(entry) && entry.type !== 'off'
+export const isService = (entry:Entry) => !isIp(entry) && entry.type !== 'off' && !isAudition(entry)
 export function validateMonth(year:number, month:number) {
   if (!Number.isInteger(year) || year < 1900 || year > 2200 || !Number.isInteger(month) || month < 0 || month > 11) throw new Error('Neplatný mesiac.')
 }
@@ -31,7 +32,7 @@ export function bratislavaNow(now=new Date()) {
   return {date:`${p.year}-${p.month}-${p.day}`,minutes:Number(p.hour)*60+Number(p.minute)}
 }
 export function visible(entry:Entry|undefined, now=bratislavaNow()) {
-  if (!entry || entry.status==='removed' || entry.status==='suggested' || entry.status==='unconfirmed') return false
+  if (!entry || isAudition(entry) || entry.status==='removed' || entry.status==='suggested' || entry.status==='unconfirmed') return false
   if (entry.status==='manual' || entry.type==='manual-service') return true
   if (entry.date!==now.date) return entry.date<now.date
   const end=timeMinutes(entry.endTime) ?? (isService(entry) && timeMinutes(entry.startTime)!==null ? timeMinutes(entry.startTime)!+180 : null)
