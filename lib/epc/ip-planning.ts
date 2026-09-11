@@ -19,11 +19,21 @@ export function blockedTimes(date:string, entries:Entry[]):Interval[] {
 export function overlaps(start:number,end:number,blocked:Interval[]) {
   return blocked.some(([a,b])=>start<b&&end>a)
 }
-export function freeIpTimes(date:string,entries:Entry[]):Interval[] {
+function freeWindows(date:string,entries:Entry[]):Interval[] {
   let free:Interval[]=[[IP_START,780],[840,IP_END]]
   for(const [a,b] of blockedTimes(date,entries))free=free.flatMap(([s,e])=>b<=s||a>=e?[[s,e] as Interval]:[...(a>s?[[s,a] as Interval]:[]),...(b<e?[[b,e] as Interval]:[])])
-  // The form has two IP fields; choose the two largest available blocks.
-  return free.map(([s,e]):Interval=>[s,Math.min(e,s+240)]).filter(([s,e])=>e-s>=30).sort((a,b)=>(b[1]-b[0])-(a[1]-a[0])||a[0]-b[0]).slice(0,2).sort((a,b)=>a[0]-b[0])
+  return free
+}
+export function freeIpTimes(date:string,entries:Entry[]):Interval[] {
+  const blocks=freeWindows(date,entries).flatMap(([start,end])=>{
+    const result:Interval[]=[]
+    for(let s=start;s<end;s+=210){
+      const e=Math.min(end,s+180)
+      if(e-s>=60)result.push([s,e])
+    }
+    return result
+  })
+  return blocks.sort((a,b)=>(b[1]-b[0])-(a[1]-a[0])||a[0]-b[0]).slice(0,2).sort((a,b)=>a[0]-b[0])
 }
 export function planWeekIp(dates:string[],entries:Entry[]) {
   const active=entries.filter(e=>!['removed','suggested','unconfirmed'].includes(e.status)&&!(isIp(e)&&e.status==='auto'))
@@ -40,11 +50,26 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
     const add=Math.min(30,remaining,day.capacity-day.minutes)
     day.minutes+=add;remaining-=add
   }
+  // At most one longer, single-session day per week, and only if shorter
+  // sessions could not fill the target. Existing manual long sessions count.
+  const hasLongManual=active.some(e=>isIp(e)&&Number(e.hours)>3)
+  if(remaining>0&&!hasLongManual){
+    const day=days.find(d=>d.free.length===1&&d.minutes<=180&&d.used+240<=480&&freeWindows(d.date,entries).some(([s,e])=>e-s>=240))
+    if(day){
+      const window=freeWindows(day.date,entries).find(([s,e])=>e-s>=240)!
+      const add=Math.min(remaining,240-day.minutes)
+      day.minutes+=add;remaining-=add;day.free=[[window[0],window[0]+day.minutes]]
+    }
+  }
   return days.flatMap(day=>{
+    const amounts=day.free.map(()=>0)
     let left=day.minutes
-    return day.free.flatMap(([start,end])=>{
-      const minutes=Math.min(left,end-start);left-=minutes
-      return minutes>0?[{date:day.date,startTime:clockTime(start),endTime:clockTime(start+minutes),hours:String(minutes/60)}]:[]
-    })
+    // Spread time between available blocks instead of filling the first one.
+    while(left>0){
+      const i=amounts.map((n,i)=>({n,i})).filter(({n,i})=>n<day.free[i][1]-day.free[i][0]).sort((a,b)=>a.n-b.n||a.i-b.i)[0]?.i
+      if(i===undefined)break
+      const add=Math.min(30,left,day.free[i][1]-day.free[i][0]-amounts[i]);amounts[i]+=add;left-=add
+    }
+    return day.free.flatMap(([start],i)=>amounts[i]>0?[{date:day.date,startTime:clockTime(start),endTime:clockTime(start+amounts[i]),hours:String(amounts[i]/60)}]:[])
   })
 }

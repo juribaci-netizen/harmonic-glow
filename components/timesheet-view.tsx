@@ -8,7 +8,7 @@ import { saveEpcName } from '@/app/actions/profile'
 import { EpcForm, type EpcFormHandle } from './epc-form'
 import { MONTHS,parseRange,type Entry,type Slot,type Ensemble } from '@/lib/epc/model'
 
-type Report={entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
+type Report={shortfalls?:{weekStart:string;missingHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
   const [savingAll,setSavingAll]=useState(false)
@@ -132,7 +132,8 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <p role="status" aria-live="polite" className="min-h-6 px-3 text-xs text-black/60">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Rozpísaná zmena – potvrďte alebo opravte pole.':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
-        <p className="text-xs leading-relaxed text-black/60">X sa zapíše po skončení služby iba pri potvrdenom Hrám v pláne práce. Pri Nehrám alebo nevybranej účasti zostávajú iba časy IP. Ručné opravy X sú výnimkou pre konkrétnu službu. IP sa rozvrhuje medzi 09:00 a 21:00 do voľných časov s cieľom 40 hodín týždenne spolu s hranými službami. Pri Nehrám čas služby IP neobmedzuje. Navrhnuté časy IP môžete upraviť.</p>
+        <p className="text-xs leading-relaxed text-black/60">X sa zapíše po skončení služby iba pri potvrdenom Hrám v pláne práce. Pri Nehrám alebo nevybranej účasti zostávajú iba časy IP. Ručné opravy X sú výnimkou pre konkrétnu službu. IP sa rozvrhuje medzi 09:00 a 21:00 do voľných časov s cieľom 40 hodín týždenne spolu s hranými službami. Pri Nehrám čas služby IP neobmedzuje. Bežne sú bloky IP do 3 hodín. Dlhší blok, najviac 4 hodiny, sa navrhne nanajvýš raz týždenne a v ten deň bude jediným IP. Navrhnuté časy IP môžete upraviť.</p>
+        {!!report.shortfalls?.length&&<details className="rounded-xl bg-black/5 p-3 text-xs"><summary className="cursor-pointer">Niektoré týždne nedosahujú 40 hodín</summary><p className="mt-2">Pri kratších blokoch IP zostávajú tieto hodiny nerozvrhnuté:</p><ul className="mt-2 space-y-1">{report.shortfalls.map(s=><li key={s.weekStart}>Týždeň od {s.weekStart.split('-').reverse().join('.')}: chýba {s.missingHours} h</li>)}</ul></details>}
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
         <p className="text-xs leading-relaxed text-black/60">PDF obsahuje uložené údaje a je pripravené na tlač alebo odovzdanie.</p>

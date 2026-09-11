@@ -10,7 +10,7 @@ export async function GET(request:Request) {
   const params=new URL(request.url).searchParams
   const year=Number(params.get('year')),month=Number(params.get('month'))
   try{validateMonth(year,month)}catch{return NextResponse.json({error:'Neplatný mesiac.'},{status:400})}
-  await autoFillMonthFromWorkPlan(year,month)
+  const {shortfalls}=await autoFillMonthFromWorkPlan(year,month)
   const [entries,report,profile]=await Promise.all([getMonthEntries(year,month),readReport(user.id,year,month),getProfile()])
-  return NextResponse.json({entries,...report,fullName:profile?.fullName??user.name},{headers:{'Cache-Control':'no-store'}})
+  return NextResponse.json({entries,shortfalls,...report,fullName:profile?.fullName??user.name},{headers:{'Cache-Control':'no-store'}})
 }

@@ -98,15 +98,20 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   const effective=applyParticipation(refreshed,participation.activities,participation.overrides)
   // Replace only generated preparation; preserve all manual edits and removals.
   await tx.delete(timeEntry).where(and(eq(timeEntry.userId,userId),gte(timeEntry.date,monthStart),lte(timeEntry.date,monthEnd),eq(timeEntry.status,'auto'),sql`${timeEntry.type} IN ('individual','ip')`))
+  const shortfalls:{weekStart:string;missingHours:number}[]=[]
   for(let monday=new Date(monthStart+'T12:00:00');iso(monday)<=monthEnd;monday.setDate(monday.getDate()+7)){
     const dates=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return iso(d)})
     const rows=effective.filter(e=>dates.includes(e.date))
-    for(const ip of planWeekIp(dates,rows))await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté do 40 h/týždeň mimo hraných služieb.'})
+    const planned=planWeekIp(dates,rows)
+    const recorded=rows.filter(e=>!['removed','suggested','unconfirmed'].includes(e.status)&&!(['individual','ip'].includes(e.type)&&e.status==='auto')).reduce((n,e)=>n+Number(e.hours),0)
+    const missing=Math.max(0,40-recorded-planned.reduce((n,e)=>n+Number(e.hours),0))
+    if(missing>0)shortfalls.push({weekStart:dates[0],missingHours:Math.round(missing*100)/100})
+    for(const ip of planned)await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté do 40 h/týždeň mimo hraných služieb.'})
   }
 
   revalidatePath("/timesheet")
   revalidatePath("/")
-  return { ok: true }
+  return { ok: true, shortfalls }
   })
 }
 
