@@ -2,7 +2,8 @@
 
 import { seasonData } from "@/lib/season-data-2026-27"
 import { getUserId } from '@/lib/session'
-import { readParticipation, writeParticipation } from '@/lib/schedule-participation'
+import { readParticipationState, writeParticipation, writeProgramParticipation } from '@/lib/schedule-participation'
+import { programByActivity } from '@/lib/work-programs'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -11,10 +12,12 @@ import { revalidatePath } from 'next/cache'
  * and avoids stale/corrupted activity rows after plan changes.
  */
 export async function getActivities() {
-  const participation = await readParticipation(await getUserId())
+  const participation = await readParticipationState(await getUserId())
   return seasonData.map((a, index) => ({
     id: index + 1,
-    playing: participation.get(index + 1) ?? true,
+    playing: participation.activities.get(index+1)??null,
+    participationOverride:participation.overrides.has(index+1),
+    workProgram:programByActivity.has(index+1)?{...programByActivity.get(index+1)!,playing:participation.programs.get(programByActivity.get(index+1)!.id)??null}:null,
     date: a.date,
     type: a.type,
     startTime: a.startTime,
@@ -27,7 +30,7 @@ export async function getActivities() {
   }))
 }
 
-export async function setActivityParticipation(activityId: number, playing: boolean) {
+export async function setActivityParticipation(activityId: number, playing: boolean|null) {
   await writeParticipation(await getUserId(), activityId, playing)
   revalidatePath('/schedule')
   revalidatePath('/timesheet')
@@ -37,4 +40,10 @@ export async function setActivityParticipation(activityId: number, playing: bool
 
 export async function seedSeason() {
   return { seeded: false, count: seasonData.length }
+}
+
+export async function setProgramParticipation(programId:string,playing:boolean|null) {
+  await writeProgramParticipation(await getUserId(),programId,playing)
+  revalidatePath("/schedule");revalidatePath("/timesheet");revalidatePath("/")
+  return {ok:true}
 }

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, serial, integer, date, numeric } from "drizzle-orm/pg-core"
+import { pgTable, primaryKey, text, timestamp, boolean, serial, integer, date, numeric } from "drizzle-orm/pg-core"
 
 // ---------- Better Auth tables ----------
 export const user = pgTable("user", {
@@ -105,3 +105,10 @@ export const concertVideo = pgTable("concert_video", {
   thumbnailUrl: text("thumbnailUrl"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 })
+
+export const participationChoice = pgTable('participation_choice', {
+  userId: text('user_id').notNull(),
+  key: text('choice_key').notNull(),
+  choice: text('choice').notNull(),
+  updatedAt: timestamp('updated_at', {withTimezone:true}).notNull().defaultNow(),
+}, table => [primaryKey({columns:[table.userId,table.key]})])

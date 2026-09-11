@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { useI18n } from "@/components/language-provider"
-import { Check, Download, MapPin, X } from "lucide-react"
-import { setActivityParticipation } from '@/app/actions/schedule'
+import { Download, MapPin } from "lucide-react"
+import { setActivityParticipation, setProgramParticipation } from '@/app/actions/schedule'
 import { canChooseParticipation } from '@/lib/work-plan'
 import type { SeasonActivity } from '@/lib/season-data-2026-27'
 
@@ -11,7 +11,9 @@ type Activity = {
   id: number
   date: string
   type: SeasonActivity['type']
-  playing: boolean
+  playing: boolean|null
+  participationOverride:boolean
+  workProgram: {id:string;title:string;start:string;end:string;activityIds:number[];playing:boolean|null}|null
   startTime: string | null
   endTime: string | null
   title: string
@@ -21,36 +23,37 @@ type Activity = {
   notes: string | null
 }
 
-function ParticipationChoice({ activity }: { activity: Activity }) {
-  const [pending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
-  const choose = (playing: boolean) => {
+function ProgramChoice({ program }: { program: NonNullable<Activity['workProgram']> }) {
+  const [pending,startTransition]=useTransition(),[error,setError]=useState('')
+  const choose=(value:string)=>startTransition(async()=>{
     setError('')
-    setSaved(false)
-    startTransition(async () => {
-      try {
-        await setActivityParticipation(activity.id, playing)
-        setSaved(true)
-      } catch {
-        setError('Voľbu sa nepodarilo uložiť. Skúste to znova.')
-      }
-    })
-  }
-  return <div className="mt-3 border-t border-black/[.06] pt-3">
-    <div role="group" aria-label={`Účasť: ${activity.date} ${activity.startTime} ${activity.title}`} aria-busy={pending} className="flex gap-2">
-      {[true, false].map(playing => {
-        const selected = activity.playing === playing
-        const Icon = playing ? Check : X
-        return <button key={String(playing)} type="button" aria-pressed={selected} disabled={pending}
-          onClick={() => choose(playing)} className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 text-[11px] font-medium transition-colors disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b6f4b] ${selected ? 'border-[#8b6f4b] bg-[#8b6f4b] text-white' : 'border-black/10 bg-white text-black/60'}`}>
-          <Icon className="h-3.5 w-3.5" aria-hidden="true"/>{playing ? 'Toto hrám' : 'Toto nehrám'}
-        </button>
-      })}
-    </div>
-    <p role="status" className="mt-1.5 text-[10px] leading-relaxed text-black/50">{pending ? 'Ukladám…' : `${saved ? 'Uložené. ' : ''}${activity.playing ? 'X sa zapíše po skončení služby.' : 'Táto služba sa do EPČ nezapíše.'}`}</p>
-    {error && <p role="alert" className="mt-1 text-[11px] text-red-700">{error}</p>}
+    try{await setProgramParticipation(program.id,value==='unset'?null:value==='yes')}
+    catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}
+  })
+  return <div data-program-id={program.id} className="mb-4 rounded-xl bg-[#f6f2ec] p-3">
+    <p className="text-[10px] font-medium uppercase tracking-wide text-[#705638]">Účasť na programe</p>
+    <h2 className="mt-1 text-sm font-semibold leading-snug">{program.title}</h2>
+    <p className="mt-1 text-[11px] text-black/55">{program.start.split('-').reverse().join('.')} – {program.end.split('-').reverse().join('.')}</p>
+    <select aria-label={`Účasť na programe ${program.title}`} value={program.playing===null?'unset':program.playing?'yes':'no'} disabled={pending}
+      onChange={event=>choose(event.target.value)} className="mt-2 min-h-11 w-full rounded-lg border border-[#8b6f4b]/30 bg-white px-3 text-sm disabled:opacity-50">
+      <option value="unset">Vybrať účasť</option><option value="yes">Hrám</option><option value="no">Nehrám</option>
+    </select>
+    <p role="status" className="mt-2 text-[11px] leading-relaxed text-black/60">{pending?'Ukladám…':`Platí pre celý program aj skúšky. ${program.playing===true?'X po skončení služby.':'Bez X, iba IP.'}`}</p>
+    {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
   </div>
+}
+function ParticipationChoice({ activity }: { activity: Activity }) {
+  const [pending,startTransition]=useTransition(),[error,setError]=useState('')
+  return <details className="mt-3 border-t border-black/[.06] pt-2">
+    <summary className="cursor-pointer text-[11px] text-black/55">{activity.participationOverride?'Výnimka: ':''}{activity.playing===true?'Hrám':activity.playing===false?'Nehrám':'Účasť nevybraná'} · upraviť túto službu</summary>
+    <select aria-label={`Účasť služby ${activity.date} ${activity.startTime}`} disabled={pending}
+      value={activity.participationOverride?(activity.playing?'yes':'no'):'inherit'}
+      onChange={event=>{const value=event.target.value;startTransition(async()=>{setError('');try{await setActivityParticipation(activity.id,value==='inherit'?null:value==='yes')}catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}})}}
+      className="mt-2 min-h-11 w-full rounded-lg border border-black/15 bg-white px-2 text-xs">
+      <option value="inherit">Podľa programu</option><option value="yes">Túto službu hrám</option><option value="no">Túto službu nehrám</option>
+    </select>
+    {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
+  </details>
 }
 
 export function ScheduleView({ activities }: { activities: Activity[] }) {
@@ -88,6 +91,8 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
       }),
     [activities, now, todayIso, showPast]
   )
+
+  const firstInProgram=useMemo(()=>{const first=new Map<string,number>();for(const activity of visible)if(activity.workProgram&&!first.has(activity.workProgram.id))first.set(activity.workProgram.id,activity.id);return first},[visible])
 
   const grouped = useMemo(() => {
     const map = new Map<string, Activity[]>()
@@ -165,7 +170,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
             <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
-            <p className="mt-2 text-[11px] text-black/50">Vyberte, ktoré služby hráte. Podľa toho sa vyplní EPČ.</p>
+            <p className="mt-2 text-[11px] text-black/50">Účasť vyberte raz pre celý program. Bez výberu sa X nezapíše.</p>
           </div>
           <a
             href="/api/work-plan"
@@ -226,6 +231,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
 
                       return (
                         <article key={a.id} data-activity-id={a.id} className={"px-4 py-4 "+(subdued?"bg-[#fafafa]":"bg-white")}>
+                          {a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<ProgramChoice program={a.workProgram}/>}
                           {index===0&&itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
                           <div className="flex items-baseline justify-between gap-3">
                             <h3 className={(subdued?"text-[15px] font-medium text-black/48":"text-[18px] font-semibold text-black")+" leading-tight tracking-[-.025em]"}>{label}</h3>

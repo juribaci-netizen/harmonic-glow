@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache"
 import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
 import { seasonData } from "@/lib/season-data-2026-27"
 import { canChooseParticipation } from '@/lib/work-plan'
+import { ensureParticipationStore,readParticipationState,applyParticipation,setParticipationOverride } from '@/lib/schedule-participation'
 
 export type LogHoursInput = {
   activityId?: number | null
@@ -35,7 +36,7 @@ function weekStart(date: Date) {
 }
 
 function iso(d: Date) {
-  return d.toISOString().slice(0, 10)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
 }
 
 function scheduledHours(startTime: string | null, endTime: string | null) {
@@ -50,6 +51,7 @@ function scheduledHours(startTime: string | null, endTime: string | null) {
 export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   validateMonth(year,month)
   const userId = await getUserId()
+  await ensureParticipationStore()
   return db.transaction(async tx=>{
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+year+'-'+String(month+1).padStart(2,'0')}))`)
   const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`
@@ -69,7 +71,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
 
   for (const activity of monthActivities) {
     const hours = scheduledHours(activity.startTime, activity.endTime)
-    if (hours <= 0 || byActivity.has(activity.activityId)) continue
+    if (byActivity.has(activity.activityId)) continue
     await tx.insert(timeEntry).values({
       userId,
       activityId: activity.activityId,
@@ -79,7 +81,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
       startTime: activity.startTime,
       endTime: activity.endTime,
       hours: String(hours),
-      status: "auto",
+      status: "unconfirmed",
       notes: "Automaticky prevzaté z pracovného plánu SF.",
     })
   }
@@ -89,6 +91,8 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     .from(timeEntry)
     .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, monthStart), lte(timeEntry.date, monthEnd)))
 
+  const participation=await readParticipationState(userId,tx)
+  const effective=applyParticipation(refreshed,participation.activities,participation.overrides)
   const weeks = new Map<string, typeof refreshed>()
   for (const entry of refreshed) {
     const key = iso(weekStart(new Date(`${entry.date}T00:00:00`)))
@@ -138,7 +142,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
 
     for (const candidate of candidates) {
       if (missing < 0.5) break
-      const existingAutoIp = weekEntries.find(e => e.date === candidate.date && e.type === "individual")
+      const existingAutoIp = refreshed.find(e => e.date === candidate.date && (e.type === "individual" || e.type === "ip"))
       if (existingAutoIp) continue
       const capacity = Math.min(3, 8 - candidate.existing)
       const hours = Math.min(capacity, Math.ceil(Math.min(missing, capacity) * 2) / 2)
@@ -167,7 +171,8 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
 
 export async function getTimeEntries() {
   const userId = await getUserId()
-  return db.select().from(timeEntry).where(eq(timeEntry.userId, userId)).orderBy(desc(timeEntry.date))
+  const [rows,state]=await Promise.all([db.select().from(timeEntry).where(eq(timeEntry.userId,userId)).orderBy(desc(timeEntry.date)),readParticipationState(userId)])
+  return applyParticipation(rows,state.activities,state.overrides)
 }
 
 export async function getMonthEntries(year: number, month: number) {
@@ -176,11 +181,9 @@ export async function getMonthEntries(year: number, month: number) {
   const start = `${year}-${String(month + 1).padStart(2, "0")}-01`
   const endDate = new Date(year, month + 1, 0).getDate()
   const end = `${year}-${String(month + 1).padStart(2, "0")}-${String(endDate).padStart(2, "0")}`
-  return db
-    .select()
-    .from(timeEntry)
-    .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, start), lte(timeEntry.date, end)))
-    .orderBy(desc(timeEntry.date))
+  const rows=await db.select().from(timeEntry).where(and(eq(timeEntry.userId,userId),gte(timeEntry.date,start),lte(timeEntry.date,end))).orderBy(desc(timeEntry.date))
+  const state=await readParticipationState(userId)
+  return applyParticipation(rows,state.activities,state.overrides)
 }
 
 /**
@@ -405,6 +408,7 @@ async function saveEpcSlot(date:string,slot:Slot,kind:'service'|'ip',value:boole
   validateDate(date)
   if(slot!==1&&slot!==2)throw new Error('Neplatný stĺpec.')
   const userId=await getUserId()
+  await ensureParticipationStore()
   await db.transaction(async tx=>{
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+date.slice(0,7)}))`)
     const rows=await tx.select().from(timeEntry).where(and(eq(timeEntry.userId,userId),eq(timeEntry.date,date)))
@@ -414,12 +418,13 @@ async function saveEpcSlot(date:string,slot:Slot,kind:'service'|'ip',value:boole
       .where(and(eq(timeEntry.id,slots[i]!.id),eq(timeEntry.userId,userId)))
     const target=slots[slot-1]
     const present=kind==='service'?Boolean(value):!!(value as [string|null,string|null])[0]
+    if(kind==='service'&&target?.activityId)await setParticipationOverride(tx,userId,target.activityId,present?'yes':'no')
     const [start,end]=kind==='ip'?value as [string|null,string|null]:[target?.startTime??null,target?.endTime??null]
     const updates={startTime:start,endTime:end,hours:String(present?(kind==='ip'?scheduledHours(start,end):target?.status!=='removed'&&target?Number(target.hours):scheduledHours(start,end)):0),status:present?'manual':'removed',notes:slotNote(target?.notes??'Manuálna úprava EPČ.',kind,slot),updatedAt:new Date()}
     if(target)await tx.update(timeEntry).set(updates).where(and(eq(timeEntry.id,target.id),eq(timeEntry.userId,userId)))
     else await tx.insert(timeEntry).values({...updates,userId,date,activityId:null,type:kind==='ip'?'individual':'manual-service',title:kind==='ip'?'Individuálna príprava':`Manuálne pridaná ${slot}. služba`})
   })
-  revalidatePath('/timesheet');revalidatePath('/')
+  revalidatePath('/timesheet');revalidatePath('/schedule');revalidatePath('/')
   return {ok:true}
 }
 export async function setManualService(date:string,slot:Slot,present:boolean) {

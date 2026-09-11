@@ -1,7 +1,7 @@
 import type { SeasonActivity } from './season-data-2026-27'
 
 export function canChooseParticipation(activity: Pick<SeasonActivity, 'type' | 'startTime' | 'title' | 'notes'>) {
-  return activity.type !== 'off' && activity.type !== 'ip' && !!activity.startTime && !/zruš/i.test(`${activity.title} ${activity.notes ?? ''}`)
+  return activity.type !== 'off' && activity.type !== 'ip' && !/zruš/i.test(`${activity.title} ${activity.notes ?? ''}`)
 }
 
 export function plannedHours(startTime: string | null, endTime: string | null) {

@@ -4,7 +4,7 @@ export { geometry }
 export const MONTHS = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December']
 export type Slot = 1 | 2
 export type Ensemble = 'orchester' | 'zbor' | 'sko'
-export type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string; notes:string|null; startTime?:string|null; endTime?:string|null }
+export type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string; notes:string|null; startTime?:string|null; endTime?:string|null;activityId?:number|null;ipRange?:string }
 export const isIp = (entry:Entry) => entry.type === 'individual' || entry.type === 'ip'
 export const isService = (entry:Entry) => !isIp(entry) && entry.type !== 'off'
 export function validateMonth(year:number, month:number) {
@@ -31,7 +31,7 @@ export function bratislavaNow(now=new Date()) {
   return {date:`${p.year}-${p.month}-${p.day}`,minutes:Number(p.hour)*60+Number(p.minute)}
 }
 export function visible(entry:Entry|undefined, now=bratislavaNow()) {
-  if (!entry || entry.status==='removed' || entry.status==='suggested') return false
+  if (!entry || entry.status==='removed' || entry.status==='suggested' || entry.status==='unconfirmed') return false
   if (entry.status==='manual' || entry.type==='manual-service') return true
   if (entry.date!==now.date) return entry.date<now.date
   const end=timeMinutes(entry.endTime) ?? (isService(entry) && timeMinutes(entry.startTime)!==null ? timeMinutes(entry.startTime)!+180 : null)
@@ -55,12 +55,12 @@ export function assignedSlots(entries:Entry[], kind:'service'|'ip'):[Entry|undef
   }
   for (const e of legacy) {
     // The original morning/afternoon fields determine a lone legacy timed IP's column.
-    let index=kind==='ip' && (timeMinutes(e.startTime)??(e.status==='auto'?timeMinutes(automaticRange(e,entries).split('-')[0]):0)??0)>=720 && !result[1] ? 1 : result.findIndex(x=>!x)
+    let index=kind==='ip' && (timeMinutes(e.startTime)??(e.status==='auto'?timeMinutes((e.ipRange??automaticRange(e,entries)).split('-')[0]):0)??0)>=720 && !result[1] ? 1 : result.findIndex(x=>!x)
     if(index>=0 && index<2) result[index]=e
   }
   return result
 }
-function automaticRange(entry:Entry, dayEntries:Entry[]) {
+export function automaticRange(entry:Entry, dayEntries:Entry[]) {
   const duration=Math.round(Number(entry.hours)*60)
   if(!duration || duration<0)return ''
   const work=dayEntries.filter(e=>isService(e)&&e.status!=='removed'&&e.status!=='suggested')
@@ -77,7 +77,7 @@ export function dayValues(entries:Entry[], date:string, now=bratislavaNow()) {
   const rows=entries.filter(e=>e.date===date)
   const services=assignedSlots(rows,'service')
   const ips=assignedSlots(rows,'ip')
-  const ranges=ips.map(e=>!visible(e,now)?'':e?.startTime&&e.endTime?`${e.startTime}-${e.endTime}`:e?automaticRange(e,rows):'')
+  const ranges=ips.map(e=>!visible(e,now)?'':e?.startTime&&e.endTime?`${e.startTime}-${e.endTime}`:e?(e.ipRange??automaticRange(e,rows)):'')
   // An auto-generated IP without explicit times belongs in the field matching its start.
   if(ips[0]?.status==='auto' && !ips[0].startTime && ranges[0] && !ips[1] && Number(ranges[0].slice(0,2))>=12) {
     ranges[1]=ranges[0];ranges[0]=''
