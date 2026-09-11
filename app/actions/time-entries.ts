@@ -6,7 +6,7 @@ import { getUserId } from "@/lib/session"
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
-import { planWeekIp, blockedTimes, overlaps } from '@/lib/epc/ip-planning'
+import { planWeekIp, blockedTimes, overlaps, IP_START, IP_END } from '@/lib/epc/ip-planning'
 import { seasonData } from "@/lib/season-data-2026-27"
 import { canChooseParticipation } from '@/lib/work-plan'
 import { ensureParticipationStore,readParticipationState,applyParticipation,setParticipationOverride } from '@/lib/schedule-participation'
@@ -385,7 +385,8 @@ export async function setManualIpTime(date:string,slot:Slot,startTime:string|nul
   const start=startTime?.trim()||null,end=endTime?.trim()||null
   if(start||end){
     const s=timeMinutes(start),e=timeMinutes(end)
-    if(s===null||e===null||e<=s)throw new Error('Zadajte čas od–do, napríklad 08:00-12:00.')
+    if(s===null||e===null||e<=s)throw new Error('Zadajte čas od–do, napríklad 09:00-13:00.')
+    if(s<IP_START||e>IP_END)throw new Error('IP je možné zapísať iba v čase 09:00–21:00.')
   }
   return saveEpcSlot(date,slot,'ip',[start,end])
 }

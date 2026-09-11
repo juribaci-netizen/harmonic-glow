@@ -27,7 +27,7 @@ function TimeCell({name,value,disabled,onSave,onDirty,registerSave}:{name:string
   }
   useEffect(()=>{registerSave(name,draft!==value?save:null);return()=>registerSave(name,null)},[name,draft,value,onSave,registerSave])
   return <input data-epc-field={name} className={`${styles.field} ${name==='Meno'?styles.name:styles.range}`} style={position(name)}
-    aria-label={name==='Meno'?'Meno a priezvisko v EPČ':name.replace(/Dropdown (\d+)\.([12])/, "$1. deň – individuálna príprava $2")} aria-invalid={error} title={name==='Meno'?'Oprava sa uloží aj do profilu. Potvrďte klávesom Enter alebo kliknutím mimo poľa.':'Čas od–do, napríklad 08:00-12:00. Prázdne pole čas vymaže.'}
+    aria-label={name==='Meno'?'Meno a priezvisko v EPČ':name.replace(/Dropdown (\d+)\.([12])/, "$1. deň – individuálna príprava $2")} aria-invalid={error} title={name==='Meno'?'Oprava sa uloží aj do profilu. Potvrďte klávesom Enter alebo kliknutím mimo poľa.':'Čas od–do, napríklad 09:00-13:00. Prázdne pole čas vymaže.'}
     autoComplete="off" spellCheck={false} value={draft} disabled={disabled}
     onFocus={()=>{focused.current=true}} onChange={e=>{setDraft(e.target.value);setError(false);onDirty(e.target.value!==latest.current)}}
     onBlur={save} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur()}if(e.key==='Escape'){setDraft(value);setError(false);onDirty(false)}}}/>

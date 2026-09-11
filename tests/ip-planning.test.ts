@@ -9,7 +9,7 @@ for(const ip of plan)assert.equal(overlaps(timeMinutes(ip.startTime)!,timeMinute
 assert.equal(plan.filter(e=>e.date===dates[0]).some(e=>e.startTime==='10:00'),false)
 plan=planWeekIp(dates,[{...service,status:'removed',hours:'0'}])
 assert.equal(plan.reduce((n,e)=>n+Number(e.hours),0),40)
-assert.equal(plan.find(e=>e.date===dates[0])?.startTime,'08:00')
+assert.equal(plan.find(e=>e.date===dates[0])?.startTime,'09:00')
 const manual={...service,id:2,type:'individual',status:'manual',startTime:'14:00',endTime:'17:00',hours:'3'}
 assert.equal(planWeekIp(dates,[service,manual]).some(e=>e.date===dates[0]),false)
 assert.equal(planWeekIp(dates,[{...service,hours:'42'}]).length,0)
@@ -18,3 +18,8 @@ assert.ok(planWeekIp(cross,[]).every(e=>cross.includes(e.date)))
 console.log('IP: 40-hour totals, rehearsal conflicts, declined services, manual preservation and cross-month dates passed')
 
 assert.deepEqual(assignedSlots([{...service,id:10,type:'individual',startTime:'13:00',endTime:'14:00'},{...service,id:11,type:'individual',startTime:'17:00',endTime:'19:00'}],'ip').map(e=>e?.startTime),['13:00','17:00'])
+
+for(const ip of plan)assert.ok(ip.startTime>='09:00'&&ip.endTime<='21:00')
+const late={...service,startTime:'09:00',endTime:'17:00',hours:'4'}
+assert.ok(planWeekIp(dates,[late]).some(e=>e.date===dates[0]&&e.startTime==='17:00'&&e.endTime==='21:00'))
+assert.equal(planWeekIp(dates,[{...service,startTime:null,endTime:null}]).some(e=>e.date===dates[0]),false)

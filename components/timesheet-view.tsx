@@ -71,7 +71,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   }
   const saveRange=async(date:string,slot:Slot,value:string)=>{
     const range=parseRange(value)
-    if(!range){setError('Zadajte čas od–do, napríklad 08:00-12:00; koniec musí byť neskôr ako začiatok.');throw new Error('Neplatný čas.')}
+    if(!range){setError('Zadajte čas od–do, napríklad 09:00-13:00; koniec musí byť neskôr ako začiatok.');throw new Error('Neplatný čas.')}
     await mutate(()=>setManualIpTime(date,slot,range[0],range[1]))
   }
   const changeMonth=(delta:number)=>{
@@ -127,12 +127,12 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
         <label className="text-xs">Priblíženie <select aria-label="Priblíženie formulára" value={zoom} onChange={e=>setZoom(Number(e.target.value))} className="rounded-lg border border-black/15 p-2">{[1,1.5,2,3].map(v=><option key={v} value={v}>{v===1?'Celá strana':`${v*100}%`}</option>)}</select></label>
       </div>
-      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravy sa ukladajú priebežne po stlačení Enter alebo kliknutí mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 08:00-12:00. Na mobile si formulár priblížte.</p>
+      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravy sa ukladajú priebežne po stlačení Enter alebo kliknutí mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 09:00-13:00. Na mobile si formulár priblížte.</p>
       {error&&<p role="alert" className="mx-3 mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
       <p role="status" aria-live="polite" className="min-h-6 px-3 text-xs text-black/60">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Rozpísaná zmena – potvrďte alebo opravte pole.':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
-        <p className="text-xs leading-relaxed text-black/60">X sa zapíše po skončení služby iba pri potvrdenom Hrám v pláne práce. Pri Nehrám alebo nevybranej účasti zostávajú iba časy IP. Ručné opravy X sú výnimkou pre konkrétnu službu. IP sa rozvrhuje do voľných časov s cieľom 40 hodín týždenne spolu s hranými službami. Pri Nehrám čas služby IP neobmedzuje. Navrhnuté časy IP môžete upraviť.</p>
+        <p className="text-xs leading-relaxed text-black/60">X sa zapíše po skončení služby iba pri potvrdenom Hrám v pláne práce. Pri Nehrám alebo nevybranej účasti zostávajú iba časy IP. Ručné opravy X sú výnimkou pre konkrétnu službu. IP sa rozvrhuje medzi 09:00 a 21:00 do voľných časov s cieľom 40 hodín týždenne spolu s hranými službami. Pri Nehrám čas služby IP neobmedzuje. Navrhnuté časy IP môžete upraviť.</p>
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
         <p className="text-xs leading-relaxed text-black/60">PDF obsahuje uložené údaje a je pripravené na tlač alebo odovzdanie.</p>
