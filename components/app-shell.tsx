@@ -5,11 +5,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useI18n } from "@/components/language-provider"
 import { cn } from "@/lib/utils"
-import { House, CalendarDays, ClipboardCheck, Play, UserRound } from "lucide-react"
+import { House, ClipboardList, ClipboardCheck, Play, UserRound } from "lucide-react"
 
 const navItems = [
   { href: "/", key: "dashboard", icon: House },
-  { href: "/calendar", key: "calendar", icon: CalendarDays },
+  { href: "/schedule", key: "schedule", icon: ClipboardList },
   { href: "/timesheet", key: "timesheet", icon: ClipboardCheck },
   { href: "/videos", key: "videos", icon: Play },
   { href: "/profile", key: "profile", icon: UserRound },
@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
             {navItems.map(item=>{
               const active=pathname===item.href
               const Icon=item.icon
-              return <Link key={item.href} href={item.href} className={cn("flex flex-col items-center justify-center gap-1 text-[9px] font-medium",active?"text-black":"text-black/32")}>
+              return <Link key={item.href} href={item.href} aria-current={active?"page":undefined} className={cn("flex flex-col items-center justify-center gap-1 text-[9px] font-medium",active?"text-black":"text-black/32")}>
                 <Icon className="h-[20px] w-[20px]" strokeWidth={active?2.35:1.8}/>
                 <span>{t[item.key]}</span>
               </Link>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useI18n } from "@/components/language-provider"
-import { ScheduleView } from "@/components/schedule-view"
+import { CalendarView } from "@/components/calendar-view"
 
 type Activity = { id:number; date:string; type:string; startTime:string|null; endTime:string|null; title:string; conductor:string|null; venue:string|null; program:string|null; notes:string|null }
 type Entry = { id:number; date:string; type:string; title:string; hours:string; status:string }
@@ -48,6 +48,6 @@ export function DashboardView({
       </div>
     </section>
 
-    <ScheduleView activities={activities} />
+    <CalendarView activities={activities} />
   </div>
 }
