@@ -56,7 +56,7 @@ export function assignedSlots(entries:Entry[], kind:'service'|'ip'):[Entry|undef
   }
   for (const e of legacy) {
     // The original morning/afternoon fields determine a lone legacy timed IP's column.
-    let index=kind==='ip' && (timeMinutes(e.startTime)??(e.status==='auto'?timeMinutes((e.ipRange??automaticRange(e,entries)).split('-')[0]):0)??0)>=720 && !result[1] ? 1 : result.findIndex(x=>!x)
+    let index=kind==='ip' && legacy.length===1 && (timeMinutes(e.startTime)??(e.status==='auto'?timeMinutes((e.ipRange??automaticRange(e,entries)).split('-')[0]):0)??0)>=720 && !result[1] ? 1 : result.findIndex(x=>!x)
     if(index>=0 && index<2) result[index]=e
   }
   return result

@@ -6,6 +6,7 @@ import { getUserId } from "@/lib/session"
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
+import { planWeekIp, blockedTimes, overlaps } from '@/lib/epc/ip-planning'
 import { seasonData } from "@/lib/season-data-2026-27"
 import { canChooseParticipation } from '@/lib/work-plan'
 import { ensureParticipationStore,readParticipationState,applyParticipation,setParticipationOverride } from '@/lib/schedule-participation'
@@ -53,10 +54,12 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   const userId = await getUserId()
   await ensureParticipationStore()
   return db.transaction(async tx=>{
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':ip-planning'}))`)
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+year+'-'+String(month+1).padStart(2,'0')}))`)
-  const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`
+  const monthStart = iso(weekStart(new Date(year,month,1)))
   const endDay = new Date(year, month + 1, 0).getDate()
-  const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`
+  const lastSunday=weekStart(new Date(year,month,endDay));lastSunday.setDate(lastSunday.getDate()+6)
+  const monthEnd = iso(lastSunday)
 
   const existing = await tx
     .select()
@@ -93,74 +96,12 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
 
   const participation=await readParticipationState(userId,tx)
   const effective=applyParticipation(refreshed,participation.activities,participation.overrides)
-  const weeks = new Map<string, typeof refreshed>()
-  for (const entry of refreshed) {
-    const key = iso(weekStart(new Date(`${entry.date}T00:00:00`)))
-    const list = weeks.get(key) ?? []
-    list.push(entry)
-    weeks.set(key, list)
-  }
-
-  const first = new Date(year, month, 1)
-  const last = new Date(year, month + 1, 0)
-  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
-    const key = iso(weekStart(d))
-    if (!weeks.has(key)) weeks.set(key, [])
-  }
-
-  for (const [weekKey, weekEntries] of weeks) {
-    const total = weekEntries
-      .filter(e => e.status !== "suggested" && e.status !== "removed")
-      .reduce((sum, e) => sum + Number(e.hours), 0)
-
-    let missing = Math.max(0, 40 - total)
-    if (missing < 0.5) continue
-
-    const monday = new Date(`${weekKey}T00:00:00`)
-    const dayHours = new Map<string, number>()
-    for (const e of weekEntries) {
-      if (e.status === "suggested" || e.status === "removed") continue
-      dayHours.set(e.date, (dayHours.get(e.date) ?? 0) + Number(e.hours))
-    }
-
-    const candidates: { date: string; existing: number }[] = []
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(monday)
-      d.setDate(d.getDate() + i)
-      if (d.getFullYear() !== year || d.getMonth() !== month) continue
-      const date = iso(d)
-      const existingHours = dayHours.get(date) ?? 0
-      if (existingHours >= 8) continue
-      candidates.push({ date, existing: existingHours })
-    }
-
-    candidates.sort((a,b) => {
-      const aHasWork = a.existing > 0 ? 0 : 1
-      const bHasWork = b.existing > 0 ? 0 : 1
-      return aHasWork - bHasWork || a.existing - b.existing || a.date.localeCompare(b.date)
-    })
-
-    for (const candidate of candidates) {
-      if (missing < 0.5) break
-      const existingAutoIp = refreshed.find(e => e.date === candidate.date && (e.type === "individual" || e.type === "ip"))
-      if (existingAutoIp) continue
-      const capacity = Math.min(3, 8 - candidate.existing)
-      const hours = Math.min(capacity, Math.ceil(Math.min(missing, capacity) * 2) / 2)
-      if (hours < 0.5) continue
-      await tx.insert(timeEntry).values({
-        userId,
-        activityId: null,
-        date: candidate.date,
-        type: "individual",
-        title: "Individuálna príprava",
-        startTime: null,
-        endTime: null,
-        hours: String(hours),
-        status: "auto",
-        notes: "Automaticky doplnené do pracovného fondu 40 h/týždeň.",
-      })
-      missing -= hours
-    }
+  // Replace only generated preparation; preserve all manual edits and removals.
+  await tx.delete(timeEntry).where(and(eq(timeEntry.userId,userId),gte(timeEntry.date,monthStart),lte(timeEntry.date,monthEnd),eq(timeEntry.status,'auto'),sql`${timeEntry.type} IN ('individual','ip')`))
+  for(let monday=new Date(monthStart+'T12:00:00');iso(monday)<=monthEnd;monday.setDate(monday.getDate()+7)){
+    const dates=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return iso(d)})
+    const rows=effective.filter(e=>dates.includes(e.date))
+    for(const ip of planWeekIp(dates,rows))await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté do 40 h/týždeň mimo hraných služieb.'})
   }
 
   revalidatePath("/timesheet")
@@ -410,8 +351,17 @@ async function saveEpcSlot(date:string,slot:Slot,kind:'service'|'ip',value:boole
   const userId=await getUserId()
   await ensureParticipationStore()
   await db.transaction(async tx=>{
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':ip-planning'}))`)
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+date.slice(0,7)}))`)
     const rows=await tx.select().from(timeEntry).where(and(eq(timeEntry.userId,userId),eq(timeEntry.date,date)))
+    if(kind==='ip'){
+      const [start,end]=value as [string|null,string|null]
+      const target=assignedSlots(rows,kind)[slot-1]
+      const otherIp=rows.filter(e=>e.id!==target?.id&&(e.type==='individual'||e.type==='ip')&&!['removed','suggested'].includes(e.status)&&e.startTime&&e.endTime).map(e=>[timeMinutes(e.startTime)!,timeMinutes(e.endTime)!] as [number,number])
+      const state=await readParticipationState(userId,tx)
+      const effective=applyParticipation(rows,state.activities,state.overrides)
+      if(start&&end&&overlaps(timeMinutes(start)!,timeMinutes(end)!,[...blockedTimes(date,effective),...otherIp]))throw new Error('IP sa nesmie prekrývať s položkou v pláne ani s iným časom IP.')
+    }
     const slots=assignedSlots(rows,kind)
     // Tag both existing columns before changing times, so sorting cannot move a value.
     for(let i=0;i<2;i++)if(slots[i])await tx.update(timeEntry).set({notes:slotNote(slots[i]!.notes,kind,(i+1) as Slot)})

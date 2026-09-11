@@ -62,6 +62,7 @@ export async function writeParticipation(userId:string,activityId:number,playing
   if(!activity||!canChooseParticipation(activity))throw new Error('Pre túto položku sa účasť nevyberá.')
   await ensureParticipationStore()
   await db.transaction(async tx=>{
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':ip-planning'}))`)
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+activity.date.slice(0,7)}))`)
     await setParticipationOverride(tx,userId,activityId,playing===null?'inherit':playing?'yes':'no')
   })
@@ -71,6 +72,7 @@ export async function writeProgramParticipation(userId:string,programId:string,p
   if(!program||![true,false,null].includes(playing))throw new Error('Neplatný koncertný program.')
   await ensureParticipationStore()
   await db.transaction(async tx=>{
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':ip-planning'}))`)
     for(const month of [...new Set(program.activityIds.map(id=>seasonData[id-1].date.slice(0,7)))].sort())
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+month}))`)
     const choice=playing===null?'unset':playing?'yes':'no'
