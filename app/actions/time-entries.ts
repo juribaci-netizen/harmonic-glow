@@ -3,8 +3,9 @@
 import { db } from "@/lib/db"
 import { timeEntry } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
-import { and, desc, eq, gte, lte } from "drizzle-orm"
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
+import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
 import { seasonData } from "@/lib/season-data-2026-27"
 
 export type LogHoursInput = {
@@ -46,12 +47,15 @@ function scheduledHours(startTime: string | null, endTime: string | null) {
 }
 
 export async function autoFillMonthFromWorkPlan(year: number, month: number) {
+  validateMonth(year,month)
   const userId = await getUserId()
+  return db.transaction(async tx=>{
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+year+'-'+String(month+1).padStart(2,'0')}))`)
   const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`
   const endDay = new Date(year, month + 1, 0).getDate()
   const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`
 
-  const existing = await db
+  const existing = await tx
     .select()
     .from(timeEntry)
     .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, monthStart), lte(timeEntry.date, monthEnd)))
@@ -65,7 +69,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   for (const activity of monthActivities) {
     const hours = scheduledHours(activity.startTime, activity.endTime)
     if (hours <= 0 || byActivity.has(activity.activityId)) continue
-    await db.insert(timeEntry).values({
+    await tx.insert(timeEntry).values({
       userId,
       activityId: activity.activityId,
       date: activity.date,
@@ -79,7 +83,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     })
   }
 
-  const refreshed = await db
+  const refreshed = await tx
     .select()
     .from(timeEntry)
     .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, monthStart), lte(timeEntry.date, monthEnd)))
@@ -138,7 +142,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
       const capacity = Math.min(3, 8 - candidate.existing)
       const hours = Math.min(capacity, Math.ceil(Math.min(missing, capacity) * 2) / 2)
       if (hours < 0.5) continue
-      await db.insert(timeEntry).values({
+      await tx.insert(timeEntry).values({
         userId,
         activityId: null,
         date: candidate.date,
@@ -157,6 +161,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   revalidatePath("/timesheet")
   revalidatePath("/")
   return { ok: true }
+  })
 }
 
 export async function getTimeEntries() {
@@ -165,6 +170,7 @@ export async function getTimeEntries() {
 }
 
 export async function getMonthEntries(year: number, month: number) {
+  validateMonth(year,month)
   const userId = await getUserId()
   const start = `${year}-${String(month + 1).padStart(2, "0")}-01`
   const endDate = new Date(year, month + 1, 0).getDate()
@@ -394,85 +400,36 @@ export async function updateEntryTime(id: number, startTime: string | null, endT
   return { ok: true }
 }
 
-export async function setManualService(date: string, slot: 1 | 2, present: boolean) {
-  const userId = await getUserId()
-  const dayEntries = await db
-    .select()
-    .from(timeEntry)
-    .where(and(eq(timeEntry.userId, userId), eq(timeEntry.date, date)))
-
-  const work = dayEntries
-    .filter(e => e.type !== "individual" && e.type !== "ip")
-    .sort((a,b) => String(a.startTime ?? "").localeCompare(String(b.startTime ?? "")))
-
-  const target = work[slot - 1]
-  if (target) return setEntryPresent(target.id, present)
-
-  if (!present) return { ok: true }
-
-  await db.insert(timeEntry).values({
-    userId,
-    activityId: null,
-    date,
-    type: "manual-service",
-    title: slot === 1 ? "Manuálne pridaná 1. služba" : "Manuálne pridaná 2. služba",
-    startTime: null,
-    endTime: null,
-    hours: "0",
-    status: "manual",
-    notes: "Manuálne označená prítomnosť v EPČ.",
+async function saveEpcSlot(date:string,slot:Slot,kind:'service'|'ip',value:boolean|[string|null,string|null]) {
+  validateDate(date)
+  if(slot!==1&&slot!==2)throw new Error('Neplatný stĺpec.')
+  const userId=await getUserId()
+  await db.transaction(async tx=>{
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+date.slice(0,7)}))`)
+    const rows=await tx.select().from(timeEntry).where(and(eq(timeEntry.userId,userId),eq(timeEntry.date,date)))
+    const slots=assignedSlots(rows,kind)
+    // Tag both existing columns before changing times, so sorting cannot move a value.
+    for(let i=0;i<2;i++)if(slots[i])await tx.update(timeEntry).set({notes:slotNote(slots[i]!.notes,kind,(i+1) as Slot)})
+      .where(and(eq(timeEntry.id,slots[i]!.id),eq(timeEntry.userId,userId)))
+    const target=slots[slot-1]
+    const present=kind==='service'?Boolean(value):!!(value as [string|null,string|null])[0]
+    const [start,end]=kind==='ip'?value as [string|null,string|null]:[target?.startTime??null,target?.endTime??null]
+    const updates={startTime:start,endTime:end,hours:String(present?(kind==='ip'?scheduledHours(start,end):target?.status!=='removed'&&target?Number(target.hours):scheduledHours(start,end)):0),status:present?'manual':'removed',notes:slotNote(target?.notes??'Manuálna úprava EPČ.',kind,slot),updatedAt:new Date()}
+    if(target)await tx.update(timeEntry).set(updates).where(and(eq(timeEntry.id,target.id),eq(timeEntry.userId,userId)))
+    else await tx.insert(timeEntry).values({...updates,userId,date,activityId:null,type:kind==='ip'?'individual':'manual-service',title:kind==='ip'?'Individuálna príprava':`Manuálne pridaná ${slot}. služba`})
   })
-  revalidatePath("/timesheet")
-  revalidatePath("/")
-  return { ok: true }
+  revalidatePath('/timesheet');revalidatePath('/')
+  return {ok:true}
 }
-
-export async function setManualIpTime(date: string, slot: 1 | 2, startTime: string | null, endTime: string | null) {
-  const userId = await getUserId()
-  const dayEntries = await db
-    .select()
-    .from(timeEntry)
-    .where(and(eq(timeEntry.userId, userId), eq(timeEntry.date, date)))
-
-  const ips = dayEntries
-    .filter(e => e.type === "individual" || e.type === "ip")
-    .sort((a,b) => String(a.startTime ?? "").localeCompare(String(b.startTime ?? "")))
-
-  const target = ips[slot - 1]
-  const start = startTime?.trim() || null
-  const end = endTime?.trim() || null
-
-  if (!start && !end) {
-    if (target) {
-      await db.update(timeEntry)
-        .set({ status: "removed", hours: "0", startTime: null, endTime: null, updatedAt: new Date() })
-        .where(and(eq(timeEntry.id, target.id), eq(timeEntry.userId, userId)))
-    }
-    revalidatePath("/timesheet")
-    revalidatePath("/")
-    return { ok: true }
+export async function setManualService(date:string,slot:Slot,present:boolean) {
+  if(typeof present!=='boolean')throw new Error('Neplatná hodnota.')
+  return saveEpcSlot(date,slot,'service',present)
+}
+export async function setManualIpTime(date:string,slot:Slot,startTime:string|null,endTime:string|null) {
+  const start=startTime?.trim()||null,end=endTime?.trim()||null
+  if(start||end){
+    const s=timeMinutes(start),e=timeMinutes(end)
+    if(s===null||e===null||e<=s)throw new Error('Zadajte čas od–do, napríklad 08:00-12:00.')
   }
-
-  const hours = scheduledHours(start, end)
-  if (target) {
-    await db.update(timeEntry)
-      .set({ startTime: start, endTime: end, hours: String(hours), status: "manual", updatedAt: new Date() })
-      .where(and(eq(timeEntry.id, target.id), eq(timeEntry.userId, userId)))
-  } else {
-    await db.insert(timeEntry).values({
-      userId,
-      activityId: null,
-      date,
-      type: "individual",
-      title: "Individuálna príprava",
-      startTime: start,
-      endTime: end,
-      hours: String(hours),
-      status: "manual",
-      notes: "Manuálne upravené priamo v EPČ.",
-    })
-  }
-  revalidatePath("/timesheet")
-  revalidatePath("/")
-  return { ok: true }
+  return saveEpcSlot(date,slot,'ip',[start,end])
 }

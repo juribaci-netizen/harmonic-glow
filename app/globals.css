@@ -159,22 +159,3 @@
 .art-dot{
   width:10px;height:10px;border-radius:999px;background:#1f49ff;
 }
-
-/* EPČ header alignment: month, year and employee name lowered and reduced to fit the printed lines. */
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(1){ top:6.150% !important; font-size:clamp(5px,.85vw,10px) !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(2){ top:6.150% !important; font-size:clamp(5px,.85vw,10px) !important; }
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(3){ top:9.540% !important; font-size:clamp(6px,.95vw,11px) !important; }
-
-/* The ensemble row is now rebuilt by MonthEnsembleChoice; hide the old four Orchester mask strips. */
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(4),
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(5),
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(6),
-[class*="pointer-events-none"][class*="absolute"][class*="inset-0"][class*="text-black"] > span:nth-child(7){
-  display:none !important;
-}
-
-/* EPČ service marks: visually align X slightly higher and use regular weight. */
-button[aria-label$="služba"] > span {
-  transform: translateY(-12%);
-  font-weight: 400 !important;
-}
