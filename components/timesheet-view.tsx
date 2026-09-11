@@ -101,7 +101,6 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     }catch{}
   }
   const pdfUrl=`/api/epc-pdf?year=${year}&month=${month}`
-  const editorUrl=`/timesheet/pdf?year=${year}&month=${month}`
   const saveChanges=async(goBack=false)=>{
     if(locked||savingAll)return
     setSavingAll(true);setError('');setStatus('Ukladám…')
@@ -129,15 +128,15 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
         <label className="text-xs">Priblíženie <select aria-label="Priblíženie formulára" value={zoom} onChange={e=>setZoom(Number(e.target.value))} className="rounded-lg border border-black/15 p-2">{[1,1.5,2,3].map(v=><option key={v} value={v}>{v===1?'Celá strana':`${v*100}%`}</option>)}</select></label>
       </div>
-      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravu potvrďte klávesom Enter alebo kliknutím mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 08:00-12:00. Na mobile si formulár priblížte.</p>
+      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravu potvrďte tlačidlom Uložiť zmeny, klávesom Enter alebo kliknutím mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 08:00-12:00. Na mobile si formulár priblížte.</p>
       {error&&<p role="alert" className="mx-3 mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
       <p role="status" aria-live="polite" className="min-h-6 px-3 text-xs text-black/60">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Rozpísaná zmena – potvrďte alebo opravte pole.':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
         <p className="text-xs leading-relaxed text-black/60">Automatické služby sa zobrazia po skončení. Budúce automatické záznamy zostávajú prázdne; vaše ručné opravy sa zobrazia ihneď.</p>
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
-        <a href={locked||hasDrafts?undefined:pdfEditor?`${pdfUrl}&download=1`:editorUrl} aria-disabled={locked||hasDrafts} target={pdfEditor?undefined:'_blank'} rel="noreferrer" download={pdfEditor?`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`:undefined} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>{pdfEditor?'Stiahnuť PDF na tlač':'Otvoriť vyplnené PDF'}</a>
-        <p className="text-xs leading-relaxed text-black/60">{pdfEditor?'Stiahnutý súbor je kópia na tlač. Ďalšie opravy ukladajte v tomto editore.':'PDF sa otvorí v prepojenom editore. Opravy sa uložia aj do EPČ.'}</p>
+        <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
+        <p className="text-xs leading-relaxed text-black/60">PDF obsahuje uložené údaje a je pripravené na tlač alebo odovzdanie.</p>
       </div>
     </section>
     {signing&&<div role="dialog" aria-modal="true" aria-labelledby="signature-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4">
