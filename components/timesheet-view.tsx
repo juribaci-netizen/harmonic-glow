@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { setManualService,setManualIpTime } from '@/app/actions/time-entries'
 import { saveEpcSignature,saveEpcEnsemble } from '@/app/actions/epc-signature'
@@ -111,13 +111,12 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     }finally{setSavingAll(false)}
   }
   return <div className="space-y-5">
-    <div className="sticky top-14 z-20 -mx-5 border-b border-black/10 bg-white/95 px-5 py-3 backdrop-blur-xl">
+    {pdfEditor&&<div className="sticky top-14 z-20 -mx-5 border-b border-black/10 bg-white/95 px-5 py-3 backdrop-blur-xl">
       <div className="flex flex-wrap gap-2">
         {pdfEditor&&<button type="button" disabled={locked||savingAll} onPointerDown={e=>e.preventDefault()} onClick={()=>void saveChanges(true)} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-black/15 px-3 text-xs font-medium disabled:opacity-40"><ArrowLeft className="h-4 w-4" aria-hidden="true"/>Späť do aplikácie</button>}
-        <button type="button" disabled={locked||savingAll} onPointerDown={e=>e.preventDefault()} onClick={()=>void saveChanges()} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#8b6f4b] px-3 text-xs font-medium text-white disabled:opacity-40"><Save className="h-4 w-4" aria-hidden="true"/>{savingAll||saving?'Ukladám…':'Uložiť zmeny'}</button>
       </div>
       <p aria-live="polite" className="mt-1.5 text-xs text-black/60">{error||((savingAll||saving)?'Ukladám zmeny…':hasDrafts?'Máte neuložené zmeny.':status||'Zmeny sa ukladajú aj priebežne.')}</p>
-    </div>
+    </div>}
     <header className="pt-1"><p className="modern-kicker text-black/50">Evidencia pracovného času</p><h1 className="ios-title mt-1">{pdfEditor?'Úprava PDF':'EPČ'}</h1>{pdfEditor&&<p className="mt-2 text-sm text-black/60">Tento editor je prepojený s aplikáciou. Potvrdené opravy sa ukladajú na stránku.</p>}</header>
     <section className="rounded-[22px] border border-black/10 bg-white">
       <div className="grid grid-cols-[44px_1fr_44px] items-center border-b border-black/10 p-3">
@@ -128,7 +127,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
         <label className="text-xs">Priblíženie <select aria-label="Priblíženie formulára" value={zoom} onChange={e=>setZoom(Number(e.target.value))} className="rounded-lg border border-black/15 p-2">{[1,1.5,2,3].map(v=><option key={v} value={v}>{v===1?'Celá strana':`${v*100}%`}</option>)}</select></label>
       </div>
-      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravu potvrďte tlačidlom Uložiť zmeny, klávesom Enter alebo kliknutím mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 08:00-12:00. Na mobile si formulár priblížte.</p>
+      <p className="px-3 pb-2 text-xs leading-relaxed text-black/60">Súbor vyberte kliknutím na Orchester, Zbor alebo SKO. Meno aj časy môžete prepísať priamo vo formulári. Opravy sa ukladajú priebežne po stlačení Enter alebo kliknutí mimo poľa. Meno sa uloží aj do profilu. Čas zadávajte vo formáte 08:00-12:00. Na mobile si formulár priblížte.</p>
       {error&&<p role="alert" className="mx-3 mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
       <p role="status" aria-live="polite" className="min-h-6 px-3 text-xs text-black/60">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Rozpísaná zmena – potvrďte alebo opravte pole.':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
