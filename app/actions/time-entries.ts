@@ -9,7 +9,7 @@ import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type
 import { planWeekIp, blockedTimes, overlaps, IP_START, IP_END } from '@/lib/epc/ip-planning'
 import { seasonData } from "@/lib/season-data-2026-27"
 import { canChooseParticipation } from '@/lib/work-plan'
-import { ensureParticipationStore,readParticipationState,applyParticipation,setParticipationOverride } from '@/lib/schedule-participation'
+import { ensureParticipationStore,readParticipationState,applyParticipation,setParticipationOverride,ParticipationConflictError } from '@/lib/schedule-participation'
 
 export type LogHoursInput = {
   activityId?: number | null
@@ -106,7 +106,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     const recorded=rows.filter(e=>!['removed','suggested','unconfirmed'].includes(e.status)&&!(['individual','ip'].includes(e.type)&&e.status==='auto')).reduce((n,e)=>n+Number(e.hours),0)
     const missing=Math.max(0,40-recorded-planned.reduce((n,e)=>n+Number(e.hours),0))
     if(missing>0)shortfalls.push({weekStart:dates[0],missingHours:Math.round(missing*100)/100})
-    for(const ip of planned)await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté do 40 h/týždeň mimo hraných služieb.'})
+    for(const ip of planned)await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté podľa júnového vzoru EPČ mimo hraných služieb.'})
   }
 
   revalidatePath("/timesheet")
@@ -384,14 +384,14 @@ async function saveEpcSlot(date:string,slot:Slot,kind:'service'|'ip',value:boole
 }
 export async function setManualService(date:string,slot:Slot,present:boolean) {
   if(typeof present!=='boolean')throw new Error('Neplatná hodnota.')
-  return saveEpcSlot(date,slot,'service',present)
+  try{return await saveEpcSlot(date,slot,'service',present)}catch(error){if(error instanceof ParticipationConflictError)return {ok:false,error:error.message};throw error}
 }
 export async function setManualIpTime(date:string,slot:Slot,startTime:string|null,endTime:string|null) {
   const start=startTime?.trim()||null,end=endTime?.trim()||null
   if(start||end){
     const s=timeMinutes(start),e=timeMinutes(end)
     if(s===null||e===null||e<=s)throw new Error('Zadajte čas od–do, napríklad 09:00-13:00.')
-    if(s<IP_START||e>IP_END)throw new Error('IP je možné zapísať iba v čase 09:00–21:00.')
+    if(s<IP_START||e>IP_END)throw new Error('IP je možné zapísať iba v čase 08:00–21:00.')
   }
   return saveEpcSlot(date,slot,'ip',[start,end])
 }

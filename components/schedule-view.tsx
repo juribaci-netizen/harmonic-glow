@@ -41,7 +41,7 @@ function ProgramChoice({ program }: { program: NonNullable<Activity['workProgram
   const [pending,startTransition]=useTransition(),[error,setError]=useState('')
   const choose=(value:boolean|null)=>startTransition(async()=>{
     setError('')
-    try{await setProgramParticipation(program.id,value)}
+    try{const result=await setProgramParticipation(program.id,value);if(result.error)setError(result.error)}
     catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}
   })
   return <div data-program-id={program.id} className={`mb-4 rounded-xl p-3 ${program.playing===false?'bg-black/5':'bg-[#f6f2ec]'}`}>
@@ -59,7 +59,7 @@ function ParticipationChoice({ activity }: { activity: Activity }) {
     <summary className="cursor-pointer text-[11px] text-black/55">{activity.participationOverride?'Výnimka: ':''}{activity.playing===true?'Hrám':activity.playing===false?'Nehrám':'Účasť nevybraná'} · upraviť túto službu</summary>
     <ParticipationButtons label={`Účasť služby ${activity.date} ${activity.startTime}`} pending={pending}
       value={activity.participationOverride?activity.playing:null}
-      onChange={value=>startTransition(async()=>{setError('');try{await setActivityParticipation(activity.id,value)}catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}})}/>
+      onChange={value=>startTransition(async()=>{setError('');try{const result=await setActivityParticipation(activity.id,value);if(result.error)setError(result.error)}catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}})}/>
     <p role="status" className="mt-2 text-[10px] text-black/50 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
   </details>

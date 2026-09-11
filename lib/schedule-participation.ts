@@ -4,10 +4,13 @@ import { participationChoice, timeEntry } from './db/schema'
 import { seasonData } from './season-data-2026-27'
 import { canChooseParticipation, plannedHours, isAudition } from './work-plan'
 import { programByActivity, workPrograms } from './work-programs'
-import { isService, automaticRange, type Entry } from './epc/model'
+import { isIp, isService, timeMinutes, automaticRange, type Entry } from './epc/model'
 
 export type Participation = boolean|null
 export type Choice = 'yes'|'no'|'unset'|'inherit'
+export class ParticipationConflictError extends Error {
+  constructor(message:string){super(message);this.name='ParticipationConflictError'}
+}
 type Database = Pick<typeof db,'select'|'insert'|'execute'>
 let ready:Promise<unknown>|undefined
 export async function ensureParticipationStore() {
@@ -52,9 +55,41 @@ export function applyParticipation<T extends Entry & {activityId?:number|null}>(
     return {...entry,status:playing===false?'removed':'unconfirmed',hours:'0'}
   })
 }
-export async function setParticipationOverride(database:Database,userId:string,activityId:number,choice:Choice) {
+async function assertNewParticipationFitsIp(database:Database,userId:string,activityIds:number[],before:Map<number,Participation>) {
+  const after=await readParticipationState(userId,database)
+  const newlyPlayed=activityIds.filter(id=>before.get(id)!==true&&after.activities.get(id)===true)
+  if(!newlyPlayed.length)return
+  const rows=await database.select().from(timeEntry).where(eq(timeEntry.userId,userId))
+  const manualIp=rows.filter(row=>isIp(row)&&(row.status==='manual'||row.status==='present'))
+  for(const id of newlyPlayed){
+    // Keep both the published time and any explicitly recorded service time
+    // protected. A missing ending is unknown, not a guessed service duration.
+    const services=[seasonData[id-1],...rows.filter(row=>row.activityId===id)]
+    for(const service of services){
+      if(!service)continue
+      const start=timeMinutes(service.startTime),end=timeMinutes(service.endTime)??1440
+      if(start===null)continue
+      const conflict=manualIp.find(ip=>{
+        const ipStart=timeMinutes(ip.startTime),ipEnd=timeMinutes(ip.endTime)
+        return ip.date===service.date&&ipStart!==null&&ipEnd!==null&&ipStart<end&&ipEnd>start
+      })
+      if(conflict){
+        const date=service.date.split('-').reverse().join('.')
+        const serviceTime=service.endTime?`${service.startTime}–${service.endTime}`:`od ${service.startTime}`
+        throw new ParticipationConflictError(`Službu „${service.title}“ ${date} (${serviceTime}) nemožno označiť „Hrám“: prekrýva sa s ručne zadanou IP ${conflict.startTime}–${conflict.endTime}. Najprv upravte čas IP.`)
+      }
+    }
+  }
+}
+async function storeParticipationOverride(database:Database,userId:string,activityId:number,choice:Choice) {
   await database.insert(participationChoice).values({userId,key:'activity:'+activityId,choice})
     .onConflictDoUpdate({target:[participationChoice.userId,participationChoice.key],set:{choice,updatedAt:new Date()}})
+}
+// Called within the caller's transaction, including direct X edits in EPČ.
+export async function setParticipationOverride(database:Database,userId:string,activityId:number,choice:Choice) {
+  const before=await readParticipationState(userId,database)
+  await storeParticipationOverride(database,userId,activityId,choice)
+  await assertNewParticipationFitsIp(database,userId,[activityId],before.activities)
 }
 export async function writeParticipation(userId:string,activityId:number,playing:Participation) {
   if(!Number.isInteger(activityId)||![true,false,null].includes(playing))throw new Error('Neplatná voľba služby.')
@@ -75,11 +110,13 @@ export async function writeProgramParticipation(userId:string,programId:string,p
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':ip-planning'}))`)
     for(const month of [...new Set(program.activityIds.map(id=>seasonData[id-1].date.slice(0,7)))].sort())
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+month}))`)
+    const before=await readParticipationState(userId,tx)
     const choice=playing===null?'unset':playing?'yes':'no'
     await tx.insert(participationChoice).values({userId,key:'program:'+programId,choice})
       .onConflictDoUpdate({target:[participationChoice.userId,participationChoice.key],set:{choice,updatedAt:new Date()}})
     // A program-wide choice applies to every service. Later individual changes
     // are exceptions; the old raw records remain intact for audit/history.
-    for(const id of program.activityIds)await setParticipationOverride(tx,userId,id,'inherit')
+    for(const id of program.activityIds)await storeParticipationOverride(tx,userId,id,'inherit')
+    await assertNewParticipationFitsIp(tx,userId,program.activityIds,before.activities)
   })
 }

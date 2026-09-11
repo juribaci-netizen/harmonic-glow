@@ -2,7 +2,7 @@
 
 import { seasonData } from "@/lib/season-data-2026-27"
 import { getUserId } from '@/lib/session'
-import { readParticipationState, writeParticipation, writeProgramParticipation } from '@/lib/schedule-participation'
+import { readParticipationState, writeParticipation, writeProgramParticipation, ParticipationConflictError } from '@/lib/schedule-participation'
 import { programByActivity } from '@/lib/work-programs'
 import { revalidatePath } from 'next/cache'
 
@@ -31,7 +31,7 @@ export async function getActivities() {
 }
 
 export async function setActivityParticipation(activityId: number, playing: boolean|null) {
-  await writeParticipation(await getUserId(), activityId, playing)
+  try{await writeParticipation(await getUserId(), activityId, playing)}catch(error){if(error instanceof ParticipationConflictError)return {ok:false,error:error.message};throw error}
   revalidatePath('/schedule')
   revalidatePath('/timesheet')
   revalidatePath('/')
@@ -43,7 +43,7 @@ export async function seedSeason() {
 }
 
 export async function setProgramParticipation(programId:string,playing:boolean|null) {
-  await writeProgramParticipation(await getUserId(),programId,playing)
+  try{await writeProgramParticipation(await getUserId(),programId,playing)}catch(error){if(error instanceof ParticipationConflictError)return {ok:false,error:error.message};throw error}
   revalidatePath("/schedule");revalidatePath("/timesheet");revalidatePath("/")
   return {ok:true}
 }

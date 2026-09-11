@@ -59,7 +59,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const mutate=async(action:()=>Promise<unknown>)=>{
     if(inFlight.current)throw new Error('Prebieha ukladanie.')
     inFlight.current=true;setSaving(true);setError('');setStatus('Ukladám…')
-    try {await action();setReport(await fetchReport(year,month));setStatus('Uložené')}
+    try {const result=await action();if(result&&typeof result==='object'&&'error' in result&&typeof result.error==='string')throw new Error(result.error);setReport(await fetchReport(year,month));setStatus('Uložené')}
     catch(e){setError(e instanceof Error?e.message:'Zmenu sa nepodarilo uložiť.');setStatus('');throw e}
     finally{inFlight.current=false;setSaving(false)}
   }
