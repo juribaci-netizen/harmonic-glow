@@ -1,128 +1,201 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Search, ExternalLink, ChevronRight } from "lucide-react"
+import Image from "next/image"
+import { useMemo, useState } from "react"
+import { CalendarDays, MapPin, Play, Search, SlidersHorizontal, X } from "lucide-react"
+import type { OfficialArchiveItem } from "@/lib/concert-archive"
 
-type Video={id:number;title:string;date:string|null;conductor:string|null;venue:string|null;description:string|null;url:string|null;thumbnailUrl:string|null}
+const filters = [
+  { label: "Všetko", test: () => true },
+  { label: "Orchester", test: (v: OfficialArchiveItem) => /symfon|orchestr|filharmón/i.test(`${v.category} ${v.performers}`) },
+  { label: "Komorné", test: (v: OfficialArchiveItem) => /komorn|quart|kvart|ensemble|recitál/i.test(`${v.category} ${v.title}`) },
+  { label: "Zbor", test: (v: OfficialArchiveItem) => /zbor|SFZ|BChZ/i.test(`${v.category} ${v.performers}`) },
+  { label: "Pre deti", test: (v: OfficialArchiveItem) => /akadém|rodinn|škôlk|mikuláš/i.test(`${v.category} ${v.title}`) },
+  { label: "Rozhovory", test: (v: OfficialArchiveItem) => /rozhovor|beseda/i.test(`${v.category} ${v.title}`) },
+] as const
 
-export function VideosView({initialVideos}:{initialVideos:Video[]}){
-  const [query,setQuery]=useState("")
-  const [officialThumbs,setOfficialThumbs]=useState<Record<number,string>>({})
+const fullDateFormatter = new Intl.DateTimeFormat("sk-SK", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+})
 
-  useEffect(()=>{
-    let cancelled=false
-    Promise.all(initialVideos.filter(v=>v.url).map(async v=>{
-      try{
-        const r=await fetch("/api/video-embed?preview=1&url="+encodeURIComponent(v.url!))
-        const data=r.ok?await r.json():null
-        return [v.id,data?.imageUrl??null] as const
-      }catch{return [v.id,null] as const}
-    })).then(rows=>{
-      if(cancelled)return
-      const next:Record<number,string>={}
-      rows.forEach(([id,url])=>{if(url)next[id]=url})
-      setOfficialThumbs(next)
+const monthFormatter = new Intl.DateTimeFormat("sk-SK", {
+  month: "long",
+  year: "numeric",
+})
+
+function formatDate(value: string) {
+  return fullDateFormatter.format(new Date(`${value}T12:00:00`))
+}
+
+function monthLabel(value: string) {
+  const label = monthFormatter.format(new Date(`${value}T12:00:00`))
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+function ArchiveImage({ video, priority = false }: { video: OfficialArchiveItem; priority?: boolean }) {
+  if (!video.thumbnailUrl) {
+    return <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_24%,#57412b_0,transparent_35%),linear-gradient(135deg,#241c18,#070707_72%)]" />
+  }
+
+  return (
+    <Image
+      src={video.thumbnailUrl}
+      alt=""
+      fill
+      priority={priority}
+      unoptimized
+      sizes="(max-width: 460px) 100vw, 460px"
+      className="object-cover transition duration-700 group-hover:scale-[1.025]"
+    />
+  )
+}
+
+export function VideosView({ initialVideos }: { initialVideos: OfficialArchiveItem[] }) {
+  const [query, setQuery] = useState("")
+  const [activeFilter, setActiveFilter] = useState("Všetko")
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase("sk")
+    const filter = filters.find((item) => item.label === activeFilter) ?? filters[0]
+
+    return initialVideos.filter((video) => {
+      const haystack = [video.title, video.performers, video.program, video.venue, video.category]
+        .join(" ")
+        .toLocaleLowerCase("sk")
+      return filter.test(video) && (!q || haystack.includes(q))
     })
-    return()=>{cancelled=true}
-  },[initialVideos])
+  }, [activeFilter, initialVideos, query])
 
-  const filtered=useMemo(()=>initialVideos.filter(v=>{
-    const q=query.toLowerCase().trim()
-    const hay=[v.title,v.conductor,v.venue,v.description].filter(Boolean).join(" ").toLowerCase()
-    return hay.includes(q)
-  }),[initialVideos,query])
+  const featured = filtered[0]
+  const archive = filtered.slice(1)
+  const groups = useMemo(() => archive.reduce<Array<{ label: string; videos: OfficialArchiveItem[] }>>((all, video) => {
+    const label = monthLabel(video.date)
+    const current = all.at(-1)
+    if (current?.label === label) current.videos.push(video)
+    else all.push({ label, videos: [video] })
+    return all
+  }, []), [archive])
 
-  const featured=filtered[0]
-  const rest=filtered.slice(1)
-
-  return <div className="-mx-5 -mt-2 min-h-svh bg-[#1d1d1f] text-white">
-    <header className="border-b border-white/[.08] bg-[#111]/95 px-5 pb-4 pt-5 backdrop-blur-xl">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-[.14em] text-white/42">Slovenská filharmónia</p>
-          <h1 className="mt-1 text-[34px] font-medium leading-none tracking-[-.045em]">Koncerty</h1>
-        </div>
-        <span className="text-[10px] text-white/35">{filtered.length} záznamov</span>
-      </div>
-
-      <div className="mt-5 grid grid-cols-3 gap-x-4 gap-y-2 border-t border-white/[.08] pt-3 text-[11px] text-white/78">
-        <span className="border-b border-white/[.10] py-2">Skladatelia</span>
-        <span className="border-b border-white/[.10] py-2">Dirigenti</span>
-        <span className="border-b border-white/[.10] py-2">Sólisti</span>
-        <span className="border-b border-white/[.10] py-2">Súbory</span>
-        <span className="border-b border-white/[.10] py-2">Sezóny</span>
-        <span className="border-b border-white/[.10] py-2">Diela</span>
-      </div>
-
-      <div className="relative mt-4">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35"/>
-        <input
-          value={query}
-          onChange={e=>setQuery(e.target.value)}
-          placeholder="Hľadať v archíve"
-          className="h-11 w-full rounded-[10px] border border-white/[.08] bg-white/[.06] pl-10 pr-4 text-[13px] text-white outline-none placeholder:text-white/32"
-        />
-      </div>
-    </header>
-
-    <main className="px-5 pb-8 pt-5">
-      {featured&&(()=>{
-        const thumb=officialThumbs[featured.id]||featured.thumbnailUrl||""
-        const date=featured.date?new Date(featured.date+"T00:00:00"):null
-        return <section>
-          <a href={featured.url||"#"} target="_blank" rel="noreferrer" className="group block">
-            <div className="relative overflow-hidden rounded-[8px] bg-black">
-              <div className="relative aspect-[1.55/1]">
-                {thumb&&<img src={thumb} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.01]"/>}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/18 to-transparent"/>
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <span className="bg-[#ffd500] px-2.5 py-1 text-[9px] font-medium uppercase tracking-[.04em] text-black">Koncert</span>
-                    {date&&<span className="text-[10px] text-white/62">{date.toLocaleDateString("sk-SK",{day:"numeric",month:"short",year:"numeric"})}</span>}
-                  </div>
-                  <h2 className="max-w-[90%] text-[26px] font-medium leading-[1.03] tracking-[-.035em]">{featured.title}</h2>
-                  {featured.conductor&&<p className="mt-2 text-[11px] text-white/64">Diriguje: {featured.conductor}</p>}
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-[6px] bg-white/18 px-4 py-2.5 text-[11px] font-medium backdrop-blur">
-                    Otvoriť koncert <ExternalLink className="h-3.5 w-3.5"/>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </a>
-        </section>
-      })()}
-
-      <section className="mt-8">
-        <div className="mb-4 flex items-center justify-between">
+  return (
+    <div className="-mx-5 -mt-2 min-h-svh overflow-hidden bg-[#0b0b0c] text-[#f7f4ed]">
+      <header className="relative px-5 pb-5 pt-7">
+        <div className="pointer-events-none absolute -right-20 -top-28 h-64 w-64 rounded-full bg-[#b88a55]/15 blur-3xl" />
+        <p className="relative text-[10px] font-semibold uppercase tracking-[.22em] text-[#c7a16f]">Slovenská filharmónia</p>
+        <div className="relative mt-2 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-[22px] font-medium tracking-[-.035em]">Koncertný archív</h2>
-            <p className="mt-1 text-[11px] text-white/42">Záznamy od januára 2026.</p>
+            <h1 className="text-[38px] font-semibold leading-none tracking-[-.055em]">Koncertný archív</h1>
+            <p className="mt-2 text-[12px] text-white/45">Záznamy od sezóny 2025/2026</p>
           </div>
-          <span className="flex items-center gap-1 text-[10px] text-white/55">Všetko <ChevronRight className="h-3 w-3"/></span>
+          <span className="mb-0.5 shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[10px] tabular-nums text-white/55">
+            {filtered.length} videí
+          </span>
         </div>
 
-        <div className="flex snap-x gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {rest.map(v=>{
-            const thumb=officialThumbs[v.id]||v.thumbnailUrl||""
-            const date=v.date?new Date(v.date+"T00:00:00"):null
-            return <a key={v.id} href={v.url||"#"} target="_blank" rel="noreferrer" className="w-[78%] shrink-0 snap-start overflow-hidden rounded-[7px] bg-[#0c0c0d]">
-              <div className="relative aspect-[16/10] bg-black">
-                {thumb&&<img src={thumb} alt="" className="h-full w-full object-cover"/>}
-                <div className="absolute inset-x-0 bottom-0 flex items-center bg-black/72 text-[9px]">
-                  <span className="bg-[#ffd500] px-2.5 py-1.5 font-medium uppercase tracking-[.03em] text-black">Koncert</span>
-                  {date&&<span className="px-2.5 text-white/65">{date.toLocaleDateString("sk-SK",{day:"numeric",month:"short",year:"numeric"})}</span>}
+        <div className="relative mt-5">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Hľadať skladbu, interpreta, dirigenta…"
+            aria-label="Hľadať v koncertnom archíve"
+            className="h-12 w-full rounded-2xl border border-white/[.09] bg-white/[.065] pl-10 pr-11 text-[13px] text-white outline-none placeholder:text-white/28 focus:border-[#c7a16f]/60 focus:bg-white/[.08]"
+          />
+          {query && (
+            <button onClick={() => setQuery("")} aria-label="Vymazať hľadanie" className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white/55">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {filters.map((filter) => (
+            <button
+              key={filter.label}
+              onClick={() => setActiveFilter(filter.label)}
+              aria-pressed={activeFilter === filter.label}
+              className={`shrink-0 rounded-full border px-3.5 py-2 text-[11px] font-medium ${activeFilter === filter.label ? "border-[#c7a16f] bg-[#c7a16f] text-[#17110b]" : "border-white/10 bg-white/[.035] text-white/56"}`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className="pb-10">
+        {featured && (
+          <section className="px-5 pb-8">
+            <p className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.18em] text-white/38">
+              <span className="h-px w-5 bg-[#c7a16f]" /> Najnovší záznam
+            </p>
+            <a href={featured.url} target="_blank" rel="noreferrer" className="group block overflow-hidden rounded-[22px] border border-white/[.08] bg-[#151516] shadow-2xl shadow-black/40">
+              <div className="relative aspect-[4/3] overflow-hidden bg-[#161312]">
+                <ArchiveImage video={featured} priority />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <div className="mb-3 flex items-center gap-2 text-[10px] font-medium">
+                    <span className="rounded-full bg-[#d8ae76] px-2.5 py-1 text-[#17110b]">{featured.category}</span>
+                    <span className="text-white/68">{formatDate(featured.date)}</span>
+                  </div>
+                  <h2 className="max-w-[95%] text-[28px] font-semibold leading-[1.02] tracking-[-.045em]">{featured.title}</h2>
+                  <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-white/58">{featured.performers}</p>
+                  <span className="mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-[11px] font-semibold text-black">
+                    <Play className="h-3.5 w-3.5 fill-current" /> Prehrať záznam
+                  </span>
                 </div>
-              </div>
-              <div className="p-3.5">
-                <h3 className="text-[17px] font-normal leading-[1.08] tracking-[-.025em]">{v.title}</h3>
-                {v.conductor&&<p className="mt-2 line-clamp-1 text-[10px] text-white/45">Diriguje: {v.conductor}</p>}
               </div>
             </a>
-          })}
-        </div>
-      </section>
+          </section>
+        )}
 
-      {query&&filtered.length===0&&<div className="mt-8 rounded-[8px] border border-white/[.08] p-8 text-center text-[12px] text-white/40">Nič sa nenašlo.</div>}
-    </main>
-  </div>
+        {groups.map((group) => (
+          <section key={group.label} className="border-t border-white/[.07] px-5 py-6 [content-visibility:auto] [contain-intrinsic-size:780px]">
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="text-[20px] font-semibold tracking-[-.035em]">{group.label}</h2>
+              <span className="text-[10px] text-white/32">{group.videos.length} {group.videos.length === 1 ? "záznam" : "záznamov"}</span>
+            </div>
+
+            <div className="space-y-4">
+              {group.videos.map((video) => (
+                <a key={video.id} href={video.url} target="_blank" rel="noreferrer" className="group grid grid-cols-[128px_1fr] gap-3 overflow-hidden rounded-[18px] border border-white/[.075] bg-[#141415] p-2.5">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#211c18]">
+                    <ArchiveImage video={video} />
+                    <div className="absolute inset-0 bg-black/12" />
+                    <span className="absolute bottom-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-white/92 text-black shadow-lg">
+                      <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
+                    </span>
+                    {video.partial && <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-1 text-[8px] font-semibold uppercase tracking-wide">Výber</span>}
+                  </div>
+
+                  <div className="min-w-0 py-0.5 pr-1">
+                    <p className="text-[9px] font-semibold uppercase tracking-[.11em] text-[#c7a16f]">{video.category}</p>
+                    <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-[1.12] tracking-[-.025em]">{video.title}</h3>
+                    <p className="mt-2 line-clamp-1 text-[10px] text-white/43">{video.performers}</p>
+                    <div className="mt-2 flex items-center gap-2 text-[9px] text-white/32">
+                      <CalendarDays className="h-3 w-3" />
+                      <span>{formatDate(video.date)}</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {!featured && (
+          <div className="mx-5 mt-3 rounded-[22px] border border-white/[.08] bg-white/[.035] px-6 py-14 text-center">
+            <SlidersHorizontal className="mx-auto h-5 w-5 text-white/32" />
+            <p className="mt-3 text-[14px] font-medium">Nenašli sa žiadne záznamy</p>
+            <p className="mt-1 text-[11px] text-white/38">Skús iný výraz alebo zruš filter.</p>
+          </div>
+        )}
+
+        <div className="mx-5 mt-2 flex items-start gap-2 border-t border-white/[.07] pt-5 text-[9px] leading-relaxed text-white/28">
+          <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+          <p>Oficiálne záznamy Koncertného archívu Slovenskej filharmónie. Videá sa otvárajú na stream.filharmonia.art.</p>
+        </div>
+      </main>
+    </div>
+  )
 }
