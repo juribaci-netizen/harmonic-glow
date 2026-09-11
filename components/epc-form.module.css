@@ -16,4 +16,7 @@
 .checkbox svg { pointer-events:none;overflow:visible; }
 .field:disabled,.checkbox:has(input:disabled) { cursor:default; }
 .signature { object-fit:contain;object-position:center; }
-.ensemble { position:absolute;box-sizing:border-box;border:.7px solid black;border-radius:50%;pointer-events:none; }
+.ensembleChoice { position:absolute;box-sizing:border-box;border:.7px solid transparent;border-radius:50%;padding:0;background:transparent;cursor:pointer; }
+.ensembleChoice:focus-visible { outline:1px solid #8b6f4b;outline-offset:2px; }
+.ensembleChoice:disabled { cursor:wait; }
+.ensemble { border-color:black; }
