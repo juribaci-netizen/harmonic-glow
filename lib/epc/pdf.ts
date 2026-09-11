@@ -1,6 +1,6 @@
-import { PDFDocument, rgb, drawLine, drawText, degrees, pushGraphicsState, popGraphicsState } from 'pdf-lib'
+import { PDFDocument, TextAlignment, rgb, drawLine, drawText, degrees, pushGraphicsState, popGraphicsState } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import {headerRect,headerFontSize} from './layout'
+import {headerRect,headerFontSize,rangeFontSize,signatureRect} from './layout'
 import { bratislavaNow, fieldRect, dayValues, MONTHS, validateMonth, type Entry, type Ensemble } from './model'
 
 export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8Array;year:number;month:number;name:string;entries:Entry[];signatureData?:string|null;ensemble?:Ensemble|null;now?:Date}) {
@@ -11,11 +11,13 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
   const font=await pdf.embedFont(fontBytes,{subset:true})
   const page=pdf.getPages()[0],form=pdf.getForm(),black=rgb(0,0,0)
   const text=(key:string,value:string,size=9)=>{
-    const header=headerRect(key),r=header??fieldRect(key),field=form.createTextField(key)
+    const header=headerRect(key),r=key==='Podpis'?signatureRect():header??fieldRect(key),field=form.createTextField(key)
     field.setText(value)
     field.addToPage(page,{x:r.x,y:r.y,width:r.width,height:r.height,borderWidth:0,borderColor:undefined,textColor:black,backgroundColor:undefined,font})
     field.setFontSize(size)
+    if(key.startsWith('Dropdown '))field.setAlignment(TextAlignment.Center)
     if(header)field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:1,y:4,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
+    if(key.startsWith('Dropdown '))field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:(r.width-font.widthOfTextAtSize(value,size))/2,y:(r.height-font.heightAtSize(size,{descender:false}))/2,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
     return field
   }
   text('Mesiac',MONTHS[month],headerFontSize);text('Rok',String(year),headerFontSize);text('Meno',name,headerFontSize)
@@ -33,11 +35,11 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
         const stroke=(x1:number,y1:number,x2:number,y2:number)=>drawLine({start:{x:x1,y:y1},end:{x:x2,y:y2},thickness:1,color:black})
         return {normal:{on:[...stroke(cx-3,cy-4,cx+3,cy+4),...stroke(cx-3,cy+4,cx+3,cy-4)],off:[pushGraphicsState(),popGraphicsState()]}}
       })
-      text(`Dropdown ${day}.${slot}`,values.ranges[slot-1],9)
+      text(`Dropdown ${day}.${slot}`,values.ranges[slot-1],rangeFontSize)
       if(!valid){field.enableReadOnly();form.getTextField(`Dropdown ${day}.${slot}`).enableReadOnly()}
     }
   }
-  // Signature uses the exact original signature widget rectangle. The image is not part of the blank template.
+  // Keep the fitted signature centered just above the printed signature line.
   const signature=text('Podpis','',10)
   if(signatureData) {
     const png=await pdf.embedPng(signatureData)

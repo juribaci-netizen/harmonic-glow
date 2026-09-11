@@ -1,3 +1,4 @@
+import { fittedSignature } from './signature-image'
 import { pool } from '@/lib/db'
 import { validateMonth, type Ensemble } from './model'
 
@@ -14,7 +15,7 @@ async function ensureTable() {
 export async function readReport(userId:string,year:number,month:number) {
   validateMonth(year,month);await ensureTable()
   const result=await pool.query('SELECT signature_data, ensemble FROM epc_report WHERE user_id=$1 AND year=$2 AND month=$3',[userId,year,month])
-  return {signatureData:(result.rows[0]?.signature_data??null) as string|null,ensemble:(result.rows[0]?.ensemble??null) as Ensemble|null}
+  return {signatureData:fittedSignature(result.rows[0]?.signature_data??null),ensemble:(result.rows[0]?.ensemble??null) as Ensemble|null}
 }
 export async function writeReport(userId:string,year:number,month:number,patch:{signatureData?:string;ensemble?:Ensemble},onlyIfEmpty=false) {
   validateMonth(year,month);await ensureTable()

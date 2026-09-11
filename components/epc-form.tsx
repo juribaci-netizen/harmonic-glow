@@ -2,10 +2,10 @@
 import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { geometry, fieldRect, dayValues, MONTHS, bratislavaNow, type Entry, type Slot, type Ensemble } from '@/lib/epc/model'
 import styles from './epc-form.module.css'
-import {headerRect,headerFontSize,previewCrop} from '@/lib/epc/layout'
+import {headerRect,headerFontSize,previewCrop,signatureRect} from '@/lib/epc/layout'
 
 function position(name:string):CSSProperties {
-  const r=headerRect(name)??fieldRect(name)
+  const r=name==='Podpis'?signatureRect():headerRect(name)??fieldRect(name)
   return {left:r.x,top:r.top,width:r.width,height:r.height}
 }
 type RegisterSave = (name:string, save:(()=>Promise<boolean>)|null)=>void

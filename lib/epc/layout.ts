@@ -10,3 +10,9 @@ export function headerRect(name:string) {
   const y=baseline-4,height=18
   return {...original,y,height,top:geometry.height-y-height,baseline}
 }
+
+export const rangeFontSize = 11
+export function signatureRect() {
+  const original=fieldRect('Podpis'),y=original.y+5,height=original.height-5
+  return {...original,x:original.x+10,y,width:original.width-20,height,top:geometry.height-y-height}
+}
