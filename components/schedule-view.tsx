@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react"
 import { useI18n } from "@/components/language-provider"
 import { Download, MapPin } from "lucide-react"
 import { setActivityParticipation, setProgramParticipation } from '@/app/actions/schedule'
+import { bratislavaNow,timeMinutes } from '@/lib/epc/model'
 import { canChooseParticipation } from '@/lib/work-plan'
 import type { SeasonActivity } from '@/lib/season-data-2026-27'
 
@@ -56,25 +57,19 @@ function ParticipationChoice({ activity }: { activity: Activity }) {
   </details>
 }
 
-export function ScheduleView({ activities }: { activities: Activity[] }) {
+export function ScheduleView({ activities,initialNow }: { activities: Activity[];initialNow:string }) {
   const { t, lang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
-  const [now, setNow] = useState(() => new Date())
+  const [now, setNow] = useState(() => new Date(initialNow))
   const [showPast, setShowPast] = useState(false)
 
   useEffect(() => {
+    setNow(new Date())
     const timer = window.setInterval(() => setNow(new Date()), 60_000)
     return () => window.clearInterval(timer)
   }, [])
 
-  const localIso = (d: Date) => {
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, "0")
-    const day = String(d.getDate()).padStart(2, "0")
-    return y + "-" + m + "-" + day
-  }
-
-  const todayIso = localIso(now)
+  const civilNow=bratislavaNow(now),todayIso=civilNow.date
 
   const visible = useMemo(
     () => [...activities]
@@ -85,11 +80,10 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
         if (a.date < todayIso) return false
         if (!a.startTime) return true
 
-        const end = new Date(`${a.date}T${a.endTime ?? a.startTime}:00`)
-        if (!a.endTime) end.setHours(end.getHours() + 3)
-        return end.getTime() > now.getTime()
+        const end=timeMinutes(a.endTime)??(timeMinutes(a.startTime)!+180)
+        return end>civilNow.minutes
       }),
-    [activities, now, todayIso, showPast]
+    [activities, civilNow.minutes, todayIso, showPast]
   )
 
   const firstInProgram=useMemo(()=>{const first=new Map<string,number>();for(const activity of visible)if(activity.workProgram&&!first.has(activity.workProgram.id))first.set(activity.workProgram.id,activity.id);return first},[visible])
@@ -121,8 +115,8 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
     a.startTime ? a.startTime + (a.endTime ? " – " + a.endTime : "") : ""
 
   const relativeDayLabel = (date: string) => {
-    const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const targetDay = new Date(date + "T00:00:00")
+    const currentDay = new Date(todayIso+"T12:00:00Z")
+    const targetDay = new Date(date + "T12:00:00Z")
     const dayDifference = Math.round((targetDay.getTime() - currentDay.getTime()) / 86_400_000)
     return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(dayDifference, "day")
   }

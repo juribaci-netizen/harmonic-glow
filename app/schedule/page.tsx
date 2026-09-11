@@ -5,5 +5,5 @@ import { getSessionUser } from '@/lib/session'
 
 export default async function SchedulePage() {
   const [activities, user] = await Promise.all([getActivities(), getSessionUser()])
-  return <AppShell user={{ name: user.name, email: user.email }}><ScheduleView activities={activities} /></AppShell>
+  return <AppShell user={{ name: user.name, email: user.email }}><ScheduleView activities={activities} initialNow={new Date().toISOString()} /></AppShell>
 }
