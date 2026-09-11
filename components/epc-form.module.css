@@ -13,4 +13,4 @@
 .checkbox svg { pointer-events:none;overflow:visible; }
 .field:disabled,.checkbox:has(input:disabled) { cursor:default; }
 .signature { object-fit:contain;object-position:center; }
-.ensemble { position:absolute;border-bottom:.7px solid black;margin-left:3px;transform:scaleX(.9);transform-origin:left;pointer-events:none; }
+.ensemble { position:absolute;box-sizing:border-box;border:.7px solid black;border-radius:50%;pointer-events:none; }

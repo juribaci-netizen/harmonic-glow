@@ -33,7 +33,7 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
       <div className={styles.paper} data-epc-paper style={{width:geometry.width,height:geometry.height,transform:`scale(${scale})`}}>
         <img className={styles.background} src="/epc-blank.png" alt="Prázdny originálny formulár EPČ" draggable={false}/>
         {[['Mesiac',MONTHS[month]],['Rok',String(year)],['Meno',name]].map(([key,value])=><div key={key} data-epc-field={key} className={`${styles.field} ${styles.header}`} style={position(key)}>{value}</div>)}
-        {ensemble&&<span data-epc-ensemble className={styles.ensemble} style={{...position({orchester:'Orchester',zbor:'Zbor',sko:'SKO'}[ensemble]),height:fieldRect('Orchester').height-3}}/>}
+        {ensemble&&<span data-epc-ensemble className={styles.ensemble} style={position({orchester:'Orchester',zbor:'Zbor',sko:'SKO'}[ensemble])}/>}
         {Array.from({length:31},(_,i)=>i+1).map(day=>{
           const date=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
           const values=dayValues(entries,date,now)

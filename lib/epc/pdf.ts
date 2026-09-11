@@ -44,8 +44,7 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
   }
   if(ensemble) {
     const r=fieldRect({orchester:'Orchester',zbor:'Zbor',sko:'SKO'}[ensemble])
-    // Plain underline, never a surrounding rectangle.
-    page.drawLine({start:{x:r.x+3,y:r.y+3},end:{x:r.x+r.width-3,y:r.y+3},thickness:.7,color:black})
+    page.drawEllipse({x:r.x+r.width/2,y:r.y+r.height/2,xScale:(r.width-.7)/2,yScale:(r.height-.7)/2,borderWidth:.7,borderColor:black})
   }
   form.updateFieldAppearances(font)
   return pdf.save()
