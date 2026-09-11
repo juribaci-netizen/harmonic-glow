@@ -34,7 +34,7 @@ export function visible(entry:Entry|undefined, now=bratislavaNow()) {
   if (!entry || entry.status==='removed' || entry.status==='suggested') return false
   if (entry.status==='manual' || entry.type==='manual-service') return true
   if (entry.date!==now.date) return entry.date<now.date
-  const end=timeMinutes(entry.endTime)
+  const end=timeMinutes(entry.endTime) ?? (isService(entry) && timeMinutes(entry.startTime)!==null ? timeMinutes(entry.startTime)!+180 : null)
   // Automatic preparation without a time is only completed after the day ends.
   return end!==null && end<=now.minutes
 }

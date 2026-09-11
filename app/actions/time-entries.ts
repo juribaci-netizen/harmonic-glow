@@ -7,6 +7,7 @@ import { and, desc, eq, gte, lte, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
 import { seasonData } from "@/lib/season-data-2026-27"
+import { canChooseParticipation } from '@/lib/work-plan'
 
 export type LogHoursInput = {
   activityId?: number | null
@@ -64,7 +65,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   const monthActivities = seasonData
     .map((activity, index) => ({ ...activity, activityId: index + 1 }))
     .filter(activity => activity.date >= monthStart && activity.date <= monthEnd)
-    .filter(activity => activity.type !== "off" && activity.type !== "ip")
+    .filter(canChooseParticipation)
 
   for (const activity of monthActivities) {
     const hours = scheduledHours(activity.startTime, activity.endTime)

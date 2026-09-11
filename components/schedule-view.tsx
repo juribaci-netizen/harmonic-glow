@@ -1,13 +1,17 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { useI18n } from "@/components/language-provider"
-import { Download, MapPin } from "lucide-react"
+import { Check, Download, MapPin, X } from "lucide-react"
+import { setActivityParticipation } from '@/app/actions/schedule'
+import { canChooseParticipation } from '@/lib/work-plan'
+import type { SeasonActivity } from '@/lib/season-data-2026-27'
 
 type Activity = {
   id: number
   date: string
-  type: string
+  type: SeasonActivity['type']
+  playing: boolean
   startTime: string | null
   endTime: string | null
   title: string
@@ -17,10 +21,43 @@ type Activity = {
   notes: string | null
 }
 
+function ParticipationChoice({ activity }: { activity: Activity }) {
+  const [pending, startTransition] = useTransition()
+  const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
+  const choose = (playing: boolean) => {
+    setError('')
+    setSaved(false)
+    startTransition(async () => {
+      try {
+        await setActivityParticipation(activity.id, playing)
+        setSaved(true)
+      } catch {
+        setError('Voľbu sa nepodarilo uložiť. Skúste to znova.')
+      }
+    })
+  }
+  return <div className="mt-3 border-t border-black/[.06] pt-3">
+    <div role="group" aria-label={`Účasť: ${activity.date} ${activity.startTime} ${activity.title}`} aria-busy={pending} className="flex gap-2">
+      {[true, false].map(playing => {
+        const selected = activity.playing === playing
+        const Icon = playing ? Check : X
+        return <button key={String(playing)} type="button" aria-pressed={selected} disabled={pending}
+          onClick={() => choose(playing)} className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 text-[11px] font-medium transition-colors disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b6f4b] ${selected ? 'border-[#8b6f4b] bg-[#8b6f4b] text-white' : 'border-black/10 bg-white text-black/60'}`}>
+          <Icon className="h-3.5 w-3.5" aria-hidden="true"/>{playing ? 'Toto hrám' : 'Toto nehrám'}
+        </button>
+      })}
+    </div>
+    <p role="status" className="mt-1.5 text-[10px] leading-relaxed text-black/50">{pending ? 'Ukladám…' : `${saved ? 'Uložené. ' : ''}${activity.playing ? 'X sa zapíše po skončení služby.' : 'Táto služba sa do EPČ nezapíše.'}`}</p>
+    {error && <p role="alert" className="mt-1 text-[11px] text-red-700">{error}</p>}
+  </div>
+}
+
 export function ScheduleView({ activities }: { activities: Activity[] }) {
   const { t, lang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
   const [now, setNow] = useState(() => new Date())
+  const [showPast, setShowPast] = useState(false)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000)
@@ -40,6 +77,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
     () => [...activities]
       .sort((a,b) => a.date.localeCompare(b.date) || (a.startTime ?? "99:99").localeCompare(b.startTime ?? "99:99"))
       .filter(a => {
+        if (showPast) return true
         if (a.date > todayIso) return true
         if (a.date < todayIso) return false
         if (!a.startTime) return true
@@ -48,7 +86,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
         if (!a.endTime) end.setHours(end.getHours() + 3)
         return end.getTime() > now.getTime()
       }),
-    [activities, now, todayIso]
+    [activities, now, todayIso, showPast]
   )
 
   const grouped = useMemo(() => {
@@ -127,7 +165,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
             <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
-            <p className="mt-2 text-[11px] text-black/38">Najbližšie služby podľa aktuálneho času</p>
+            <p className="mt-2 text-[11px] text-black/50">Vyberte, ktoré služby hráte. Podľa toho sa vyplní EPČ.</p>
           </div>
           <a
             href="/api/work-plan"
@@ -143,6 +181,10 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
       </header>
 
       <div className="pt-4">
+        <label className="flex min-h-11 items-center gap-2 text-[12px] text-black/60">
+          <input type="checkbox" checked={showPast} onChange={event => setShowPast(event.target.checked)} className="h-4 w-4 accent-[#8b6f4b]"/>
+          Zobraziť aj uplynulé služby
+        </label>
         {grouped.map(([date, items], index) => {
           const d = new Date(date + "T00:00:00")
           const monthChanged = index === 0 || grouped[index-1][0].slice(0,7) !== date.slice(0,7)
@@ -183,7 +225,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                       const subdued=off||audition
 
                       return (
-                        <article key={a.id} className={"px-4 py-4 "+(subdued?"bg-[#fafafa]":"bg-white")}>
+                        <article key={a.id} data-activity-id={a.id} className={"px-4 py-4 "+(subdued?"bg-[#fafafa]":"bg-white")}>
                           {index===0&&itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
                           <div className="flex items-baseline justify-between gap-3">
                             <h3 className={(subdued?"text-[15px] font-medium text-black/48":"text-[18px] font-semibold text-black")+" leading-tight tracking-[-.025em]"}>{label}</h3>
@@ -218,6 +260,7 @@ export function ScheduleView({ activities }: { activities: Activity[] }) {
                               {notes&&<p>{notes}</p>}
                             </div>
                           )}
+                          {canChooseParticipation(a) && <ParticipationChoice activity={a}/>}
                         </article>
                       )
                     })}
