@@ -133,7 +133,12 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
-        {!!report.shortfalls?.length&&<details className="rounded-xl bg-black/5 p-3 text-xs"><summary className="cursor-pointer">Niektoré týždne nedosahujú 40 hodín</summary><ul className="mt-2 space-y-1">{report.shortfalls.map(s=><li key={s.weekStart}>Týždeň od {s.weekStart.split('-').reverse().join('.')}: chýba {s.missingHours} h</li>)}</ul></details>}
+        {!!report.shortfalls?.length&&<details className="rounded-xl bg-black/5 p-3 text-xs">
+          <summary className="cursor-pointer">Prehľad týždňov pod 40 hodín</summary>
+          <p className="mt-2 text-black/60">Toto je informácia o súčte hodín, nie chyba uloženia výkazu. Automatické IP dodržiava nastavené časové obmedzenia, preto nemusí doplniť každý týždeň na 40 hodín.</p>
+          <ul className="mt-2 space-y-1">{report.shortfalls.map(s=><li key={s.weekStart}>Týždeň od {s.weekStart.split('-').reverse().join('.')}: rozdiel do 40 h je {s.missingHours.toLocaleString('sk-SK')} h.</li>)}</ul>
+          <p className="mt-2 text-black/60">Súčet zahŕňa celý týždeň od pondelka do nedele, aj dni v susednom mesiaci. Skontrolujte účasť na službách a zapíšte iba prípravu, ktorá skutočne prebehla. Výkaz môžete uložiť a stiahnuť aj s nižším súčtom.</p>
+        </details>}
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
       </div>
