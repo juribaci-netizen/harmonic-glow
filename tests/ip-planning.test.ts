@@ -60,4 +60,11 @@ for(const rows of [[],daily,frozen,[morning,afternoon],[morning,evening]]){
  assert.deepEqual(planWeekIp(dates,[...rows,...plan.map((p,i)=>({...p,id:1000+i,type:'individual',title:'IP',status:'auto',notes:null}))]),plan)
 }
 assert.equal(sum(planWeekIp(cross,[])),38.5)
+const twoShort=[{...morning,endTime:'11:00',hours:'2'},{...evening,hours:'2'}]
+const protectedDays=dates.slice(1,6).map((date,i)=>({...manual,id:200+i,date,hours:'6'}))
+const protectedSunday={...manual,id:300,date:dates[6],status:'removed',hours:'0',startTime:null,endTime:null}
+const serviceTopUp=planWeekIp(dates,[...twoShort,...protectedDays,protectedSunday])
+assert.equal(sum(serviceTopUp),4.5)
+assert.equal(serviceTopUp.length,2)
+assert.ok(serviceTopUp.every(e=>e.date===dates[0]))
 console.log('PASS: reference blocks, second daily blocks, weekend top-up, 38.5h target, half-hour remainder, manual preservation, blocked days, cross-month weeks, no overlaps and repeatable planning')
