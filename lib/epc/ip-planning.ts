@@ -32,11 +32,11 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
   const active=entries.filter(e=>dates.includes(e.date)&&!['removed','suggested','unconfirmed'].includes(e.status)&&(isIp(e)||isService(e))&&!(isIp(e)&&e.status==='auto'))
   let remaining=Math.max(0,WEEKLY_TARGET_MINUTES-Math.round(countedHours(active)*60))
   const planned:{date:string;startTime:string;endTime:string;hours:string}[]=[]
-  const addBlock=(date:string,topUp=false)=>{
+  const addBlock=(date:string,topUp=false,allowServiceTopUp=false)=>{
     // A manual preparation entry or explicit removal protects the entire day.
     if(entries.some(e=>e.date===date&&isIp(e)&&e.status!=='auto'&&e.status!=='suggested'))return
     const day=active.filter(e=>e.date===date),services=day.filter(isService)
-    if(topUp&&services.length)return
+    if(topUp&&services.length&&!allowServiceTopUp)return
     const existing=planned.filter(e=>e.date===date)
     if(existing.length>=2)return
     const used=Math.round((countedHours(day)+existing.reduce((sum,e)=>sum+Number(e.hours),0))*60)
@@ -74,5 +74,8 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
   for(const date of weekdays)addBlock(date,true)
   for(const date of weekend)addBlock(date)
   for(const date of weekend)addBlock(date,true)
+  // A remaining fraction can use a second free slot on a service day,
+  // as in the reference, without changing the normal service-day pattern.
+  for(const date of dates)addBlock(date,true,true)
   return planned.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime))
 }
