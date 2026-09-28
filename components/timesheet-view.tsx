@@ -20,6 +20,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [dirty,setDirty]=useState<Record<string,boolean>>({}),[zoom,setZoom]=useState(1)
   const [signing,setSigning]=useState(false),[hasInk,setHasInk]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null),drawing=useRef(false),requestId=useRef(0),inFlight=useRef(false)
+  const untimedServices=report.entries.filter(e=>!['individual','ip','off'].includes(e.type)&&e.status!=='removed'&&(!e.startTime||!e.endTime))
   const untimedPreparationDays=[...new Set(report.entries.filter(e=>['individual','ip'].includes(e.type)&&!['auto','suggested','unconfirmed','removed'].includes(e.status)&&(!e.startTime||!e.endTime)).map(e=>e.date))].sort()
   const excludedPreparationDays=[...new Set(report.entries.filter(e=>['individual','ip'].includes(e.type)&&e.status==='removed').map(e=>e.date))].sort()
   const locked=loading||saving,hasDrafts=Object.values(dirty).some(Boolean)
@@ -138,6 +139,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} showPlannedPreparation={showPlannedPreparation} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
+        {!!untimedServices.length&&<details className="text-xs text-black/60"><summary>Položky bez úplného času</summary><ul>{untimedServices.map(e=><li key={e.id}>{e.date.split('-').reverse().join('.')} · {e.title} · {e.startTime??'?'}–{e.endTime??'?'}</li>)}</ul></details>}
         {!!untimedPreparationDays.length&&<p className="text-xs text-black/60">Príprava s uloženými hodinami bez času od–do: {untimedPreparationDays.map(date=>date.split('-').reverse().join('.')).join(', ')}.</p>}
         {!!excludedPreparationDays.length&&<p className="text-xs text-black/60">Ručne vynechaná príprava: {excludedPreparationDays.map(date=>date.split('-').reverse().join('.')).join(', ')}. Automatický plán tieto dni nemení.</p>}
         {!!report.weeklyTotals?.length&&<details className="rounded-xl bg-black/5 p-3 text-sm">
