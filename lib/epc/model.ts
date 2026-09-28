@@ -51,7 +51,7 @@ export function slotNote(notes:string|null, kind:'service'|'ip', slot:Slot) {
 }
 export function assignedSlots(entries:Entry[], kind:'service'|'ip'):[Entry|undefined,Entry|undefined] {
   const result:[Entry|undefined,Entry|undefined]=[undefined,undefined]
-  const rows=entries.filter(e=>e.status!=='suggested' && (kind==='ip'?isIp(e):isService(e)))
+  const rows=entries.filter(e=>e.status!=='suggested' && (kind==='ip'?isIp(e)&&e.status!=='unconfirmed':isService(e)))
     .sort((a,b)=>String(a.startTime??'').localeCompare(String(b.startTime??'')) || a.id-b.id)
   const legacy:Entry[]=[]
   for (const e of rows) {
