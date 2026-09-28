@@ -32,7 +32,7 @@ function TimeCell({name,value,disabled,onSave,onDirty,registerSave}:{name:string
     autoComplete="off" spellCheck={false} value={draft} disabled={disabled}
     onFocus={()=>{focused.current=true}} onChange={e=>{setDraft(e.target.value);setError(false);onDirty(e.target.value!==latest.current)}}
     onBlur={save} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur()}if(e.key==='Escape'){setDraft(value);setError(false);onDirty(false)}}}/>
-    {range&&rect&&<svg aria-hidden="true" data-epc-value={name} className={`${styles.field} ${styles.rangeValue}`} style={position(name)}><text x={rect.width/2} y={rect.height-(rangeBaseline(name)-rect.y)} textAnchor="middle" fontSize={rangeFontSize}>{draft}</text></svg>}
+    {range&&rect&&<svg aria-hidden="true" data-epc-value={name} className={`${styles.field} ${styles.rangeValue}`} style={position(name)}><text x={1} y={rect.height-(rangeBaseline(name)-rect.y)} textAnchor="start" fontSize={rangeFontSize}>{draft}</text></svg>}
   </>
 }
 export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,busy,onService,onRange,onName,onEnsemble,onDirty,editorRef}:{entries:Entry[];year:number;month:number;name:string;signatureData:string|null;ensemble:Ensemble|null;zoom:number;busy:boolean;onService:(date:string,slot:Slot,value:boolean)=>Promise<void>;onRange:(date:string,slot:Slot,value:string)=>Promise<void>;onName:(value:string)=>Promise<void>;onEnsemble:(value:Ensemble)=>Promise<void>;onDirty:(key:string,dirty:boolean)=>void;editorRef?:Ref<EpcFormHandle>}) {
@@ -81,7 +81,7 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
               <label className={`${styles.field} ${styles.checkbox}`} style={position(check)}>
                 <input data-epc-field={check} type="checkbox" aria-label={`${date} ${slot}. služba`} checked={day<=days&&values.services[slot-1]} disabled={busy||day>days}
                   onChange={e=>{void onService(date,slot,e.target.checked).catch(()=>{})}}/>
-                {day<=days&&values.services[slot-1]&&<svg aria-hidden="true" width="6" height="8" viewBox="0 0 6 8"><path d="M0 0L6 8M0 8L6 0" stroke="black" strokeWidth="1"/></svg>}
+                {day<=days&&values.services[slot-1]&&<svg aria-hidden="true" width="13" height="13" viewBox="0 0 13 13"><path d="M0 0L13 13M0 13L13 0" stroke="black" strokeWidth="1"/></svg>}
               </label>
               <TimeCell registerSave={registerSave} key={`${date}:${slot}`} name={range} value={day<=days?values.ranges[slot-1]:''} disabled={busy||day>days}
                 onSave={value=>onRange(date,slot,value)} onDirty={dirty=>onDirty(`${date}:${slot}`,dirty)}/>
