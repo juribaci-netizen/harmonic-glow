@@ -1,6 +1,5 @@
 "use client"
 
-import { useI18n } from "@/components/language-provider"
 import { CalendarView } from "@/components/calendar-view"
 
 type Activity = { id:number; date:string; type:string; startTime:string|null; endTime:string|null; title:string; conductor:string|null; venue:string|null; program:string|null; notes:string|null }
@@ -20,16 +19,7 @@ export function DashboardView({
   monthConcertCount:number
   todayHours:number
 }) {
-  const { lang } = useI18n()
-  const now = new Date()
-  const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
-  const todayLabel = now.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})
-
   return <div className="space-y-7">
-    <header className="pt-2">
-      <p className="modern-kicker capitalize text-black/38">{todayLabel}</p>
-    </header>
-
     <CalendarView activities={activities} />
 
     <section>
