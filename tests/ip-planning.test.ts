@@ -31,7 +31,7 @@ const ip=(startTime:string,endTime:string):Entry=>({...manual,startTime,endTime}
 assert.deepEqual(dayValues([ip('08:00','12:00')],dates[0]).ranges,['08:00-12:00',''])
 assert.deepEqual(dayValues([ip('14:00','18:00')],dates[0]).ranges,['','14:00-18:00'])
 const cross=['2026-08-31','2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06']
-assert.ok(planWeekIp(cross,[]).every(e=>cross.slice(0,5).includes(e.date)))
+assert.ok(planWeekIp(cross,[]).every(e=>cross.includes(e.date)))
 assert.equal(countedHours([service,{...service,id:2,type:'individual',hours:'4',status:'manual'},{...service,id:3,status:'unconfirmed',hours:'3'},{...service,id:4,status:'removed',hours:'3'},{...service,id:5,title:'Konkurz',hours:'3'},{...service,id:6,type:'off',hours:'8'}]),8)
 assert.ok(planWeekIp(cross,[{...service,date:'2026-09-01',status:'present',hours:'4'}]).some(e=>e.date==='2026-08-31'))
 
@@ -64,7 +64,14 @@ const twoShort=[{...morning,endTime:'11:00',hours:'2'},{...evening,hours:'2'}]
 const protectedDays=dates.slice(1,6).map((date,i)=>({...manual,id:200+i,date,hours:'6'}))
 const protectedSunday={...manual,id:300,date:dates[6],status:'removed',hours:'0',startTime:null,endTime:null}
 const serviceTopUp=planWeekIp(dates,[...twoShort,...protectedDays,protectedSunday])
-assert.equal(sum(serviceTopUp),4) // Daily 8h limit preserves a genuine 0.5h shortfall.
-assert.equal(serviceTopUp.length,2)
-assert.ok(serviceTopUp.every(e=>e.date===dates[0]))
+assert.equal(sum(serviceTopUp),4.5)
+assert.ok(serviceTopUp.length>=2)
+assert.ok(serviceTopUp.some(e=>e.date!==dates[0]))
+const distributed=planWeekIp(dates,[])
+for(const date of dates)assert.ok(distributed.some(e=>e.date===date),'Every available day gets a first block before second blocks')
+const future:Entry={...manual,date:'2027-01-04',status:'auto',startTime:'08:00',endTime:'12:00'}
+const before={date:'2027-01-01',minutes:0}
+assert.deepEqual(dayValues([future],future.date,before).ranges,['',''])
+assert.deepEqual(dayValues([future],future.date,before,true).ranges,['08:00-12:00',''])
+assert.deepEqual(dayValues([{...future,status:'removed'}],future.date,before,true).ranges,['',''])
 console.log('PASS: reference blocks, second daily blocks, weekend top-up, 38.5h target, half-hour remainder, manual preservation, blocked days, cross-month weeks, no overlaps and repeatable planning')
