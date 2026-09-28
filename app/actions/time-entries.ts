@@ -5,7 +5,7 @@ import { timeEntry } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
-import { assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
+import { WEEKLY_TARGET_HOURS, assignedSlots, slotNote, validateDate, timeMinutes, validateMonth, type Slot } from "@/lib/epc/model"
 import { planWeekIp, countedHours, blockedTimes, overlaps, IP_START, IP_END } from '@/lib/epc/ip-planning'
 import { seasonData } from "@/lib/season-data-2026-27"
 import { canChooseParticipation } from '@/lib/work-plan'
@@ -107,7 +107,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     const recorded=countedHours(rows.filter(e=>!(['individual','ip'].includes(e.type)&&e.status==='auto')))
     const total=Math.round((recorded+planned.reduce((n,e)=>n+Number(e.hours),0))*100)/100
     weeklyTotals.push({weekStart:dates[0],totalHours:total})
-    const missing=Math.max(0,40-total)
+    const missing=Math.max(0,WEEKLY_TARGET_HOURS-total)
     if(missing>0)shortfalls.push({weekStart:dates[0],missingHours:Math.round(missing*100)/100})
     for(const ip of planned)await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté podľa júnového vzoru EPČ mimo hraných služieb.'})
   }
@@ -137,7 +137,7 @@ export async function getMonthEntries(year: number, month: number) {
 
 /**
  * Creates clearly marked suggestions for individual preparation where a completed
- * working week is below the 40 h target. Suggestions never exceed 3 h/day or 8 h/day
+ * working week is below the 38.5 h target. Suggestions never exceed 3 h/day or 8 h/day
  * total, are placed on weekdays with existing work, and are never silently treated
  * as confirmed worked time (status = "suggested").
  */
@@ -175,7 +175,7 @@ export async function suggestIndividualPreparation(year: number, month: number) 
 
     const confirmed = weekEntries.filter(e => e.status !== "suggested")
     const total = confirmed.reduce((sum, e) => sum + Number(e.hours), 0)
-    const missing = Math.max(0, 40 - total)
+    const missing = Math.max(0, WEEKLY_TARGET_HOURS - total)
     if (missing < 0.5) continue
 
     // Only suggest preparation in a week where there is already real work on the schedule.
@@ -214,7 +214,7 @@ export async function suggestIndividualPreparation(year: number, month: number) 
         endTime: null,
         hours: String(hours),
         status: "suggested",
-        notes: "Automatický návrh na doplnenie pracovného fondu do 40 h/týždeň. Potvrď iba ak príprava reálne prebehla.",
+        notes: `Automatický návrh na doplnenie pracovného fondu do ${WEEKLY_TARGET_HOURS.toLocaleString('sk-SK')} h/týždeň. Potvrď iba ak príprava reálne prebehla.`,
       })
       created++
       remaining -= hours
