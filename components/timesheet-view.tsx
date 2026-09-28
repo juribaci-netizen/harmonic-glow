@@ -170,7 +170,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="grid grid-cols-2 gap-3 p-3">
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl border border-black/15 bg-white px-4 py-3 text-center text-sm font-medium text-black ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť</a>
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white disabled:opacity-40">Podpísať</button>
-        {!loading&&sendIssues.length>0&&<div id="send-issues" role="alert" className="col-span-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950"><p className="font-semibold">Pred odoslaním opravte:</p><ul className="mt-1 list-disc space-y-1 pl-5">{sendIssues.map(issue=><li key={issue}>{issue}</li>)}</ul>
+        {!loading&&sendIssues.length>0&&<div id="send-issues" role="alert" className="col-span-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950"><ul className="list-disc space-y-1 pl-5">{sendIssues.map(issue=><li key={issue}>{issue}</li>)}</ul>
           {!!report.shortfalls?.length&&<button type="button" disabled={locked||hasDrafts} onClick={()=>void suggestRepair()} className="mt-3 rounded-lg border border-amber-900/20 bg-white px-3 py-2 font-medium disabled:opacity-40">{proposing?'Pripravujem návrh…':'Navrhnúť doplnenie hodín'}</button>}
           {repairs!==null&&<div className="mt-3 space-y-3">
             <p>Návrh sa nezapíše bez potvrdenia. Pri minulých dňoch potvrďte iba prípravu, ktorá skutočne prebehla.</p>
