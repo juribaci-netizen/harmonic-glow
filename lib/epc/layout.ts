@@ -2,7 +2,7 @@ import rangeBaselines from './range-baselines.json'
 import { fieldRect, geometry } from './model'
 
 export const previewCrop = {left:60,right:60,top:18,bottom:18}
-export const headerFontSize = 12
+export const headerFontSize = 16
 export function headerRect(name:string) {
   if(!['Mesiac','Rok','Meno'].includes(name))return null
   const original=fieldRect(name)
@@ -12,7 +12,7 @@ export function headerRect(name:string) {
   return {...original,y,height,top:geometry.height-y-height,baseline}
 }
 
-export const rangeFontSize = 11
+export const rangeFontSize = 15
 export function signatureRect() {
   const original=fieldRect('Podpis'),y=76.4951,height=original.y+original.height-y
   return {...original,x:original.x+10,y,width:original.width-20,height,top:geometry.height-y-height}
