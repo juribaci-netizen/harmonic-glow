@@ -12,6 +12,7 @@ type Report={shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
   const [savingAll,setSavingAll]=useState(false)
+  const [showPlannedPreparation,setShowPlannedPreparation]=useState(true)
   const [cursor,setCursor]=useState({year:initialYear,month:initialMonth})
   const {year,month}=cursor
   const [report,setReport]=useState<Report>({entries:initialEntries,signatureData:null,ensemble:null,fullName})
@@ -129,9 +130,11 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
         <label className="text-xs">Priblíženie <select aria-label="Priblíženie formulára" value={zoom} onChange={e=>setZoom(Number(e.target.value))} className="rounded-lg border border-black/15 p-2">{[1,1.5,2,3].map(v=><option key={v} value={v}>{v===1?'Celá strana':`${v*100}%`}</option>)}</select></label>
       </div>
+      <label className="mx-3 mb-2 flex items-center gap-2 text-xs"><input type="checkbox" checked={showPlannedPreparation} onChange={e=>setShowPlannedPreparation(e.target.checked)}/>Zobraziť aj plánovanú prípravu</label>
+      {showPlannedPreparation&&<p className="mx-3 mb-3 text-xs text-black/60">Náhľad obsahuje aj budúcu prípravu. Stiahnuté PDF obsahuje automatickú prípravu až po skončení jej času.</p>}
       {error&&<p role="alert" className="mx-3 mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
-      {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
+      {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} showPlannedPreparation={showPlannedPreparation} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
         {!!report.weeklyTotals?.length&&<details className="rounded-xl bg-black/5 p-3 text-sm">
           <summary className="cursor-pointer font-medium">Týždenné súčty · fond {WEEKLY_TARGET_HOURS.toLocaleString('sk-SK')} h</summary>
