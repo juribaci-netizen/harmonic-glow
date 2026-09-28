@@ -92,9 +92,9 @@ assert.ok(busyPlan.some(e=>e.date===busyWeek[1]))
 assert.equal(countedHours(busyServices)+sum(busyPlan),38.5)
 const unconfirmedManual={...service,type:'manual-service',status:'unconfirmed',startTime:null,endTime:null,hours:'0',activityId:null}
 assert.deepEqual(planWeekIp(dates,[unconfirmedManual]),planWeekIp(dates,[]))
-const personal={weekdayStart:540,weekendStart:600,preferredEnd:1260,latestEnd:1320}
+const personal={weekdayStart:540,weekendStart:600,preferredEnd:1260,latestEnd:1320,roundBlocks:true}
 const personalPlan=planWeekIp(dates,[],personal)
-assert.equal(sum(personalPlan),38.5)
+assert.ok(sum(personalPlan)>=38.5&&sum(personalPlan)<=39.5)
 assert.equal(personalPlan.find(e=>e.date===dates[0])?.startTime,'09:00')
 assert.equal(personalPlan.find(e=>e.date===dates[5])?.startTime,'10:00')
 for(const ip of personalPlan){
