@@ -2,6 +2,10 @@ import geometry from './geometry.json'
 import { isAudition } from '../work-plan'
 
 export { geometry }
+
+// Confirmed weekly working-time target, shared by planning and reporting.
+export const WEEKLY_TARGET_HOURS = 38.5
+export const WEEKLY_TARGET_MINUTES = WEEKLY_TARGET_HOURS * 60
 export const MONTHS = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December']
 export type Slot = 1 | 2
 export type Ensemble = 'orchester' | 'zbor' | 'sko'
