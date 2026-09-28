@@ -1,4 +1,4 @@
-import { WEEKLY_TARGET_HOURS, isIp, isService, timeMinutes, visible, type Entry, type Ensemble } from './model'
+import { WEEKLY_TARGET_HOURS, isIp, isService, timeMinutes, type Entry, type Ensemble } from './model'
 
 type SubmissionReport = {
   fullName: string
@@ -33,6 +33,5 @@ export function submissionIssues(report:SubmissionReport,year:number,month:numbe
     })
   })
   if(overlapping)issues.push('Časové záznamy sa prekrývajú. Opravte ich pred odoslaním.')
-  if(active.some(e=>isIp(e)&&!visible(e)))issues.push('Výkaz obsahuje budúcu prípravu, ktorá ešte nie je zahrnutá v PDF. Odošlite ho až po jej skončení.')
   return issues
 }
