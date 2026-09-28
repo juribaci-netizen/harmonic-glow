@@ -34,7 +34,7 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
   const planned:{date:string;startTime:string;endTime:string;hours:string}[]=[]
   const addBlock=(date:string,topUp=false,allowServiceTopUp=false)=>{
     // A manual preparation entry or explicit removal protects the entire day.
-    const manual=entries.filter(e=>e.date===date&&isIp(e)&&e.status!=='auto'&&e.status!=='suggested')
+    const manual=entries.filter(e=>e.date===date&&isIp(e)&&!['auto','suggested','unconfirmed'].includes(e.status))
     if(manual.some(e=>e.status==='removed'||!e.startTime||!e.endTime))return
     if(manual.length&&!allowServiceTopUp)return
     const day=active.filter(e=>e.date===date),services=day.filter(isService)
