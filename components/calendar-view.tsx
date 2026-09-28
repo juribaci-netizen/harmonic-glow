@@ -16,6 +16,12 @@ type Activity = {
   program: string | null
 }
 
+const languageOptions = [
+  { code: "sk", label: "Slovenčina" },
+  { code: "en", label: "English" },
+  { code: "de", label: "Deutsch" },
+] as const
+
 const serviceCode = (activity:Activity) => {
   const text = `${activity.title} ${activity.venue ?? ""}`
   if (activity.type === "off" || activity.type === "ip") return null
@@ -26,7 +32,7 @@ const serviceCode = (activity:Activity) => {
 }
 
 export function CalendarView({ activities }: { activities: Activity[] }) {
-  const { t, lang } = useI18n()
+  const { t, lang, setLang } = useI18n()
   const locale = lang === "sk" ? "sk-SK" : lang === "de" ? "de-DE" : "en-GB"
   const today = new Date()
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
@@ -89,10 +95,19 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
 
 
   return <div className="pb-5 text-[#30271e]">
-    <header className="mb-5 flex items-end justify-between pt-3">
+    <header className="mb-5 flex items-end justify-between gap-3 pt-3">
       <div>
         <p className="text-[10px] font-medium uppercase tracking-[.14em] text-[#826b50]">Slovenská filharmónia</p>
         <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">{t.calendar}</h1>
+      </div>
+      <div role="group" aria-label="Language" className="flex shrink-0 items-center gap-0.5 rounded-xl border border-[#dfd2bf]/70 bg-[#fffaf2]/60 p-0.5">
+        {languageOptions.map(option => (
+          <button key={option.code} type="button" onClick={() => setLang(option.code)}
+            aria-label={option.label} title={option.label} aria-pressed={lang === option.code}
+            className={"flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-semibold tracking-[.04em] transition-colors hover:bg-[#e9ddca] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78552f] " + (lang === option.code ? "bg-[#e9ddca] text-[#634523] shadow-sm" : "text-[#81705c]")}>
+            {option.code.toUpperCase()}
+          </button>
+        ))}
       </div>
     </header>
 
