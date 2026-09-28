@@ -119,7 +119,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       </div>
       <p aria-live="polite" className="mt-1.5 text-xs text-black/60 empty:hidden">{error||((savingAll||saving)?'Ukladám zmeny…':hasDrafts?'Máte neuložené zmeny.':status)}</p>
     </div>}
-    <header className="pt-1"><p className="modern-kicker text-black/50">Evidencia pracovného času</p><h1 className="ios-title mt-1">{pdfEditor?'Úprava PDF':'EPČ'}</h1></header>
+    <header className="pt-1"><p className="modern-kicker text-black/50">Evidencia pracovného času</p>{pdfEditor&&<h1 className="ios-title mt-1">Úprava PDF</h1>}</header>
     <section className="rounded-[22px] border border-black/10 bg-white">
       <div className="grid grid-cols-[44px_1fr_44px] items-center border-b border-black/10 p-3">
         <button aria-label="Predchádzajúci mesiac" disabled={locked||hasDrafts} onClick={()=>changeMonth(-1)} className="flex h-11 items-center justify-center rounded-full disabled:opacity-30"><ChevronLeft/></button>
