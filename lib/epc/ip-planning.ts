@@ -1,5 +1,5 @@
 import { seasonData } from '../season-data-2026-27'
-import { isIp, isService, timeMinutes, type Entry } from './model'
+import { WEEKLY_TARGET_MINUTES, isIp, isService, timeMinutes, type Entry } from './model'
 
 export const IP_START = 8 * 60
 export const IP_END = 21 * 60
@@ -30,7 +30,7 @@ export function countedHours(entries:Entry[]) {
 }
 export function planWeekIp(dates:string[],entries:Entry[]) {
   const active=entries.filter(e=>dates.includes(e.date)&&!['removed','suggested','unconfirmed'].includes(e.status)&&(isIp(e)||isService(e))&&!(isIp(e)&&e.status==='auto'))
-  let remaining=Math.max(0,2400-Math.round(countedHours(active)*60))
+  let remaining=Math.max(0,WEEKLY_TARGET_MINUTES-Math.round(countedHours(active)*60))
   const planned:{date:string;startTime:string;endTime:string;hours:string}[]=[]
   for(const date of dates.slice(0,5)){
     // Service days follow the June form. Days without a played service may
