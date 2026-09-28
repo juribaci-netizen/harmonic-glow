@@ -12,6 +12,7 @@ type Report={shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
   const [savingAll,setSavingAll]=useState(false)
+  const [sharing,setSharing]=useState(false),[shareFallback,setShareFallback]=useState(false)
   const [cursor,setCursor]=useState({year:initialYear,month:initialMonth})
   const {year,month}=cursor
   const [report,setReport]=useState<Report>({entries:initialEntries,signatureData:null,ensemble:null,fullName})
@@ -19,7 +20,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [dirty,setDirty]=useState<Record<string,boolean>>({})
   const [signing,setSigning]=useState(false),[hasInk,setHasInk]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null),drawing=useRef(false),requestId=useRef(0),inFlight=useRef(false)
-  const locked=loading||saving,hasDrafts=Object.values(dirty).some(Boolean)
+  const locked=loading||saving||sharing,hasDrafts=Object.values(dirty).some(Boolean)
   const dirtyChanged=useCallback((key:string,value:boolean)=>setDirty(state=>({...state,[key]:value})),[])
   const fetchReport=async(y:number,m:number)=>{
     const response=await fetch(`/api/epc-report?year=${y}&month=${m}`,{cache:'no-store'})
@@ -103,6 +104,23 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     }catch{}
   }
   const pdfUrl=`/api/epc-pdf?year=${year}&month=${month}`
+  const sharePdf=async()=>{
+    if(locked||hasDrafts)return
+    setSharing(true);setError('');setStatus('')
+    try{
+      const response=await fetch(pdfUrl,{cache:'no-store'})
+      if(!response.ok)throw new Error('PDF sa nepodarilo pripraviť. Skúste to znova.')
+      const file=new File([await response.blob()],`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`,{type:'application/pdf'})
+      if(navigator.canShare?.({files:[file]})&&navigator.share){
+        await navigator.share({files:[file],title:`EPČ · ${MONTHS[month]} ${year}`})
+      }else setShareFallback(true)
+    }catch(error){
+      if(!(error instanceof DOMException&&error.name==='AbortError')){
+        if(error instanceof DOMException&&error.name==='NotAllowedError')setShareFallback(true)
+        else setError(error instanceof Error?error.message:'PDF sa nepodarilo zdieľať.')
+      }
+    }finally{setSharing(false)}
+  }
   const saveChanges=async(goBack=false)=>{
     if(locked||savingAll)return
     setSavingAll(true);setError('');setStatus('Ukladám…')
@@ -132,8 +150,17 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="grid grid-cols-2 gap-3 p-3">
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">Podpísať</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť</a>
+        <button type="button" disabled={locked||hasDrafts} onClick={()=>void sharePdf()} className="col-span-2 min-h-14 rounded-xl bg-[#78552f] px-4 py-4 text-base font-semibold text-white transition-colors hover:bg-[#634523] disabled:opacity-40">{sharing?'Pripravujem PDF…':'Odoslať'}</button>
       </div>
     </section>
+    {shareFallback&&<div role="dialog" aria-modal="true" aria-labelledby="send-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4" onKeyDown={e=>{if(e.key==='Escape')setShareFallback(false)}}>
+      <div className="w-full max-w-md rounded-2xl bg-white p-5">
+        <h2 id="send-title" className="text-xl font-semibold">Odoslať výkaz</h2>
+        <p className="mt-3 text-sm text-black/70">Tento prehliadač nepodporuje priame zdieľanie PDF. Stiahni výkaz a prilož ho k e-mailu alebo správe.</p>
+        <a href={`${pdfUrl}&download=1`} download className="mt-4 block rounded-xl bg-[#78552f] p-3 text-center font-medium text-white">Stiahnuť PDF</a>
+        <button autoFocus type="button" onClick={()=>setShareFallback(false)} className="mt-3 w-full rounded-xl border border-black/15 p-3">Zavrieť</button>
+      </div>
+    </div>}
     {signing&&<div role="dialog" aria-modal="true" aria-labelledby="signature-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-5">
         <h2 id="signature-title" className="text-xl font-semibold">Podpis · {MONTHS[month]} {year}</h2>
