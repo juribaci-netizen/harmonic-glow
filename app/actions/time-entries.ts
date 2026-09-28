@@ -1,5 +1,6 @@
 "use server"
 
+import { readPreparationPreferences } from "@/lib/epc/preparation-preferences-store"
 import { db } from "@/lib/db"
 import { timeEntry } from "@/lib/db/schema"
 import { getUserId } from "@/lib/session"
@@ -53,6 +54,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   validateMonth(year,month)
   const userId = await getUserId()
   await ensureParticipationStore()
+  const preparationPreferences=await readPreparationPreferences(userId)
   return db.transaction(async tx=>{
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':ip-planning'}))`)
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId+':'+year+'-'+String(month+1).padStart(2,'0')}))`)
@@ -103,7 +105,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
   for(let monday=new Date(monthStart+'T12:00:00');iso(monday)<=monthEnd;monday.setDate(monday.getDate()+7)){
     const dates=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return iso(d)})
     const rows=effective.filter(e=>dates.includes(e.date))
-    const planned=planWeekIp(dates,rows)
+    const planned=planWeekIp(dates,rows,preparationPreferences)
     const recorded=countedHours(rows.filter(e=>!(['individual','ip'].includes(e.type)&&e.status==='auto')))
     const total=Math.round((recorded+planned.reduce((n,e)=>n+Number(e.hours),0))*100)/100
     weeklyTotals.push({weekStart:dates[0],totalHours:total})
@@ -394,7 +396,7 @@ export async function setManualIpTime(date:string,slot:Slot,startTime:string|nul
   if(start||end){
     const s=timeMinutes(start),e=timeMinutes(end)
     if(s===null||e===null||e<=s)throw new Error('Zadajte čas od–do, napríklad 09:00-13:00.')
-    if(s<IP_START||e>IP_END)throw new Error('IP je možné zapísať iba v čase 08:00–21:00.')
+    if(s<IP_START||e>IP_END)throw new Error('IP je možné zapísať iba v čase 08:00–22:00.')
   }
   return saveEpcSlot(date,slot,'ip',[start,end])
 }

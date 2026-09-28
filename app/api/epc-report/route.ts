@@ -1,3 +1,4 @@
+import { readPreparationPreferences } from '@/lib/epc/preparation-preferences-store'
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/session'
 import { getMonthEntries,autoFillMonthFromWorkPlan } from '@/app/actions/time-entries'
@@ -11,6 +12,6 @@ export async function GET(request:Request) {
   const year=Number(params.get('year')),month=Number(params.get('month'))
   try{validateMonth(year,month)}catch{return NextResponse.json({error:'Neplatný mesiac.'},{status:400})}
   const {shortfalls,weeklyTotals}=await autoFillMonthFromWorkPlan(year,month)
-  const [entries,report,profile]=await Promise.all([getMonthEntries(year,month),readReport(user.id,year,month),getProfile()])
-  return NextResponse.json({entries,shortfalls,weeklyTotals,...report,fullName:profile?.fullName??user.name},{headers:{'Cache-Control':'no-store'}})
+  const [entries,report,profile,preparationPreferences]=await Promise.all([getMonthEntries(year,month),readReport(user.id,year,month),getProfile(),readPreparationPreferences(user.id)])
+  return NextResponse.json({entries,shortfalls,weeklyTotals,preparationPreferences,...report,fullName:profile?.fullName??user.name},{headers:{'Cache-Control':'no-store'}})
 }
