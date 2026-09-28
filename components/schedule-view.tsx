@@ -47,19 +47,16 @@ function ProgramChoice({ program }: { program: NonNullable<Activity['workProgram
     try{const result=await setProgramParticipation(program.id,value);if(result.error)setError(result.error)}
     catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}
   })
-  return <div data-program-id={program.id} className={`mb-4 rounded-xl p-3 ${program.playing===false?'bg-black/5':'bg-[#f6f2ec]'}`}>
-    <p className="text-[10px] font-medium uppercase tracking-wide text-[#705638]">Účasť na programe</p>
-    <h2 className="mt-1 text-sm font-semibold leading-snug">{program.title}</h2>
-    <p className="mt-1 text-[11px] text-black/55">{program.start.split('-').reverse().join('.')} – {program.end.split('-').reverse().join('.')}</p>
-    <ParticipationSwitch label={`Účasť na programe ${program.title}`} value={program.playing} pending={pending} onChange={choose} resetLabel="Zrušiť voľbu"/>
+  return <div data-program-id={program.id} className="mt-3 border-t border-black/[.06] pt-2">
+    <ParticipationSwitch label={`Účasť na programe ${program.title}`} value={program.playing} pending={pending} onChange={choose}/>
     <p role="status" className="mt-2 text-[11px] leading-relaxed text-black/60 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
   </div>
 }
-function ParticipationChoice({ activity }: { activity: Activity }) {
+function ParticipationChoice({ activity,programControl=false }: { activity: Activity;programControl?:boolean }) {
   const [pending,startTransition]=useTransition(),[error,setError]=useState('')
   return <details className="mt-3 border-t border-black/[.06] pt-2">
-    <summary className="cursor-pointer text-[11px] text-black/55">{activity.participationOverride?'Výnimka: ':''}{activity.playing===true?'Hrám':activity.playing===false?'Nehrám':'Účasť nevybraná'} · upraviť túto službu</summary>
+    <summary className="cursor-pointer text-[11px] text-black/55">{programControl?'Upraviť túto službu':`${activity.participationOverride?'Výnimka: ':''}${activity.playing===true?'Hrám':activity.playing===false?'Nehrám':'Účasť nevybraná'} · upraviť túto službu`}</summary>
     <ParticipationSwitch label={`Účasť služby ${activity.date} ${activity.startTime}`} pending={pending}
       value={activity.playing} resetLabel={activity.participationOverride?'Podľa programu':undefined}
       onChange={value=>startTransition(async()=>{setError('');try{const result=await setActivityParticipation(activity.id,value);if(result.error)setError(result.error)}catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}})}/>
@@ -235,7 +232,10 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
 
                       return (
                         <article key={a.id} data-activity-id={a.id} data-not-playing={notPlaying?"":undefined} className={"px-4 py-4 "+(subdued||notPlaying?"bg-[#fafafa]":"bg-white")}>
-                          {a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<ProgramChoice program={a.workProgram}/>}
+                          {a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<div className="mb-4 rounded-xl bg-[#f6f2ec] p-3">
+                            <h2 className="text-sm font-semibold leading-snug">{a.workProgram.title}</h2>
+                            <p className="mt-1 text-[11px] text-black/55">{a.workProgram.start.split('-').reverse().join('.')} – {a.workProgram.end.split('-').reverse().join('.')}</p>
+                          </div>}
                           <div data-activity-content className={notPlaying?"opacity-50":""}>
                           {index===0&&itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
                           <div className="flex items-baseline justify-between gap-3">
@@ -272,7 +272,8 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
                             </div>
                           )}
                           </div>
-                          {canChooseParticipation(a) && <ParticipationChoice activity={a}/>}
+                          {canChooseParticipation(a)&&a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<ProgramChoice program={a.workProgram}/>}
+                          {canChooseParticipation(a) && <ParticipationChoice activity={a} programControl={!!a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id}/>}
                         </article>
                       )
                     })}
