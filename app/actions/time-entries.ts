@@ -109,7 +109,7 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     weeklyTotals.push({weekStart:dates[0],totalHours:total})
     const missing=Math.max(0,WEEKLY_TARGET_HOURS-total)
     if(missing>0)shortfalls.push({weekStart:dates[0],missingHours:Math.round(missing*100)/100})
-    for(const ip of planned)await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté podľa júnového vzoru EPČ mimo hraných služieb.'})
+    for(const ip of planned)await tx.insert(timeEntry).values({...ip,userId,activityId:null,type:'individual',title:'Individuálna príprava',status:'auto',notes:'Automaticky rozvrhnuté podľa vzoru EPČ do fondu 38,5 h/týždeň mimo hraných služieb.'})
   }
 
   revalidatePath("/timesheet")
