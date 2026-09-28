@@ -32,43 +32,47 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
   const active=entries.filter(e=>dates.includes(e.date)&&!['removed','suggested','unconfirmed'].includes(e.status)&&(isIp(e)||isService(e))&&!(isIp(e)&&e.status==='auto'))
   let remaining=Math.max(0,WEEKLY_TARGET_MINUTES-Math.round(countedHours(active)*60))
   const planned:{date:string;startTime:string;endTime:string;hours:string}[]=[]
-  for(const date of dates.slice(0,5)){
-    // Service days follow the June form. Days without a played service may
-    // split the same preparation duration into two shorter blocks. Manual corrections,
-    // including an explicitly cleared day, always take priority.
-    if(entries.some(e=>e.date===date&&isIp(e)&&e.status!=='auto'&&e.status!=='suggested'))continue
+  const addBlock=(date:string,topUp=false)=>{
+    // A manual preparation entry or explicit removal protects the entire day.
+    if(entries.some(e=>e.date===date&&isIp(e)&&e.status!=='auto'&&e.status!=='suggested'))return
     const day=active.filter(e=>e.date===date),services=day.filter(isService)
-    const used=Math.round(countedHours(day)*60)
-    const duration=Math.min(services.length>=2?120:240,remaining,Math.max(0,480-used))
-    if(duration<30)continue
+    if(topUp&&services.length)return
+    const existing=planned.filter(e=>e.date===date)
+    if(existing.length>=2)return
+    const used=Math.round((countedHours(day)+existing.reduce((sum,e)=>sum+Number(e.hours),0))*60)
+    const maximum=Math.min(topUp?240:services.length>=2?120:240,remaining,Math.max(0,480-used))
+    if(maximum<30)return
+    let windows=freeWindows(date,entries)
+    for(const ip of existing){
+      const start=timeMinutes(ip.startTime)!,end=timeMinutes(ip.endTime)!
+      windows=windows.flatMap(([a,b])=>end<=a||start>=b?[[a,b] as Interval]:[...(start>a?[[a,start] as Interval]:[]),...(end<b?[[end,b] as Interval]:[])])
+    }
     const firstStart=Math.min(...services.map(e=>timeMinutes(e.startTime)??1440))
-    // Reference slots: 08–12, 14–18, 17–19 or 14–16. Select a free
-    // reference slot first; actual service times determine which can be used.
     const hasEvening=services.some(e=>(timeMinutes(e.startTime)??0)>=1020)
     const preferred=services.length>=2?(hasEvening?[840,480,1020]:[1020,840,480]):services.length&&firstStart<780?[840,480,1020]:[480,840,1020]
-    const windows=freeWindows(date,entries)
-    if(services.length===0&&duration>=120){
-      const blockMinutes=Math.min(120,Math.floor(duration/60)*30)
-      const choices=[480,840,1020,...windows.map(([a])=>Math.ceil(a/30)*30)]
-      const first=choices.find(start=>windows.some(([a,b])=>start>=a&&start+blockMinutes<=b))
-      const second=first===undefined?undefined:choices.find(start=>(start>=first+blockMinutes+30||start+duration-blockMinutes+30<=first)&&windows.some(([a,b])=>start>=a&&start+duration-blockMinutes<=b))
-      if(first!==undefined&&second!==undefined){
-        for(const [start,minutes] of [[first,blockMinutes],[second,duration-blockMinutes]].sort((a,b)=>a[0]-b[0]))
-          planned.push({date,startTime:clockTime(start),endTime:clockTime(start+minutes),hours:String(minutes/60)})
-        remaining-=duration
-        continue
-      }
-    }
-    const fits=(start:number)=>windows.some(([a,b])=>start>=a&&start+duration<=b)
-    let start=preferred.find(fits)
-    if(start===undefined){
-      // If a service uses a reference slot, choose a whole/half-hour start
-      // in a genuinely free window instead of overlapping it.
-      start=windows.map(([a,b])=>({start:Math.ceil(a/30)*30,end:b})).filter(w=>w.start+duration<=w.end).map(w=>w.start)[0]
-    }
-    if(start===undefined)continue
-    planned.push({date,startTime:clockTime(start),endTime:clockTime(start+duration),hours:String(duration/60)})
-    remaining-=duration
+    // Keep full 08–12 / 14–18 blocks where possible; double-service days
+    // start with 14–16 or 17–19. Only the remaining weekly deficit shortens a block.
+    const starts=[...new Set([...preferred,...windows.map(([a])=>Math.ceil(a/30)*30),...existing.map(ip=>timeMinutes(ip.endTime)!+30)])]
+    const candidates=starts.flatMap(start=>{
+      const window=windows.find(([a,b])=>start>=a&&start<b)
+      if(!window)return []
+      // Keep separately entered blocks separated by a break.
+      if(existing.some(ip=>start===timeMinutes(ip.endTime)))return []
+      const endLimit=Math.min(window[1],...existing.filter(ip=>timeMinutes(ip.startTime)!>start).map(ip=>timeMinutes(ip.startTime)!-30))
+      const duration=Math.min(maximum,Math.floor((endLimit-start)/30)*30)
+      return duration>=30?[{start,duration}]:[]
+    })
+    const choice=candidates.find(c=>c.duration===maximum)??candidates.sort((a,b)=>b.duration-a.duration)[0]
+    if(!choice)return
+    planned.push({date,startTime:clockTime(choice.start),endTime:clockTime(choice.start+choice.duration),hours:String(choice.duration/60)})
+    remaining-=choice.duration
   }
-  return planned
+  const weekdays=dates.slice(0,5),weekend=dates.slice(5,7)
+  // Apply the reference pattern first, then allow a second block (up to
+  // eight total work hours/day). Weekend preparation fills remaining gaps.
+  for(const date of weekdays)addBlock(date)
+  for(const date of weekdays)addBlock(date,true)
+  for(const date of weekend)addBlock(date)
+  for(const date of weekend)addBlock(date,true)
+  return planned.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime))
 }
