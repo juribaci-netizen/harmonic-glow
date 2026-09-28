@@ -77,4 +77,19 @@ assert.deepEqual(dayValues([{...future,status:'removed'}],future.date,before,tru
 const placeholder={...manual,date:dates[0],status:'unconfirmed',startTime:null,endTime:null,hours:'0'}
 assert.deepEqual(planWeekIp(dates,[placeholder]),planWeekIp(dates,[]))
 assert.deepEqual(dayValues([placeholder,{...future,date:dates[0]}],dates[0],before,true).ranges,['08:00-12:00',''])
+const busyWeek=['2026-09-28','2026-09-29','2026-09-30','2026-10-01','2026-10-02','2026-10-03','2026-10-04']
+const busyServices:Entry[]=[
+ {...service,date:busyWeek[2],id:500},
+ {...morning,date:busyWeek[3],id:501},
+ {...afternoon,date:busyWeek[3],id:502},
+ {...service,date:busyWeek[4],id:503},
+ {...service,date:busyWeek[5],id:504,startTime:'10:00',endTime:'14:00'},
+ {...service,date:busyWeek[6],id:505,startTime:'19:30',endTime:null,hours:'3'},
+]
+const busyPlan=planWeekIp(busyWeek,busyServices)
+assert.ok(busyPlan.some(e=>e.date===busyWeek[0]))
+assert.ok(busyPlan.some(e=>e.date===busyWeek[1]))
+assert.equal(countedHours(busyServices)+sum(busyPlan),38.5)
+const unconfirmedManual={...service,type:'manual-service',status:'unconfirmed',startTime:null,endTime:null,hours:'0',activityId:null}
+assert.deepEqual(planWeekIp(dates,[unconfirmedManual]),planWeekIp(dates,[]))
 console.log('PASS: reference blocks, second daily blocks, weekend top-up, 38.5h target, half-hour remainder, manual preservation, blocked days, cross-month weeks, no overlaps and repeatable planning')
