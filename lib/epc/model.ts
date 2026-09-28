@@ -1,3 +1,4 @@
+import { isWorkPlanDayOff } from '../work-plan-days-off'
 import geometry from './geometry.json'
 import { isAudition } from '../work-plan'
 
@@ -37,6 +38,7 @@ export function bratislavaNow(now=new Date()) {
 }
 export function visible(entry:Entry|undefined, now=bratislavaNow()) {
   if (!entry || isAudition(entry) || entry.status==='removed' || entry.status==='suggested' || entry.status==='unconfirmed') return false
+  if (isService(entry)&&isWorkPlanDayOff(entry.date)) return false
   if (entry.status==='manual' || entry.type==='manual-service') return true
   // A confirmed choice of Hrám fills every service in its program now,
   // including rehearsals and concerts in future months. IP remains tied to time worked.
