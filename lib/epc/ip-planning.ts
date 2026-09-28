@@ -61,7 +61,12 @@ export function planWeekIp(dates:string[],entries:Entry[],preferences:Preparatio
       }
     }
     if(existing.length>=2)return
-    const maximum=Math.min(topUp?240:services.length>=2?120:240,budget,remaining,Math.max(0,480-used))
+    // When the last fraction would create an awkward short block, permit
+    // a natural whole/two-hour ending within one hour above the weekly target.
+    const rounded=preferences.roundBlocks&&budget===Infinity&&remaining>0
+      ? (Math.ceil(remaining/120)*120<=remaining+60?Math.ceil(remaining/120)*120:Math.ceil(remaining/60)*60)
+      : remaining
+    const maximum=Math.min(topUp?240:services.length>=2?120:240,budget,rounded,Math.max(0,480-used))
     if(maximum<30)return
     let windows=freeWindows(date,entries,preferences,late)
     for(const ip of existing){
