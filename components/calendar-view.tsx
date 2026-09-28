@@ -44,7 +44,10 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     const first = new Date(year, month, 1)
     const days = new Date(year, month + 1, 0).getDate()
     const mondayFirstOffset = (first.getDay() + 6) % 7
-    return [...Array(mondayFirstOffset).fill(null), ...Array.from({length:days},(_,i)=>i+1)]
+    const cellCount = Math.ceil((mondayFirstOffset + days) / 7) * 7
+    return Array.from({ length: cellCount }, (_, index) =>
+      new Date(year, month, index - mondayFirstOffset + 1)
+    )
   }, [year, month])
 
   const selectedActivities = byDate.get(selected) ?? []
@@ -102,15 +105,16 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
 
       <div className="grid grid-cols-7 px-3.5 pb-3 pt-4">
         {t.weekdays.map(day=><span key={day} className="py-2.5 text-center text-[11px] font-medium text-black/32">{day}</span>)}
-        {cells.map((day,index) => {
-          if (!day) return <span key={"blank-"+index}/>
-          const iso = localIso(new Date(year,month,day))
+        {cells.map(date => {
+          const day = date.getDate()
+          const outsideMonth = date.getMonth() !== month
+          const iso = localIso(date)
           const items = byDate.get(iso) ?? []
           const active = iso === selected
           const isToday = iso === localIso(today)
           const markerItems = items.filter(item => item.type !== "off" && item.type !== "ip")
-          return <button key={iso} onClick={()=>setSelected(iso)} className="flex h-[68px] flex-col items-center justify-center rounded-[16px]">
-            <span className={"flex h-9 w-9 items-center justify-center rounded-full text-[16px] "+(active?"bg-black text-white":isToday?"ring-1 ring-black/25":"")}>{day}</span>
+          return <button key={iso} type="button" aria-label={date.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"})} aria-pressed={active} aria-current={isToday?"date":undefined} onClick={()=>setSelected(iso)} className="flex h-[68px] flex-col items-center justify-center rounded-[16px]">
+            <span className={"flex h-9 w-9 items-center justify-center rounded-full text-[16px] "+(active?"bg-black text-white":(outsideMonth?"text-black/40 ":"")+(isToday?"ring-1 ring-black/25":""))}>{day}</span>
             <span className="mt-1 flex h-3 items-center justify-center gap-1">
               {markerItems.map((item,markerIndex)=><i key={item.id+"-"+markerIndex} className="h-1.5 w-1.5 rounded-full bg-black/70" />)}
             </span>
