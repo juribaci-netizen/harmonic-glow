@@ -5,27 +5,20 @@ import { useRouter } from 'next/navigation'
 import { setManualService,setManualIpTime } from '@/app/actions/time-entries'
 import { saveEpcSignature,saveEpcEnsemble } from '@/app/actions/epc-signature'
 import { saveEpcName } from '@/app/actions/profile'
-import {savePreparationPreferences} from '@/app/actions/epc-preferences'
-import {DEFAULT_PREPARATION_PREFERENCES,type PreparationPreferences} from '@/lib/epc/preparation-preferences'
 import { EpcForm, type EpcFormHandle } from './epc-form'
 import { MONTHS,parseRange,type Entry,type Slot,type Ensemble } from '@/lib/epc/model'
 
-type Report={preparationPreferences?:PreparationPreferences;shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:{weekStart:string;totalHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
+type Report={shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:{weekStart:string;totalHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
   const [savingAll,setSavingAll]=useState(false)
-  const [showPlannedPreparation,setShowPlannedPreparation]=useState(true)
   const [cursor,setCursor]=useState({year:initialYear,month:initialMonth})
   const {year,month}=cursor
   const [report,setReport]=useState<Report>({entries:initialEntries,signatureData:null,ensemble:null,fullName})
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[status,setStatus]=useState('')
-  const [dirty,setDirty]=useState<Record<string,boolean>>({}),[zoom,setZoom]=useState(1)
+  const [dirty,setDirty]=useState<Record<string,boolean>>({})
   const [signing,setSigning]=useState(false),[hasInk,setHasInk]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null),drawing=useRef(false),requestId=useRef(0),inFlight=useRef(false)
-  const untimedServices=report.entries.filter(e=>!['individual','ip','off'].includes(e.type)&&e.status!=='removed'&&(!e.startTime||!e.endTime))
-  const untimedPreparationDays=[...new Set(report.entries.filter(e=>['individual','ip'].includes(e.type)&&!['auto','suggested','unconfirmed','removed'].includes(e.status)&&(!e.startTime||!e.endTime)).map(e=>e.date))].sort()
-  const excludedPreparationDays=[...new Set(report.entries.filter(e=>['individual','ip'].includes(e.type)&&e.status==='removed').map(e=>e.date))].sort()
-  const preparationPreferences=report.preparationPreferences??DEFAULT_PREPARATION_PREFERENCES
   const locked=loading||saving,hasDrafts=Object.values(dirty).some(Boolean)
   const dirtyChanged=useCallback((key:string,value:boolean)=>setDirty(state=>({...state,[key]:value})),[])
   const fetchReport=async(y:number,m:number)=>{
@@ -133,26 +126,10 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         <h2 className="text-center text-[18px] font-semibold">{MONTHS[month]} {year}</h2>
         <button aria-label="Nasledujúci mesiac" disabled={locked||hasDrafts} onClick={()=>changeMonth(1)} className="flex h-11 items-center justify-center rounded-full disabled:opacity-30"><ChevronRight/></button>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
-        <label className="text-xs">Priblíženie <select aria-label="Priblíženie formulára" value={zoom} onChange={e=>setZoom(Number(e.target.value))} className="rounded-lg border border-black/15 p-2">{[1,1.5,2,3].map(v=><option key={v} value={v}>{v===1?'Celá strana':`${v*100}%`}</option>)}</select></label>
-      </div>
-      <details className="mx-3 mb-3 rounded-xl border border-black/10 p-3 text-xs">
-        <summary className="cursor-pointer font-medium">Môj režim prípravy</summary>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {([{key:'weekdayStart',label:'Začiatok cez týždeň',values:[480,540,600]},{key:'weekendStart',label:'Začiatok cez víkend',values:[480,540,600]},{key:'preferredEnd',label:'Bežný koniec',values:[1200,1260,1320]},{key:'latestEnd',label:'Najneskorší koniec',values:[1200,1260,1320]}] as const).map(field=><label key={field.key} className="grid gap-1">{field.label}<select aria-label={field.label} disabled={locked||hasDrafts} value={preparationPreferences[field.key]} onChange={e=>{const next={...preparationPreferences,[field.key]:Number(e.target.value)};if(next.latestEnd<next.preferredEnd){if(field.key==='preferredEnd')next.latestEnd=next.preferredEnd;else next.preferredEnd=next.latestEnd}void mutate(()=>savePreparationPreferences(next)).catch(()=>{})}} className="rounded-lg border border-black/15 bg-white p-2">{field.values.map(minutes=><option key={minutes} value={minutes}>{String(minutes/60).padStart(2,'0')}:00</option>)}</select></label>)}
-        </div>
-        <label className="mt-3 flex items-center gap-2"><input type="checkbox" aria-label="Prirodzené bloky s rezervou do 1 hodiny" disabled={locked||hasDrafts} checked={preparationPreferences.roundBlocks??false} onChange={e=>void mutate(()=>savePreparationPreferences({...preparationPreferences,roundBlocks:e.target.checked})).catch(()=>{})}/>Prirodzené bloky s rezervou do 1 hodiny nad týždenný fond</label>
-        <p className="mt-2 text-black/60">Uložené iba pre tvoj účet. Neskorší čas sa použije iba ak sa fond nezmestí do bežného režimu.</p>
-      </details>
-      <label className="mx-3 mb-2 flex items-center gap-2 text-xs"><input type="checkbox" checked={showPlannedPreparation} onChange={e=>setShowPlannedPreparation(e.target.checked)}/>Zobraziť aj plánovanú prípravu</label>
-      {showPlannedPreparation&&<p className="mx-3 mb-3 text-xs text-black/60">Náhľad obsahuje aj budúcu prípravu. Stiahnuté PDF obsahuje automatickú prípravu až po skončení jej času.</p>}
       {error&&<p role="alert" className="mx-3 mb-3 rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
-      {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} showPlannedPreparation={showPlannedPreparation} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
+      {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={1} busy={saving} showPlannedPreparation onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
-        {!!untimedServices.length&&<details className="text-xs text-black/60"><summary>Položky bez úplného času</summary><ul>{untimedServices.map(e=><li key={e.id}>{e.date.split('-').reverse().join('.')} · {e.title} · {e.startTime??'?'}–{e.endTime??'?'}</li>)}</ul></details>}
-        {!!untimedPreparationDays.length&&<p className="text-xs text-black/60">Príprava s uloženými hodinami bez času od–do: {untimedPreparationDays.map(date=>date.split('-').reverse().join('.')).join(', ')}.</p>}
-        {!!excludedPreparationDays.length&&<p className="text-xs text-black/60">Ručne vynechaná príprava: {excludedPreparationDays.map(date=>date.split('-').reverse().join('.')).join(', ')}. Automatický plán tieto dni nemení.</p>}
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
       </div>
