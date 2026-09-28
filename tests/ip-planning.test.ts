@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {planWeekIp,blockedTimes,overlaps} from '../lib/epc/ip-planning'
+import {planWeekIp,countedHours,blockedTimes,overlaps} from '../lib/epc/ip-planning'
 import {timeMinutes,dayValues,type Entry} from '../lib/epc/model'
 const dates=['2026-06-01','2026-06-02','2026-06-03','2026-06-04','2026-06-05','2026-06-06','2026-06-07']
 const service:Entry={id:1,date:dates[0],type:'rehearsal',title:'Skúška',startTime:'09:00',endTime:'13:00',hours:'4',status:'auto',notes:null}
@@ -32,4 +32,6 @@ assert.deepEqual(dayValues([ip('08:00','12:00')],dates[0]).ranges,['08:00-12:00'
 assert.deepEqual(dayValues([ip('14:00','18:00')],dates[0]).ranges,['','14:00-18:00'])
 const cross=['2026-08-31','2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06']
 assert.ok(planWeekIp(cross,[]).every(e=>cross.slice(0,5).includes(e.date)))
+assert.equal(countedHours([service,{...service,id:2,type:'individual',hours:'4',status:'manual'},{...service,id:3,status:'unconfirmed',hours:'3'},{...service,id:4,status:'removed',hours:'3'},{...service,id:5,title:'Konkurz',hours:'3'},{...service,id:6,type:'off',hours:'8'}]),8)
+assert.ok(planWeekIp(cross,[{...service,date:'2026-09-01',status:'present',hours:'4'}]).some(e=>e.date==='2026-08-31'))
 console.log('PASS: June-style 4h/2h service-day IP and two short blocks without a service, correct columns, morning/evening services, no overlaps, weekdays, manual preservation and weekly cap')

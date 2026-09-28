@@ -24,9 +24,13 @@ function freeWindows(date:string,entries:Entry[]):Interval[] {
   for(const [a,b] of blockedTimes(date,entries))free=free.flatMap(([s,e])=>b<=s||a>=e?[[s,e] as Interval]:[...(a>s?[[s,a] as Interval]:[]),...(b<e?[[b,e] as Interval]:[])])
   return free
 }
+export function countedHours(entries:Entry[]) {
+  return entries.filter(e=>!['removed','suggested','unconfirmed'].includes(e.status)&&(isIp(e)||isService(e)))
+    .reduce((sum,e)=>sum+(Number.isFinite(Number(e.hours))?Math.max(0,Number(e.hours)):0),0)
+}
 export function planWeekIp(dates:string[],entries:Entry[]) {
-  const active=entries.filter(e=>!['removed','suggested','unconfirmed'].includes(e.status)&&!(isIp(e)&&e.status==='auto'))
-  let remaining=Math.max(0,2400-active.reduce((n,e)=>n+Math.round(Number(e.hours)*60),0))
+  const active=entries.filter(e=>dates.includes(e.date)&&!['removed','suggested','unconfirmed'].includes(e.status)&&(isIp(e)||isService(e))&&!(isIp(e)&&e.status==='auto'))
+  let remaining=Math.max(0,2400-Math.round(countedHours(active)*60))
   const planned:{date:string;startTime:string;endTime:string;hours:string}[]=[]
   for(const date of dates.slice(0,5)){
     // Service days follow the June form. Days without a played service may
@@ -34,7 +38,7 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
     // including an explicitly cleared day, always take priority.
     if(entries.some(e=>e.date===date&&isIp(e)&&e.status!=='auto'&&e.status!=='suggested'))continue
     const day=active.filter(e=>e.date===date),services=day.filter(isService)
-    const used=day.reduce((n,e)=>n+Math.round(Number(e.hours)*60),0)
+    const used=Math.round(countedHours(day)*60)
     const duration=Math.min(services.length>=2?120:240,remaining,Math.max(0,480-used))
     if(duration<30)continue
     const firstStart=Math.min(...services.map(e=>timeMinutes(e.startTime)??1440))

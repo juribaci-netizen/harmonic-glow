@@ -8,7 +8,7 @@ import { saveEpcName } from '@/app/actions/profile'
 import { EpcForm, type EpcFormHandle } from './epc-form'
 import { MONTHS,parseRange,type Entry,type Slot,type Ensemble } from '@/lib/epc/model'
 
-type Report={shortfalls?:{weekStart:string;missingHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
+type Report={shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:{weekStart:string;totalHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
   const [savingAll,setSavingAll]=useState(false)
@@ -133,11 +133,11 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
-        {!!report.shortfalls?.length&&<details className="rounded-xl bg-black/5 p-3 text-xs">
-          <summary className="cursor-pointer">Prehľad týždňov pod 40 hodín</summary>
-          <p className="mt-2 text-black/60">Toto je informácia o súčte hodín, nie chyba uloženia výkazu. Automatické IP dodržiava nastavené časové obmedzenia, preto nemusí doplniť každý týždeň na 40 hodín.</p>
-          <ul className="mt-2 space-y-1">{report.shortfalls.map(s=><li key={s.weekStart}>Týždeň od {s.weekStart.split('-').reverse().join('.')}: rozdiel do 40 h je {s.missingHours.toLocaleString('sk-SK')} h.</li>)}</ul>
-          <p className="mt-2 text-black/60">Súčet zahŕňa celý týždeň od pondelka do nedele, aj dni v susednom mesiaci. Skontrolujte účasť na službách a zapíšte iba prípravu, ktorá skutočne prebehla. Výkaz môžete uložiť a stiahnuť aj s nižším súčtom.</p>
+        {!!report.weeklyTotals?.length&&<details className="rounded-xl bg-black/5 p-3 text-sm">
+          <summary className="cursor-pointer font-medium">Týždenné súčty · fond 40 h</summary>
+          <p className="mt-2 text-black/60">Súčet potvrdených služieb a rozvrhnutej individuálnej prípravy. Prípravu potvrďte iba vtedy, keď skutočne prebehla.</p>
+          <ul className="mt-2 space-y-2">{report.weeklyTotals.map(w=>{const missing=Math.max(0,40-w.totalHours);return <li key={w.weekStart} className="flex justify-between gap-3 border-t border-black/10 pt-2"><span>Od {w.weekStart.split('-').reverse().join('.')}</span><span className="text-right font-semibold tabular-nums">{w.totalHours.toLocaleString('sk-SK')} / 40 h{missing>0&&<small className="block font-normal text-black/55">Chýba {missing.toLocaleString('sk-SK')} h</small>}</span></li>})}</ul>
+          <p className="mt-2 text-black/60">Každý týždeň je pondelok až nedeľa vrátane dní v susednom mesiaci. Nižší súčet nebráni uloženiu ani stiahnutiu výkazu.</p>
         </details>}
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black/5 px-4 py-3 text-sm font-medium disabled:opacity-40">{report.signatureData?'Zmeniť uložený podpis':'Podpísať EPČ'}</button>
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl bg-black px-4 py-3 text-center text-sm font-medium text-white ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť PDF</a>
