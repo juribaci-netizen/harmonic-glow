@@ -15,9 +15,9 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
     field.setText(value)
     field.addToPage(page,{x:r.x,y:r.y,width:r.width,height:r.height,borderWidth:0,borderColor:undefined,textColor:black,backgroundColor:undefined,font})
     field.setFontSize(size)
-    if(key.startsWith('Dropdown '))field.setAlignment(TextAlignment.Center)
+    if(key.startsWith('Dropdown '))field.setAlignment(TextAlignment.Left)
     if(header)field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:1,y:4,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
-    if(key.startsWith('Dropdown '))field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:(r.width-font.widthOfTextAtSize(value,size))/2,y:rangeBaseline(key)-r.y,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
+    if(key.startsWith('Dropdown '))field.updateAppearances(font,()=>drawText(font.encodeText(value),{x:1,y:rangeBaseline(key)-r.y,size,font:font.name,color:black,rotate:degrees(0),xSkew:degrees(0),ySkew:degrees(0)}))
     return field
   }
   text('Mesiac',MONTHS[month],headerFontSize);text('Rok',String(year),headerFontSize);text('Meno',name,headerFontSize)
@@ -33,7 +33,7 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
       field.updateAppearances(()=>{
         const cx=r.width/2,cy=r.height/2
         const stroke=(x1:number,y1:number,x2:number,y2:number)=>drawLine({start:{x:x1,y:y1},end:{x:x2,y:y2},thickness:1,color:black})
-        return {normal:{on:[...stroke(cx-3,cy-4,cx+3,cy+4),...stroke(cx-3,cy+4,cx+3,cy-4)],off:[pushGraphicsState(),popGraphicsState()]}}
+        return {normal:{on:[...stroke(cx-6.5,cy-6.5,cx+6.5,cy+6.5),...stroke(cx-6.5,cy+6.5,cx+6.5,cy-6.5)],off:[pushGraphicsState(),popGraphicsState()]}}
       })
       text(`Dropdown ${day}.${slot}`,values.ranges[slot-1],rangeFontSize)
       if(!valid){field.enableReadOnly();form.getTextField(`Dropdown ${day}.${slot}`).enableReadOnly()}
@@ -51,7 +51,7 @@ export async function createEpcPdf(options:{template:Uint8Array;fontBytes:Uint8A
   }
   if(ensemble) {
     const r=fieldRect({orchester:'Orchester',zbor:'Zbor',sko:'SKO'}[ensemble])
-    page.drawEllipse({x:r.x+r.width/2,y:r.y+r.height/2,xScale:(r.width-.7)/2,yScale:(r.height-.7)/2,borderWidth:.7,borderColor:black})
+    page.drawRectangle({x:r.x,y:r.y,width:r.width,height:r.height,borderWidth:1,borderColor:black})
   }
   form.updateFieldAppearances(font)
   return pdf.save()
