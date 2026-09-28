@@ -14,6 +14,7 @@ type Report={submissionIssues?:string[];shortfalls?:{weekStart:string;missingHou
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
   const [repairs,setRepairs]=useState<PreparationRepair[]|null>(null),[proposing,setProposing]=useState(false)
+  const [validationOpen,setValidationOpen]=useState(false)
   const [savingAll,setSavingAll]=useState(false)
   const [sharing,setSharing]=useState(false),[shareFallback,setShareFallback]=useState(false)
   const [cursor,setCursor]=useState({year:initialYear,month:initialMonth})
@@ -33,7 +34,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   useEffect(()=>{
     let cancelled=false
     const id=++requestId.current
-    setLoading(true);setRepairs(null);setError('');setStatus('');setDirty({});setReport({entries:[],signatureData:null,ensemble:null,fullName})
+    setLoading(true);setValidationOpen(false);setRepairs(null);setError('');setStatus('');setDirty({});setReport({entries:[],signatureData:null,ensemble:null,fullName})
     ;(async()=>{
       let next=await fetchReport(year,month)
       // Previous versions were single-user and stored signatures locally. Import without deleting or replacing them.
@@ -109,14 +110,15 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const pdfUrl=`/api/epc-pdf?year=${year}&month=${month}`
   const sendIssues=[...(report.submissionIssues??['Kontrola výkazu ešte nie je dokončená.']),...(hasDrafts?['Uložte rozpracované zmeny.']:[])]
   const sharePdf=async()=>{
-    if(locked||hasDrafts||sendIssues.length)return
+    if(locked||hasDrafts)return
+    if(sendIssues.length){setValidationOpen(true);return}
     setSharing(true);setError('');setStatus('')
     try{
       const response=await fetch(`${pdfUrl}&send=1`,{cache:'no-store'})
       if(!response.ok){
         if(response.status===422){
           const data=await response.json() as {issues:string[]}
-          setReport(current=>({...current,submissionIssues:data.issues}));return
+          setReport(current=>({...current,submissionIssues:data.issues}));setValidationOpen(true);return
         }
         throw new Error('PDF sa nepodarilo pripraviť. Skúste to znova.')
       }
@@ -168,9 +170,15 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={1} busy={saving} showPlannedPreparation onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="grid grid-cols-2 gap-3 p-3">
-        <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl border border-black/15 bg-white px-4 py-3 text-center text-sm font-medium text-black ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť</a>
+        <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl border border-black/15 bg-white px-4 py-3 text-center text-sm font-medium text-black ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Vytlačiť</a>
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white disabled:opacity-40">Podpísať</button>
-        {!loading&&sendIssues.length>0&&<div id="send-issues" role="alert" className="col-span-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950"><ul className="list-disc space-y-1 pl-5">{sendIssues.map(issue=><li key={issue}>{issue}</li>)}</ul>
+        <button type="button" disabled={locked||hasDrafts} onClick={()=>void sharePdf()} className="col-span-2 min-h-14 rounded-xl bg-[#a8e6a3] px-4 py-4 text-base font-semibold text-[#163b20] transition-colors hover:bg-[#93d98d] disabled:opacity-40">{sharing?'Pripravujem PDF…':'Odoslať'}</button>
+      </div>
+    </section>
+    {validationOpen&&<div role="dialog" aria-modal="true" aria-labelledby="validation-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4" onKeyDown={e=>{if(e.key==='Escape')setValidationOpen(false)}}>
+      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5">
+        <h2 id="validation-title" className="text-xl font-semibold">Kontrola výkazu</h2>
+        {sendIssues.length?<div className="mt-3 text-sm text-black/80"><ul className="list-disc space-y-1 pl-5">{sendIssues.map(issue=><li key={issue}>{issue}</li>)}</ul>
           {!!report.shortfalls?.length&&<button type="button" disabled={locked||hasDrafts} onClick={()=>void suggestRepair()} className="mt-3 rounded-lg border border-amber-900/20 bg-white px-3 py-2 font-medium disabled:opacity-40">{proposing?'Pripravujem návrh…':'Navrhnúť doplnenie hodín'}</button>}
           {repairs!==null&&<div className="mt-3 space-y-3">
             <p>Návrh sa nezapíše bez potvrdenia. Pri minulých dňoch potvrďte iba prípravu, ktorá skutočne prebehla.</p>
@@ -182,10 +190,10 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
             </div>)}
             <button type="button" onClick={()=>setRepairs(null)} className="underline">Zrušiť návrh</button>
           </div>}
-        </div>}
-        <button type="button" disabled={locked||hasDrafts||sendIssues.length>0} aria-describedby={sendIssues.length?'send-issues':undefined} onClick={()=>void sharePdf()} className="col-span-2 min-h-14 rounded-xl bg-[#a8e6a3] px-4 py-4 text-base font-semibold text-[#163b20] transition-colors hover:bg-[#93d98d] disabled:opacity-40">{sharing?'Pripravujem PDF…':'Odoslať'}</button>
+        </div>:<p className="mt-3 text-sm">Výkaz je pripravený na odoslanie.</p>}
+        <button autoFocus type="button" onClick={()=>setValidationOpen(false)} className="mt-4 w-full rounded-xl border border-black/15 p-3">Zavrieť</button>
       </div>
-    </section>
+    </div>}
     {shareFallback&&<div role="dialog" aria-modal="true" aria-labelledby="send-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4" onKeyDown={e=>{if(e.key==='Escape')setShareFallback(false)}}>
       <div className="w-full max-w-md rounded-2xl bg-white p-5">
         <h2 id="send-title" className="text-xl font-semibold">Odoslať výkaz</h2>
