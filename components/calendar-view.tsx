@@ -50,7 +50,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     )
   }, [year, month])
 
-  const selectedActivities = byDate.get(selected) ?? []
+  const selectedActivities = (byDate.get(selected) ?? []).filter(activity => activity.type !== "off")
   const selectedDate = new Date(selected + "T00:00:00")
   const typeLabel = (type:string) => ({
     rehearsal:t.type_rehearsal, concert:t.type_concert, recording:t.type_recording,
@@ -88,23 +88,23 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
   }
 
 
-  return <div className="pb-5">
+  return <div className="pb-5 text-[#30271e]">
     <header className="mb-5 flex items-end justify-between pt-3">
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
+        <p className="text-[10px] font-medium uppercase tracking-[.14em] text-[#826b50]">Slovenská filharmónia</p>
         <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">{t.calendar}</h1>
       </div>
     </header>
 
-    <section className="overflow-hidden rounded-[24px] border border-black/[.06] bg-white shadow-[0_12px_36px_rgba(0,0,0,.04)]">
-      <div className="flex items-center justify-between border-b border-black/[.05] px-4 py-4">
-        <button onClick={()=>moveMonth(-1)} aria-label="Predchádzajúci mesiac" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4f4f5]"><ChevronLeft className="h-4 w-4"/></button>
+    <section className="overflow-hidden rounded-[24px] border border-[#ded2bf] bg-[#fffdf9] shadow-[0_12px_36px_rgba(91,65,32,.08)]">
+      <div className="flex items-center justify-between border-b border-[#e3d7c5] bg-[#eee3d2] px-4 py-4">
+        <button onClick={()=>moveMonth(-1)} aria-label="Predchádzajúci mesiac" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fffaf2] text-[#76532d] hover:bg-[#e3d0b4] focus-visible:outline-2 focus-visible:outline-[#76532d]"><ChevronLeft className="h-4 w-4"/></button>
         <p className="text-[17px] font-medium capitalize">{cursor.toLocaleDateString(locale,{month:"long",year:"numeric"})}</p>
-        <button onClick={()=>moveMonth(1)} aria-label="Nasledujúci mesiac" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4f4f5]"><ChevronRight className="h-4 w-4"/></button>
+        <button onClick={()=>moveMonth(1)} aria-label="Nasledujúci mesiac" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fffaf2] text-[#76532d] hover:bg-[#e3d0b4] focus-visible:outline-2 focus-visible:outline-[#76532d]"><ChevronRight className="h-4 w-4"/></button>
       </div>
 
       <div className="grid grid-cols-7 px-3.5 pb-3 pt-4">
-        {t.weekdays.map(day=><span key={day} className="py-2.5 text-center text-[11px] font-medium text-black/32">{day}</span>)}
+        {t.weekdays.map(day=><span key={day} className="py-2.5 text-center text-[11px] font-medium text-[#79664f]">{day}</span>)}
         {cells.map(date => {
           const day = date.getDate()
           const outsideMonth = date.getMonth() !== month
@@ -113,19 +113,19 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const active = iso === selected
           const isToday = iso === localIso(today)
           const markerItems = items.filter(item => item.type !== "off" && item.type !== "ip")
-          return <button key={iso} type="button" aria-label={date.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"})} aria-pressed={active} aria-current={isToday?"date":undefined} onClick={()=>setSelected(iso)} className="flex h-[68px] flex-col items-center justify-center rounded-[16px]">
-            <span className={"flex h-9 w-9 items-center justify-center rounded-full text-[16px] "+(active?"bg-black text-white":(outsideMonth?"text-black/40 ":"")+(isToday?"ring-1 ring-black/25":""))}>{day}</span>
+          return <button key={iso} type="button" aria-label={date.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"})} aria-pressed={active} aria-current={isToday?"date":undefined} onClick={()=>setSelected(iso)} className="flex h-[68px] flex-col items-center justify-center rounded-[16px] transition-colors hover:bg-[#f2e8d9] focus-visible:outline-2 focus-visible:outline-[#76532d]">
+            <span className={"flex h-9 w-9 items-center justify-center rounded-full text-[16px] "+(active?"bg-[#78552f] text-white shadow-sm":(outsideMonth?"text-[#7c7062] ":"")+(isToday?"ring-2 ring-[#aa8454]":""))}>{day}</span>
             <span className="mt-1 flex h-3 items-center justify-center gap-1">
-              {markerItems.map((item,markerIndex)=><i key={item.id+"-"+markerIndex} className="h-1.5 w-1.5 rounded-full bg-black/70" />)}
+              {markerItems.map((item,markerIndex)=><i key={item.id+"-"+markerIndex} className="h-1.5 w-1.5 rounded-full bg-[#9b7444]" />)}
             </span>
           </button>
         })}
       </div>
     </section>
 
-    <section className="mt-4 overflow-hidden rounded-[26px] border border-black/[.05] bg-white shadow-[0_18px_50px_rgba(0,0,0,.065)]">
+    {selectedActivities.length > 0 && <section className="mt-4 overflow-hidden rounded-[26px] border border-[#ded2bf] bg-[#fffdf9] shadow-[0_18px_50px_rgba(91,65,32,.08)]">
       <div className="px-5 pt-4">
-        <p className="text-[11px] font-medium capitalize text-black/38">
+        <p className="text-[11px] font-medium capitalize text-[#7b6246]">
           {selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}
         </p>
       </div>
@@ -133,9 +133,9 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
       <div className="grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(.22,1,.36,1)]" style={{gridTemplateRows:selectedActivities.length?"1fr":"0fr"}}>
         <div className="overflow-hidden">
           {selectedActivities.length===0 ? (
-            <div className="px-5 pb-5 pt-3 text-[12px] text-black/28">Žiadne udalosti</div>
+            <div className="px-5 pb-5 pt-3 text-[12px] text-[#82715e]">Žiadne udalosti</div>
           ) : (
-            <div className="divide-y divide-black/[.05]">
+            <div className="divide-y divide-[#e5dacb]">
               {selectedActivities.map(activity=>{
                 const code=serviceCode(activity)
                 const activityType=code==="A"?"Konkurz":code==="Z"?"Zájazd":typeLabel(activity.type)
@@ -143,24 +143,24 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
                 return (
                   <article key={activity.id} className="px-5 py-4">
                     <div className="flex items-baseline justify-between gap-4">
-                      <p className={"text-[10px] uppercase tracking-[.09em] "+(code==="A"?"text-black/38":"text-black/28")}>{activityType}</p>
-                      {activity.startTime&&<p className={"text-[24px] font-normal tracking-[-.035em] "+(code==="A"?"text-black/48":"text-black")}>{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
+                      <p className={"text-[10px] uppercase tracking-[.09em] "+(code==="A"?"text-[#7b6246]":"text-[#82715e]")}>{activityType}</p>
+                      {activity.startTime&&<p className={"text-[24px] font-normal tracking-[-.035em] "+(code==="A"?"text-[#735d44]":"text-black")}>{activity.startTime}{activity.endTime?" – "+activity.endTime:""}</p>}
                     </div>
                     {activity.type!=="off" && (
                       <>
-                        {code==="A" && <p className="mt-2 text-[14px] leading-snug text-black/48">{activity.title}</p>}
+                        {code==="A" && <p className="mt-2 text-[14px] leading-snug text-[#735d44]">{activity.title}</p>}
                         {program ? (
                           <details className="mt-3">
-                            <summary className="cursor-pointer list-none text-[11px] font-medium text-black/48 [&::-webkit-details-marker]:hidden">Program +</summary>
-                            <p className="mt-2 text-[12px] leading-[1.55] text-black/58">{program}</p>
+                            <summary className="cursor-pointer list-none text-[11px] font-medium text-[#735d44] [&::-webkit-details-marker]:hidden">Program +</summary>
+                            <p className="mt-2 text-[12px] leading-[1.55] text-[#675540]">{program}</p>
                           </details>
                         ) : code!=="A" ? (
-                          <p className="mt-2 text-[14px] leading-snug text-black/72">{activity.title}</p>
+                          <p className="mt-2 text-[14px] leading-snug text-[#483a2b]">{activity.title}</p>
                         ) : null}
                       </>
                     )}
-                    {activity.conductor&&<p className="mt-3 text-[11px] text-black/42">Dirigent · {activity.conductor}</p>}
-                    {activity.venue&&<p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-black/32"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
+                    {activity.conductor&&<p className="mt-3 text-[11px] text-[#79664f]">Dirigent · {activity.conductor}</p>}
+                    {activity.venue&&<p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#79664f]"><MapPin className="h-3 w-3"/>{activity.venue}</p>}
                   </article>
                 )
               })}
@@ -169,7 +169,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
 
         </div>
       </div>
-    </section>
+    </section>}
   </div>
 }
 
