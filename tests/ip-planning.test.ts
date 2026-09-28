@@ -92,4 +92,21 @@ assert.ok(busyPlan.some(e=>e.date===busyWeek[1]))
 assert.equal(countedHours(busyServices)+sum(busyPlan),38.5)
 const unconfirmedManual={...service,type:'manual-service',status:'unconfirmed',startTime:null,endTime:null,hours:'0',activityId:null}
 assert.deepEqual(planWeekIp(dates,[unconfirmedManual]),planWeekIp(dates,[]))
+const personal={weekdayStart:540,weekendStart:600,preferredEnd:1260,latestEnd:1320}
+const personalPlan=planWeekIp(dates,[],personal)
+assert.equal(sum(personalPlan),38.5)
+assert.equal(personalPlan.find(e=>e.date===dates[0])?.startTime,'09:00')
+assert.equal(personalPlan.find(e=>e.date===dates[5])?.startTime,'10:00')
+for(const ip of personalPlan){
+ const weekend=[0,6].includes(new Date(ip.date+'T12:00:00').getDay())
+ assert.ok(ip.startTime>=(weekend?'10:00':'09:00'))
+ assert.ok(ip.endTime<='21:00')
+}
+const protectedOtherDays=dates.slice(1).map((date,i)=>({...manual,id:700+i,date,hours:'6.083333333333333'}))
+const lateBlocker={...service,id:800,date:dates[0],status:'unconfirmed',startTime:'09:00',endTime:'20:00',hours:'0'}
+const latePlan=planWeekIp(dates,[...protectedOtherDays,...dates.slice(1).map((date,i)=>({...manual,id:900+i,date,status:'removed',hours:'0',startTime:null,endTime:null})),lateBlocker],personal)
+assert.equal(sum(latePlan),2)
+assert.equal(latePlan[0]?.startTime,'20:00')
+assert.equal(latePlan[0]?.endTime,'22:00')
+assert.ok(planWeekIp(dates,[],{...personal,preferredEnd:1200}).every(e=>e.endTime<='20:00'))
 console.log('PASS: reference blocks, second daily blocks, weekend top-up, 38.5h target, half-hour remainder, manual preservation, blocked days, cross-month weeks, no overlaps and repeatable planning')
