@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { geometry, fieldRect, dayValues, MONTHS, bratislavaNow, type Entry, type Slot, type Ensemble } from '@/lib/epc/model'
+import { isWorkPlanDayOff } from '@/lib/work-plan-days-off'
 import styles from './epc-form.module.css'
 import {headerRect,headerFontSize,previewCrop,signatureRect,rangeBaseline,rangeFontSize,rangeInputPadding} from '@/lib/epc/layout'
 
@@ -79,7 +80,7 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
             const slot=n as Slot,check=`Check Box ${day}.${slot}`,range=`Dropdown ${day}.${slot}`
             return <div key={`${day}.${slot}`}>
               <label className={`${styles.field} ${styles.checkbox}`} style={position(check)}>
-                <input data-epc-field={check} type="checkbox" aria-label={`${date} ${slot}. služba`} checked={day<=days&&values.services[slot-1]} disabled={busy||day>days}
+                <input data-epc-field={check} type="checkbox" aria-label={`${date} ${slot}. služba`} checked={day<=days&&values.services[slot-1]} disabled={busy||day>days||isWorkPlanDayOff(date)} title={isWorkPlanDayOff(date)?'Podľa PDF plánu práce je voľno.':undefined}
                   onChange={e=>{void onService(date,slot,e.target.checked).catch(()=>{})}}/>
                 {day<=days&&values.services[slot-1]&&<svg aria-hidden="true" width="13" height="13" viewBox="0 0 13 13"><path d="M0 0L13 13M0 13L13 0" stroke="black" strokeWidth="1"/></svg>}
               </label>
