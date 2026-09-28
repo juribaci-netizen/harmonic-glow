@@ -1,5 +1,7 @@
 "use server"
 
+import { isWorkPlanDayOff } from "@/lib/work-plan-days-off"
+import { isService } from "@/lib/epc/model"
 import { readPreparationPreferences } from "@/lib/epc/preparation-preferences-store"
 import { db } from "@/lib/db"
 import { timeEntry } from "@/lib/db/schema"
@@ -68,6 +70,15 @@ export async function autoFillMonthFromWorkPlan(year: number, month: number) {
     .from(timeEntry)
     .where(and(eq(timeEntry.userId, userId), gte(timeEntry.date, monthStart), lte(timeEntry.date, monthEnd)))
 
+  // Clear service marks contradicting an explicit PDF day off before planning.
+  // Keep the original row for recovery; preparation is unaffected.
+  for(const entry of existing){
+    if(isWorkPlanDayOff(entry.date)&&isService(entry)&&entry.status!=='removed'){
+      await tx.update(timeEntry).set({status:'removed',hours:'0',updatedAt:new Date()})
+        .where(and(eq(timeEntry.id,entry.id),eq(timeEntry.userId,userId)))
+      if(entry.activityId!=null)await setParticipationOverride(tx,userId,entry.activityId,'no')
+    }
+  }
   const byActivity = new Map(existing.filter(e => e.activityId != null).map(e => [e.activityId, e]))
   const monthActivities = seasonData
     .map((activity, index) => ({ ...activity, activityId: index + 1 }))
@@ -389,6 +400,7 @@ async function saveEpcSlot(date:string,slot:Slot,kind:'service'|'ip',value:boole
 }
 export async function setManualService(date:string,slot:Slot,present:boolean) {
   if(typeof present!=='boolean')throw new Error('Neplatná hodnota.')
+  if(present&&isWorkPlanDayOff(date))return {ok:false,error:'Podľa PDF plánu práce je v tento deň voľno. Službu nemožno označiť.'}
   try{return await saveEpcSlot(date,slot,'service',present)}catch(error){if(error instanceof ParticipationConflictError)return {ok:false,error:error.message};throw error}
 }
 export async function setManualIpTime(date:string,slot:Slot,startTime:string|null,endTime:string|null) {
