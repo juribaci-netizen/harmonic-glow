@@ -21,18 +21,18 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
   const isEpc=pathname.startsWith("/timesheet")
 
   return (
-    <div className="min-h-svh bg-white">
+    <div className="min-h-svh bg-[#f6f1e8] text-[#30271e]">
       <div className={cn("mx-auto min-h-svh w-full",isEpc?"max-w-[900px]":"max-w-[460px]")}>
         <main className="pb-[98px] pt-[env(safe-area-inset-top)]">
           <div className={cn("pb-6 pt-2",isEpc?"px-2 sm:px-5":"px-5")}>{children}</div>
         </main>
 
-        <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[460px] -translate-x-1/2 border-t border-black/[.06] bg-white/86 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
+        <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[460px] -translate-x-1/2 border-t border-[#ddceb9] bg-[#fffaf2]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl">
           <div className="grid h-[64px] grid-cols-5 px-3">
             {navItems.map(item=>{
               const active=pathname===item.href
               const Icon=item.icon
-              return <Link key={item.href} href={item.href} aria-current={active?"page":undefined} className={cn("flex flex-col items-center justify-center gap-1 text-[9px] font-medium",active?"text-black":"text-black/32")}>
+              return <Link key={item.href} href={item.href} aria-current={active?"page":undefined} className={cn("flex flex-col items-center justify-center gap-1 text-[9px] font-medium",active?"text-[#78552f]":"text-[#81705c]")}>
                 <Icon className="h-[20px] w-[20px]" strokeWidth={active?2.35:1.8}/>
                 <span>{t[item.key]}</span>
               </Link>
