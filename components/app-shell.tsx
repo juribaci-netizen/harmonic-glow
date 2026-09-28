@@ -23,17 +23,7 @@ export function AppShell({ children }: { children: ReactNode; user: { name: stri
   return (
     <div className="min-h-svh bg-white">
       <div className={cn("mx-auto min-h-svh w-full",isEpc?"max-w-[900px]":"max-w-[460px]")}>
-        <header className="sticky top-0 z-30 bg-white/84 pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
-          <div className="relative flex h-14 items-center justify-between px-5">
-            <p className="text-[15px] font-medium tracking-[-.03em]">Worktime</p>
-            <Link href="/" aria-label="Slovenská filharmónia" className="absolute left-1/2 top-1/2 flex h-12 w-[112px] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-              <img src="/filharmonia-logo-sk.svg?v=4" alt="Slovenská filharmónia" className="block max-h-10 w-[104px] object-contain" />
-            </Link>
-            <a href="https://filharmonia.sk/" target="_blank" rel="noreferrer" className="text-[10px] font-medium text-black/35 transition-opacity hover:opacity-60">Slovenská filharmónia</a>
-          </div>
-        </header>
-
-        <main className="pb-[98px]">
+        <main className="pb-[98px] pt-[env(safe-area-inset-top)]">
           <div className={cn("pb-6 pt-2",isEpc?"px-2 sm:px-5":"px-5")}>{children}</div>
         </main>
 
