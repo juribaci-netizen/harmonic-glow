@@ -75,7 +75,8 @@ async function main(){
   const values=async()=>dayValues(await rendered(),date,past)
   assert.deepEqual((await values()).services,[false,false]);assert.deepEqual((await values()).ranges,['','17:00-19:30'])
   await writeProgramParticipation(userId,'cd-2026-09',true)
-  assert.deepEqual((await values()).services,[true,true]);assert.deepEqual(dayValues(await rendered(),date,{date,minutes:660}).services,[false,false])
+  assert.deepEqual((await values()).services,[true,true]);assert.deepEqual(dayValues(await rendered(),date,{date,minutes:660}).services,[true,true])
+  assert.deepEqual(dayValues(await rendered(),date,{date:'2026-09-07',minutes:660}).services,[true,true])
   await writeProgramParticipation(userId,'cd-2026-09',false)
   assert.deepEqual((await values()).services,[false,false]);assert.deepEqual((await values()).ranges,['','17:00-19:30'])
   await writeParticipation(userId,ids[1],true)
@@ -92,11 +93,15 @@ async function main(){
   for(const [id,program] of programByActivity)if(['rehearsal','dress','concert'].includes(seasonData[id-1].type))assert.ok(!program.id.startsWith('service:'),'Ungrouped musical service '+id)
   const bellini=workPrograms.find(p=>p.id==='bellini-2026')!
   assert.ok(bellini.activityIds.some(id=>seasonData[id-1].date.startsWith('2026-09')));assert.ok(bellini.activityIds.some(id=>seasonData[id-1].date.startsWith('2026-10')))
+  await writeProgramParticipation(userId,bellini.id,true)
+  const belliniState=await readParticipationState(userId)
+  assert.ok(bellini.activityIds.every(id=>belliniState.activities.get(id)===true),'Hrám applies to all program services across months')
+  await writeProgramParticipation(userId,bellini.id,null)
   const newYear=workPrograms.find(p=>p.id==='novy-rok-2027')!;assert.ok(newYear.activityIds.some(id=>seasonData[id-1].date.startsWith('2027')))
   assert.ok(workPrograms.find(p=>p.id==='olos-2026-12')!.activityIds.every(id=>programByActivity.get(id)!.id!=='cd-2026-09'))
   await assert.rejects(()=>writeParticipation(userId,1,true));await assert.rejects(()=>writeProgramParticipation(userId,'missing',true))
   await verifyManualIpGuard(userId+'-ip-guard')
-  console.log('PASS: unconfirmed old auto entries have no X; whole program yes/no/unset; future gating; service exception and inheritance; unchanged IP/storage; user isolation; cross-month/year groups; invalid input.')
+  console.log('PASS: unconfirmed old auto entries have no X; whole program yes/no/unset; future program X; service exception and inheritance; unchanged IP/storage; user isolation; cross-month/year groups; invalid input.')
   console.log('PASS: manual IP overlap guard for service, program and direct EPČ X; atomic rollback; inheritance; allowed Nehrám; exact time boundaries; unknown end/start; confirmed and inactive IP statuses.')
  }finally{await db.delete(participationChoice).where(eq(participationChoice.userId,userId));await db.delete(timeEntry).where(eq(timeEntry.userId,userId));await pool.end()}
 }
