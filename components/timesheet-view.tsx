@@ -20,6 +20,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [dirty,setDirty]=useState<Record<string,boolean>>({}),[zoom,setZoom]=useState(1)
   const [signing,setSigning]=useState(false),[hasInk,setHasInk]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null),drawing=useRef(false),requestId=useRef(0),inFlight=useRef(false)
+  const excludedPreparationDays=[...new Set(report.entries.filter(e=>['individual','ip'].includes(e.type)&&e.status==='removed').map(e=>e.date))].sort()
   const locked=loading||saving,hasDrafts=Object.values(dirty).some(Boolean)
   const dirtyChanged=useCallback((key:string,value:boolean)=>setDirty(state=>({...state,[key]:value})),[])
   const fetchReport=async(y:number,m:number)=>{
@@ -136,6 +137,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <p role="status" aria-live="polite" className="px-3 text-xs text-black/60 empty:hidden">{loading?'Načítavam výkaz…':saving?status:hasDrafts?'Neuložená zmena':status}</p>
       {!loading&&<EpcForm editorRef={editor} key={`${year}-${month}`} entries={report.entries} year={year} month={month} name={report.fullName} signatureData={report.signatureData} ensemble={report.ensemble} zoom={zoom} busy={saving} showPlannedPreparation={showPlannedPreparation} onService={saveService} onRange={saveRange} onName={saveName} onEnsemble={value=>mutate(()=>saveEpcEnsemble(year,month,value))} onDirty={dirtyChanged}/>}
       <div className="space-y-3 p-3">
+        {!!excludedPreparationDays.length&&<p className="text-xs text-black/60">Ručne vynechaná príprava: {excludedPreparationDays.map(date=>date.split('-').reverse().join('.')).join(', ')}. Automatický plán tieto dni nemení.</p>}
         {!!report.weeklyTotals?.length&&<details className="rounded-xl bg-black/5 p-3 text-sm">
           <summary className="cursor-pointer font-medium">Týždenné súčty · fond {WEEKLY_TARGET_HOURS.toLocaleString('sk-SK')} h</summary>
           <p className="mt-2 text-black/60">Súčet potvrdených služieb a rozvrhnutej individuálnej prípravy. Prípravu potvrďte iba vtedy, keď skutočne prebehla.</p>
