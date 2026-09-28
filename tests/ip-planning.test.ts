@@ -11,12 +11,12 @@ const evening={...afternoon,startTime:'19:00',endTime:'21:00',hours:'2'}
 assert.deepEqual(range([morning,evening]),{date:dates[0],startTime:'14:00',endTime:'16:00',hours:'2'})
 assert.deepEqual(range([afternoon]),{date:dates[0],startTime:'08:00',endTime:'12:00',hours:'4'})
 assert.deepEqual(range([{...service,status:'removed',hours:'0'}]),range([]))
-assert.deepEqual(planWeekIp(dates,[]).filter(e=>e.date===dates[0]).map(e=>[e.startTime,e.endTime]),[['08:00','10:00'],['14:00','16:00']])
+assert.deepEqual(planWeekIp(dates,[]).filter(e=>e.date===dates[0]).map(e=>[e.startTime,e.endTime]),[['08:00','12:00'],['14:00','18:00']])
 assert.equal(range([])?.startTime,'08:00')
 for(const rows of [[],[service],[morning,afternoon],[morning,evening],[{...service,status:'unconfirmed',hours:'0'}]]){
  const ips=planWeekIp(dates,rows)
- for(const date of dates.slice(0,5)){const day=ips.filter(e=>e.date===date);assert.ok(day.length<=2);for(let i=0;i<day.length;i++)for(let j=i+1;j<day.length;j++)assert.ok(day[i].endTime<=day[j].startTime||day[j].endTime<=day[i].startTime)}
- assert.ok(ips.every(e=>dates.slice(0,5).includes(e.date)&&e.startTime>='08:00'&&e.endTime<='21:00'))
+ for(const date of dates){const day=ips.filter(e=>e.date===date);assert.ok(day.length<=2);for(let i=0;i<day.length;i++)for(let j=i+1;j<day.length;j++)assert.ok(day[i].endTime<=day[j].startTime||day[j].endTime<=day[i].startTime)}
+ assert.ok(ips.every(e=>dates.includes(e.date)&&e.startTime>='08:00'&&e.endTime<='21:00'))
  for(const ip of ips)assert.equal(overlaps(timeMinutes(ip.startTime)!,timeMinutes(ip.endTime)!,blockedTimes(ip.date,rows)),false)
 }
 const manual={...service,id:2,type:'individual',status:'manual',startTime:'14:00',endTime:'17:00',hours:'3'}
@@ -25,8 +25,8 @@ assert.equal(range([{...manual,status:'removed',hours:'0',startTime:null,endTime
 assert.equal(planWeekIp(dates,[{...service,hours:'42'}]).length,0)
 assert.equal(range([{...service,startTime:null,endTime:null}]),undefined)
 const daily=dates.slice(0,5).map((date,i)=>({...service,id:i+1,date}))
-assert.equal(planWeekIp(dates,daily).reduce((n,e)=>n+Number(e.hours),0),20)
-assert.ok(planWeekIp(dates,daily).every(e=>e.hours==='4'))
+assert.equal(planWeekIp(dates,daily).reduce((n,e)=>n+Number(e.hours),0),18.5)
+assert.ok(planWeekIp(dates,daily).every(e=>Number(e.hours)<=4))
 const ip=(startTime:string,endTime:string):Entry=>({...manual,startTime,endTime})
 assert.deepEqual(dayValues([ip('08:00','12:00')],dates[0]).ranges,['08:00-12:00',''])
 assert.deepEqual(dayValues([ip('14:00','18:00')],dates[0]).ranges,['','14:00-18:00'])
@@ -34,4 +34,30 @@ const cross=['2026-08-31','2026-09-01','2026-09-02','2026-09-03','2026-09-04','2
 assert.ok(planWeekIp(cross,[]).every(e=>cross.slice(0,5).includes(e.date)))
 assert.equal(countedHours([service,{...service,id:2,type:'individual',hours:'4',status:'manual'},{...service,id:3,status:'unconfirmed',hours:'3'},{...service,id:4,status:'removed',hours:'3'},{...service,id:5,title:'Konkurz',hours:'3'},{...service,id:6,type:'off',hours:'8'}]),8)
 assert.ok(planWeekIp(cross,[{...service,date:'2026-09-01',status:'present',hours:'4'}]).some(e=>e.date==='2026-08-31'))
-console.log('PASS: June-style 4h/2h service-day IP and two short blocks without a service, correct columns, morning/evening services, no overlaps, weekdays, manual preservation and weekly cap')
+
+const sum=(rows:ReturnType<typeof planWeekIp>)=>rows.reduce((n,e)=>n+Number(e.hours),0)
+assert.equal(sum(planWeekIp(dates,[])),38.5)
+const frozen=dates.slice(0,5).map((date,i)=>({...manual,id:i+100,date,hours:'6',startTime:'08:00',endTime:'14:00'}))
+const snapshot=JSON.stringify(frozen)
+const weekendPlan=planWeekIp(dates,frozen)
+assert.equal(sum(weekendPlan),8.5)
+assert.ok(weekendPlan.every(e=>dates.slice(5).includes(e.date)))
+assert.equal(JSON.stringify(frozen),snapshot)
+assert.equal(sum(planWeekIp(dates,[{...manual,hours:'38'}])),0.5)
+assert.equal(sum(planWeekIp(dates,[{...manual,hours:'38.5'}])),0)
+assert.equal(sum(planWeekIp(dates,[{...manual,hours:'39'}])),0)
+const closed=dates.map((date,i)=>({...service,id:i+50,date,startTime:null,endTime:null,status:'unconfirmed',hours:'0'}))
+assert.deepEqual(planWeekIp(dates,closed),[])
+for(const rows of [[],daily,frozen,[morning,afternoon],[morning,evening]]){
+ const plan=planWeekIp(dates,rows)
+ assert.ok(countedHours(rows)+sum(plan)<=38.5)
+ for(const date of dates){
+  const day=plan.filter(e=>e.date===date)
+  assert.ok(day.length<=2)
+  assert.ok(countedHours(rows.filter(e=>e.date===date))+sum(day)<=8)
+  for(const block of day)assert.equal(overlaps(timeMinutes(block.startTime)!,timeMinutes(block.endTime)!,blockedTimes(date,rows)),false)
+ }
+ assert.deepEqual(planWeekIp(dates,[...rows,...plan.map((p,i)=>({...p,id:1000+i,type:'individual',title:'IP',status:'auto',notes:null}))]),plan)
+}
+assert.equal(sum(planWeekIp(cross,[])),38.5)
+console.log('PASS: reference blocks, second daily blocks, weekend top-up, 38.5h target, half-hour remainder, manual preservation, blocked days, cross-month weeks, no overlaps and repeatable planning')
