@@ -2,15 +2,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { proposeEpcRepairs,confirmEpcRepair } from '@/app/actions/epc-repairs'
+import type { PreparationRepair } from '@/lib/epc/preparation-repairs'
 import { setManualService,setManualIpTime } from '@/app/actions/time-entries'
 import { saveEpcSignature,saveEpcEnsemble } from '@/app/actions/epc-signature'
 import { saveEpcName } from '@/app/actions/profile'
 import { EpcForm, type EpcFormHandle } from './epc-form'
 import { MONTHS,parseRange,type Entry,type Slot,type Ensemble } from '@/lib/epc/model'
 
-type Report={shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:{weekStart:string;totalHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
+type Report={submissionIssues?:string[];shortfalls?:{weekStart:string;missingHours:number}[];weeklyTotals?:{weekStart:string;totalHours:number}[];entries:Entry[];signatureData:string|null;ensemble:Ensemble|null;fullName:string}
 export function TimesheetView({initialEntries,year:initialYear,month:initialMonth,userId,fullName,pdfEditor=false}:{initialEntries:Entry[];year:number;month:number;userId:string;fullName:string;pdfEditor?:boolean}) {
   const router=useRouter(),editor=useRef<EpcFormHandle>(null)
+  const [repairs,setRepairs]=useState<PreparationRepair[]|null>(null),[proposing,setProposing]=useState(false)
   const [savingAll,setSavingAll]=useState(false)
   const [sharing,setSharing]=useState(false),[shareFallback,setShareFallback]=useState(false)
   const [cursor,setCursor]=useState({year:initialYear,month:initialMonth})
@@ -20,7 +23,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   const [dirty,setDirty]=useState<Record<string,boolean>>({})
   const [signing,setSigning]=useState(false),[hasInk,setHasInk]=useState(false)
   const canvas=useRef<HTMLCanvasElement>(null),drawing=useRef(false),requestId=useRef(0),inFlight=useRef(false)
-  const locked=loading||saving||sharing,hasDrafts=Object.values(dirty).some(Boolean)
+  const locked=loading||saving||sharing||proposing,hasDrafts=Object.values(dirty).some(Boolean)
   const dirtyChanged=useCallback((key:string,value:boolean)=>setDirty(state=>({...state,[key]:value})),[])
   const fetchReport=async(y:number,m:number)=>{
     const response=await fetch(`/api/epc-report?year=${y}&month=${m}`,{cache:'no-store'})
@@ -30,7 +33,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   useEffect(()=>{
     let cancelled=false
     const id=++requestId.current
-    setLoading(true);setError('');setStatus('');setDirty({});setReport({entries:[],signatureData:null,ensemble:null,fullName})
+    setLoading(true);setRepairs(null);setError('');setStatus('');setDirty({});setReport({entries:[],signatureData:null,ensemble:null,fullName})
     ;(async()=>{
       let next=await fetchReport(year,month)
       // Previous versions were single-user and stored signatures locally. Import without deleting or replacing them.
@@ -59,7 +62,7 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
   },[year,month,locked,hasDrafts])
   const mutate=async(action:()=>Promise<unknown>)=>{
     if(inFlight.current)throw new Error('Prebieha ukladanie.')
-    inFlight.current=true;setSaving(true);setError('');setStatus('Ukladám…')
+    inFlight.current=true;setRepairs(null);setSaving(true);setError('');setStatus('Ukladám…')
     try {const result=await action();if(result&&typeof result==='object'&&'error' in result&&typeof result.error==='string')throw new Error(result.error);setReport(await fetchReport(year,month));setStatus('Uložené')}
     catch(e){setError(e instanceof Error?e.message:'Zmenu sa nepodarilo uložiť.');setStatus('');throw e}
     finally{inFlight.current=false;setSaving(false)}
@@ -104,12 +107,19 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
     }catch{}
   }
   const pdfUrl=`/api/epc-pdf?year=${year}&month=${month}`
+  const sendIssues=[...(report.submissionIssues??['Kontrola výkazu ešte nie je dokončená.']),...(hasDrafts?['Uložte rozpracované zmeny.']:[])]
   const sharePdf=async()=>{
-    if(locked||hasDrafts)return
+    if(locked||hasDrafts||sendIssues.length)return
     setSharing(true);setError('');setStatus('')
     try{
-      const response=await fetch(pdfUrl,{cache:'no-store'})
-      if(!response.ok)throw new Error('PDF sa nepodarilo pripraviť. Skúste to znova.')
+      const response=await fetch(`${pdfUrl}&send=1`,{cache:'no-store'})
+      if(!response.ok){
+        if(response.status===422){
+          const data=await response.json() as {issues:string[]}
+          setReport(current=>({...current,submissionIssues:data.issues}));return
+        }
+        throw new Error('PDF sa nepodarilo pripraviť. Skúste to znova.')
+      }
       const file=new File([await response.blob()],`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`,{type:'application/pdf'})
       if(navigator.canShare?.({files:[file]})&&navigator.share){
         await navigator.share({files:[file],title:`EPČ · ${MONTHS[month]} ${year}`})
@@ -120,6 +130,16 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
         else setError(error instanceof Error?error.message:'PDF sa nepodarilo zdieľať.')
       }
     }finally{setSharing(false)}
+  }
+  const suggestRepair=async()=>{
+    if(locked||hasDrafts)return
+    setProposing(true);setError('')
+    try{setRepairs(await proposeEpcRepairs(year,month))}
+    catch(e){setError(e instanceof Error?e.message:'Návrh sa nepodarilo pripraviť.')}
+    finally{setProposing(false)}
+  }
+  const acceptRepair=async(proposal:PreparationRepair)=>{
+    try{await mutate(()=>confirmEpcRepair(year,month,proposal))}catch{}
   }
   const saveChanges=async(goBack=false)=>{
     if(locked||savingAll)return
@@ -150,14 +170,27 @@ export function TimesheetView({initialEntries,year:initialYear,month:initialMont
       <div className="grid grid-cols-2 gap-3 p-3">
         <a href={locked||hasDrafts?undefined:`${pdfUrl}&download=1`} aria-disabled={locked||hasDrafts} download={`EPC-${year}-${String(month+1).padStart(2,'0')}.pdf`} className={`block rounded-xl border border-black/15 bg-white px-4 py-3 text-center text-sm font-medium text-black ${locked||hasDrafts?'pointer-events-none opacity-40':''}`}>Stiahnuť</a>
         <button disabled={locked||hasDrafts} onClick={()=>{setHasInk(false);setSigning(true)}} className="w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white disabled:opacity-40">Podpísať</button>
-        <button type="button" disabled={locked||hasDrafts} onClick={()=>void sharePdf()} className="col-span-2 min-h-14 rounded-xl bg-[#a8e6a3] px-4 py-4 text-base font-semibold text-[#163b20] transition-colors hover:bg-[#93d98d] disabled:opacity-40">{sharing?'Pripravujem PDF…':'Odoslať'}</button>
+        {!loading&&sendIssues.length>0&&<div id="send-issues" role="alert" className="col-span-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-950"><p className="font-semibold">Pred odoslaním opravte:</p><ul className="mt-1 list-disc space-y-1 pl-5">{sendIssues.map(issue=><li key={issue}>{issue}</li>)}</ul>
+          {!!report.shortfalls?.length&&<button type="button" disabled={locked||hasDrafts} onClick={()=>void suggestRepair()} className="mt-3 rounded-lg border border-amber-900/20 bg-white px-3 py-2 font-medium disabled:opacity-40">{proposing?'Pripravujem návrh…':'Navrhnúť doplnenie hodín'}</button>}
+          {repairs!==null&&<div className="mt-3 space-y-3">
+            <p>Návrh sa nezapíše bez potvrdenia. Pri minulých dňoch potvrďte iba prípravu, ktorá skutočne prebehla.</p>
+            {!repairs.length&&<p>Nenašiel sa bezpečný voľný čas. Skontrolujte časy služieb a ručné zápisy; meno, súbor a podpis doplňte vo formulári.</p>}
+            {repairs.map(p=><div key={p.weekStart} className="rounded-lg border border-amber-900/15 bg-white p-3">
+              <p className="font-medium">{p.date.split('-').reverse().join('. ')} · {p.startTime}–{p.endTime} · +{p.hours.toLocaleString('sk-SK')} h</p>
+              <p className="mt-1">V týždni chýba {p.missingHours.toLocaleString('sk-SK')} h.{p.replacesCleared?' Potvrdenie nahradí ručne vynechanú prípravu v tomto políčku.':''}</p>
+              <button type="button" disabled={locked||hasDrafts} onClick={()=>void acceptRepair(p)} className="mt-2 rounded-lg bg-black px-3 py-2 text-white disabled:opacity-40">Potvrdiť tento čas</button>
+            </div>)}
+            <button type="button" onClick={()=>setRepairs(null)} className="underline">Zrušiť návrh</button>
+          </div>}
+        </div>}
+        <button type="button" disabled={locked||hasDrafts||sendIssues.length>0} aria-describedby={sendIssues.length?'send-issues':undefined} onClick={()=>void sharePdf()} className="col-span-2 min-h-14 rounded-xl bg-[#a8e6a3] px-4 py-4 text-base font-semibold text-[#163b20] transition-colors hover:bg-[#93d98d] disabled:opacity-40">{sharing?'Pripravujem PDF…':'Odoslať'}</button>
       </div>
     </section>
     {shareFallback&&<div role="dialog" aria-modal="true" aria-labelledby="send-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4" onKeyDown={e=>{if(e.key==='Escape')setShareFallback(false)}}>
       <div className="w-full max-w-md rounded-2xl bg-white p-5">
         <h2 id="send-title" className="text-xl font-semibold">Odoslať výkaz</h2>
         <p className="mt-3 text-sm text-black/70">Tento prehliadač nepodporuje priame zdieľanie PDF. Stiahni výkaz a prilož ho k e-mailu alebo správe.</p>
-        <a href={`${pdfUrl}&download=1`} download className="mt-4 block rounded-xl bg-[#78552f] p-3 text-center font-medium text-white">Stiahnuť PDF</a>
+        <a href={`${pdfUrl}&download=1&send=1`} download className="mt-4 block rounded-xl bg-[#78552f] p-3 text-center font-medium text-white">Stiahnuť PDF</a>
         <button autoFocus type="button" onClick={()=>setShareFallback(false)} className="mt-3 w-full rounded-xl border border-black/15 p-3">Zavrieť</button>
       </div>
     </div>}

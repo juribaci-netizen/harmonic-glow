@@ -1,3 +1,4 @@
+import { submissionIssues } from '@/lib/epc/submission-validation'
 import { NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -14,12 +15,16 @@ export async function GET(request:Request) {
   const params=new URL(request.url).searchParams,now=bratislavaNow()
   const year=Number(params.get('year')??now.date.slice(0,4)),month=Number(params.get('month')??Number(now.date.slice(5,7))-1)
   try{validateMonth(year,month)}catch{return NextResponse.json({error:'Neplatný mesiac.'},{status:400})}
-  await autoFillMonthFromWorkPlan(year,month)
+  const {weeklyTotals}=await autoFillMonthFromWorkPlan(year,month)
   const [entries,report,profile,template,fontBytes]=await Promise.all([
     getMonthEntries(year,month),readReport(user.id,year,month),getProfile(),
     readFile(path.join(process.cwd(),'public','epc-blank.pdf')),
     readFile(path.join(process.cwd(),'public','fonts','EpcSans.ttf')),
   ])
+  if(params.get('send')==='1'){
+    const issues=submissionIssues({entries,...report,fullName:profile?.fullName??user.name,weeklyTotals},year,month)
+    if(issues.length)return NextResponse.json({issues},{status:422,headers:{'Cache-Control':'no-store'}})
+  }
   const bytes=await createEpcPdf({template,fontBytes,year,month,name:profile?.fullName??user.name,entries,...report})
   return new NextResponse(new Uint8Array(bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`${params.get('download')==='1'?'attachment':'inline'}; filename="EPC-${year}-${String(month+1).padStart(2,'0')}.pdf"`,'Cache-Control':'no-store, max-age=0'}})
 }
