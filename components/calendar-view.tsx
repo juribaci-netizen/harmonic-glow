@@ -50,7 +50,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
     )
   }, [year, month])
 
-  const selectedActivities = byDate.get(selected) ?? []
+  const selectedActivities = (byDate.get(selected) ?? []).filter(activity => activity.type !== "off")
   const selectedDate = new Date(selected + "T00:00:00")
   const typeLabel = (type:string) => ({
     rehearsal:t.type_rehearsal, concert:t.type_concert, recording:t.type_recording,
@@ -114,7 +114,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
           const isToday = iso === localIso(today)
           const markerItems = items.filter(item => item.type !== "off" && item.type !== "ip")
           return <button key={iso} type="button" aria-label={date.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"})} aria-pressed={active} aria-current={isToday?"date":undefined} onClick={()=>setSelected(iso)} className="flex h-[68px] flex-col items-center justify-center rounded-[16px] transition-colors hover:bg-[#f2e8d9] focus-visible:outline-2 focus-visible:outline-[#76532d]">
-            <span className={"flex h-9 w-9 items-center justify-center rounded-full text-[16px] "+(active?"bg-[#78552f] text-white shadow-sm":(outsideMonth?"text-[#817567] ":"")+(isToday?"ring-2 ring-[#aa8454]":""))}>{day}</span>
+            <span className={"flex h-9 w-9 items-center justify-center rounded-full text-[16px] "+(active?"bg-[#78552f] text-white shadow-sm":(outsideMonth?"text-[#7c7062] ":"")+(isToday?"ring-2 ring-[#aa8454]":""))}>{day}</span>
             <span className="mt-1 flex h-3 items-center justify-center gap-1">
               {markerItems.map((item,markerIndex)=><i key={item.id+"-"+markerIndex} className="h-1.5 w-1.5 rounded-full bg-[#9b7444]" />)}
             </span>
@@ -123,7 +123,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
       </div>
     </section>
 
-    <section className="mt-4 overflow-hidden rounded-[26px] border border-[#ded2bf] bg-[#fffdf9] shadow-[0_18px_50px_rgba(91,65,32,.08)]">
+    {selectedActivities.length > 0 && <section className="mt-4 overflow-hidden rounded-[26px] border border-[#ded2bf] bg-[#fffdf9] shadow-[0_18px_50px_rgba(91,65,32,.08)]">
       <div className="px-5 pt-4">
         <p className="text-[11px] font-medium capitalize text-[#7b6246]">
           {selectedDate.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long"})}
@@ -169,7 +169,7 @@ export function CalendarView({ activities }: { activities: Activity[] }) {
 
         </div>
       </div>
-    </section>
+    </section>}
   </div>
 }
 
