@@ -81,11 +81,11 @@ export function automaticRange(entry:Entry, dayEntries:Entry[]) {
   const hh=(m:number)=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')
   return start+duration<=1440?`${hh(start)}-${hh(start+duration)}`:''
 }
-export function dayValues(entries:Entry[], date:string, now=bratislavaNow()) {
+export function dayValues(entries:Entry[], date:string, now=bratislavaNow(), includePlannedPreparation=false) {
   const rows=entries.filter(e=>e.date===date)
   const services=assignedSlots(rows,'service')
   const ips=assignedSlots(rows,'ip')
-  const ranges=ips.map(e=>!visible(e,now)?'':e?.startTime&&e.endTime?`${e.startTime}-${e.endTime}`:e?(e.ipRange??automaticRange(e,rows)):'')
+  const ranges=ips.map(e=>!(visible(e,now)||(includePlannedPreparation&&e?.status==='auto'))?'':e?.startTime&&e.endTime?`${e.startTime}-${e.endTime}`:e?(e.ipRange??automaticRange(e,rows)):'')
   // An auto-generated IP without explicit times belongs in the field matching its start.
   if(ips[0]?.status==='auto' && !ips[0].startTime && ranges[0] && !ips[1] && Number(ranges[0].slice(0,2))>=12) {
     ranges[1]=ranges[0];ranges[0]=''
