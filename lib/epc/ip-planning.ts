@@ -7,7 +7,7 @@ type Interval = [number, number]
 export const clockTime = (m:number) => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`
 export function blockedTimes(date:string, entries:Entry[]):Interval[] {
   const declined=new Set(entries.filter(e=>e.status==='removed').map(e=>e.activityId))
-  const activities=[...seasonData.flatMap((e,i)=>e.date===date&&!declined.has(i+1)?[e]:[]),...entries.filter(e=>e.date===date&&!isIp(e)&&e.status!=='removed')]
+  const activities=[...seasonData.flatMap((e,i)=>e.date===date&&!declined.has(i+1)?[e]:[]),...entries.filter(e=>e.date===date&&!isIp(e)&&e.status!=='removed'&&!(e.type==='manual-service'&&e.status==='unconfirmed'))]
   return activities.flatMap(e=>{
     if(e.type==='off'||e.type==='ip'||e.type==='individual')return []
     if(/zruš/i.test(`${e.title} ${e.notes??''}`))return []
@@ -32,7 +32,7 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
   const active=entries.filter(e=>dates.includes(e.date)&&!['removed','suggested','unconfirmed'].includes(e.status)&&(isIp(e)||isService(e))&&!(isIp(e)&&e.status==='auto'))
   let remaining=Math.max(0,WEEKLY_TARGET_MINUTES-Math.round(countedHours(active)*60))
   const planned:{date:string;startTime:string;endTime:string;hours:string}[]=[]
-  const addBlock=(date:string,topUp=false,allowServiceTopUp=false)=>{
+  const addBlock=(date:string,topUp=false,allowServiceTopUp=false,budget=Infinity)=>{
     // A manual preparation entry or explicit removal protects the entire day.
     const manual=entries.filter(e=>e.date===date&&isIp(e)&&!['auto','suggested','unconfirmed'].includes(e.status))
     if(manual.some(e=>e.status==='removed'||!e.startTime||!e.endTime))return
@@ -43,7 +43,7 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
     const existing=[...generated,...manual.map(e=>({startTime:e.startTime!,endTime:e.endTime!}))]
     if(existing.length>=2)return
     const used=Math.round((countedHours(day)+generated.reduce((sum,e)=>sum+Number(e.hours),0))*60)
-    const maximum=Math.min(topUp?240:services.length>=2?120:240,remaining,Math.max(0,480-used))
+    const maximum=Math.min(topUp?240:services.length>=2?120:240,budget,remaining,Math.max(0,480-used))
     if(maximum<30)return
     let windows=freeWindows(date,entries)
     for(const ip of existing){
@@ -70,12 +70,13 @@ export function planWeekIp(dates:string[],entries:Entry[]) {
     planned.push({date,startTime:clockTime(choice.start),endTime:clockTime(choice.start+choice.duration),hours:String(choice.duration/60)})
     remaining-=choice.duration
   }
-  const serviceDays=dates.filter(date=>active.some(e=>e.date===date&&isService(e)))
-  const freeDays=dates.filter(date=>!serviceDays.includes(date))
-  // Reserve preparation around services, then give free days throughout the
-  // whole Monday–Sunday week a first block before adding any second blocks.
-  for(const date of serviceDays)addBlock(date)
-  for(const date of freeDays)addBlock(date)
+  // Spread the initial weekly budget across every available day, including
+  // free days before a busy program. Do not reserve the entire fund for services.
+  const allocations=dates.filter(date=>!entries.some(e=>e.date===date&&isIp(e)&&!['auto','suggested','unconfirmed'].includes(e.status))&&freeWindows(date,entries).some(([a,b])=>b-a>=30))
+    .map(date=>({date,minutes:active.filter(e=>e.date===date&&isService(e)).length>=2?120:240}))
+  const desired=allocations.reduce((sum,e)=>sum+e.minutes,0)
+  const ratio=desired?Math.min(1,remaining/desired):0
+  for(const {date,minutes} of allocations)addBlock(date,false,false,Math.floor(minutes*ratio/30)*30)
   const byDailyLoad=()=>[...dates].sort((a,b)=>{
     const load=(date:string)=>countedHours(active.filter(e=>e.date===date))+planned.filter(e=>e.date===date).reduce((sum,e)=>sum+Number(e.hours),0)
     return load(a)-load(b)||a.localeCompare(b)
