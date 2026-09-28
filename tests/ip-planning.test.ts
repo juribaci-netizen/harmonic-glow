@@ -74,4 +74,7 @@ const before={date:'2027-01-01',minutes:0}
 assert.deepEqual(dayValues([future],future.date,before).ranges,['',''])
 assert.deepEqual(dayValues([future],future.date,before,true).ranges,['08:00-12:00',''])
 assert.deepEqual(dayValues([{...future,status:'removed'}],future.date,before,true).ranges,['',''])
+const placeholder={...manual,date:dates[0],status:'unconfirmed',startTime:null,endTime:null,hours:'0'}
+assert.deepEqual(planWeekIp(dates,[placeholder]),planWeekIp(dates,[]))
+assert.deepEqual(dayValues([placeholder,{...future,date:dates[0]}],dates[0],before,true).ranges,['08:00-12:00',''])
 console.log('PASS: reference blocks, second daily blocks, weekend top-up, 38.5h target, half-hour remainder, manual preservation, blocked days, cross-month weeks, no overlaps and repeatable planning')
