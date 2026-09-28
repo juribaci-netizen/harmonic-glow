@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { useI18n } from "@/components/language-provider"
-import { Check, X, Download, MapPin } from "lucide-react"
+import { Download, MapPin } from "lucide-react"
 import { setActivityParticipation, setProgramParticipation } from '@/app/actions/schedule'
 import { bratislavaNow,timeMinutes } from '@/lib/epc/model'
 import { canChooseParticipation } from '@/lib/work-plan'
@@ -24,16 +24,19 @@ type Activity = {
   notes: string | null
 }
 
-function ParticipationButtons({value,pending,label,onChange}:{value:boolean|null;pending:boolean;label:string;onChange:(value:boolean|null)=>void}) {
-  return <div role="group" aria-label={label} className="mt-2 grid grid-cols-2 gap-2">
-    {([true,false] as const).map(choice=>{
-      const selected=value===choice,Icon=choice?Check:X
-      return <button key={String(choice)} type="button" aria-pressed={selected} disabled={pending}
-        onClick={()=>onChange(selected?null:choice)}
-        className={`flex min-h-11 items-center justify-center gap-2 rounded-lg border px-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b6f4b] disabled:opacity-50 ${selected?(choice?'border-emerald-700 bg-emerald-700 text-white':'border-rose-700 bg-rose-700 text-white'):'border-black/15 bg-white text-black/65 hover:bg-black/5'}`}>
-        <Icon aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={2.5}/>{choice?'Hrám':'Nehrám'}
+function ParticipationSwitch({value,pending,label,onChange,resetLabel}:{value:boolean|null;pending:boolean;label:string;onChange:(value:boolean|null)=>void;resetLabel?:string}) {
+  const state=value===null?'Účasť neurčená':value?'Hrám':'Nehrám'
+  return <div className="mt-3">
+    <div className="flex min-h-11 items-center justify-between gap-3">
+      <span className="text-sm font-medium text-black/75">{state}</span>
+      <button type="button" role="switch" aria-label={label} aria-checked={value===true} disabled={pending}
+        onClick={()=>onChange(value===true?false:true)}
+        className={`relative h-[32px] w-[53px] shrink-0 rounded-full border transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b6f4b] disabled:opacity-50 ${value===true?'border-[#34c759] bg-[#34c759]':'border-black/15 bg-[#e9e9ea]'}`}>
+        <span aria-hidden="true" className={`absolute left-[2px] top-[2px] h-[26px] w-[26px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,.3)] transition-transform duration-200 ${value===true?'translate-x-[21px]':''}`}/>
       </button>
-    })}
+    </div>
+    {value===null&&<button type="button" disabled={pending} onClick={()=>onChange(false)} className="mt-1 min-h-9 text-xs font-medium text-black/55 underline-offset-2 hover:underline disabled:opacity-50">Nehrám</button>}
+    {resetLabel&&value!==null&&<button type="button" disabled={pending} onClick={()=>onChange(null)} className="mt-1 min-h-9 text-xs text-black/50 underline-offset-2 hover:underline disabled:opacity-50">{resetLabel}</button>}
   </div>
 }
 
@@ -48,7 +51,7 @@ function ProgramChoice({ program }: { program: NonNullable<Activity['workProgram
     <p className="text-[10px] font-medium uppercase tracking-wide text-[#705638]">Účasť na programe</p>
     <h2 className="mt-1 text-sm font-semibold leading-snug">{program.title}</h2>
     <p className="mt-1 text-[11px] text-black/55">{program.start.split('-').reverse().join('.')} – {program.end.split('-').reverse().join('.')}</p>
-    <ParticipationButtons label={`Účasť na programe ${program.title}`} value={program.playing} pending={pending} onChange={choose}/>
+    <ParticipationSwitch label={`Účasť na programe ${program.title}`} value={program.playing} pending={pending} onChange={choose} resetLabel="Zrušiť voľbu"/>
     <p role="status" className="mt-2 text-[11px] leading-relaxed text-black/60 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
   </div>
@@ -57,8 +60,8 @@ function ParticipationChoice({ activity }: { activity: Activity }) {
   const [pending,startTransition]=useTransition(),[error,setError]=useState('')
   return <details className="mt-3 border-t border-black/[.06] pt-2">
     <summary className="cursor-pointer text-[11px] text-black/55">{activity.participationOverride?'Výnimka: ':''}{activity.playing===true?'Hrám':activity.playing===false?'Nehrám':'Účasť nevybraná'} · upraviť túto službu</summary>
-    <ParticipationButtons label={`Účasť služby ${activity.date} ${activity.startTime}`} pending={pending}
-      value={activity.participationOverride?activity.playing:null}
+    <ParticipationSwitch label={`Účasť služby ${activity.date} ${activity.startTime}`} pending={pending}
+      value={activity.playing} resetLabel={activity.participationOverride?'Podľa programu':undefined}
       onChange={value=>startTransition(async()=>{setError('');try{const result=await setActivityParticipation(activity.id,value);if(result.error)setError(result.error)}catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}})}/>
     <p role="status" className="mt-2 text-[10px] text-black/50 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
