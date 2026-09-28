@@ -30,6 +30,8 @@ export function DashboardView({
       <p className="modern-kicker capitalize text-black/38">{todayLabel}</p>
     </header>
 
+    <CalendarView activities={activities} />
+
     <section>
       <div className="mb-2 flex items-center justify-between px-1">
         <h2 className="ios-section-title">Zo Slovenskej filharmónie</h2>
@@ -48,6 +50,5 @@ export function DashboardView({
       </div>
     </section>
 
-    <CalendarView activities={activities} />
   </div>
 }
