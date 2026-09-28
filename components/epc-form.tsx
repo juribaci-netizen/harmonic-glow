@@ -35,7 +35,7 @@ function TimeCell({name,value,disabled,onSave,onDirty,registerSave}:{name:string
     {range&&rect&&<svg aria-hidden="true" data-epc-value={name} className={`${styles.field} ${styles.rangeValue}`} style={position(name)}><text x={1} y={rect.height-(rangeBaseline(name)-rect.y)} textAnchor="start" fontSize={rangeFontSize}>{draft}</text></svg>}
   </>
 }
-export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,busy,onService,onRange,onName,onEnsemble,onDirty,editorRef}:{entries:Entry[];year:number;month:number;name:string;signatureData:string|null;ensemble:Ensemble|null;zoom:number;busy:boolean;onService:(date:string,slot:Slot,value:boolean)=>Promise<void>;onRange:(date:string,slot:Slot,value:string)=>Promise<void>;onName:(value:string)=>Promise<void>;onEnsemble:(value:Ensemble)=>Promise<void>;onDirty:(key:string,dirty:boolean)=>void;editorRef?:Ref<EpcFormHandle>}) {
+export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,busy,showPlannedPreparation=false,onService,onRange,onName,onEnsemble,onDirty,editorRef}:{entries:Entry[];year:number;month:number;name:string;signatureData:string|null;ensemble:Ensemble|null;zoom:number;busy:boolean;showPlannedPreparation?:boolean;onService:(date:string,slot:Slot,value:boolean)=>Promise<void>;onRange:(date:string,slot:Slot,value:string)=>Promise<void>;onName:(value:string)=>Promise<void>;onEnsemble:(value:Ensemble)=>Promise<void>;onDirty:(key:string,dirty:boolean)=>void;editorRef?:Ref<EpcFormHandle>}) {
   const saves=useRef(new Map<string,()=>Promise<boolean>>())
   const registerSave=useRef<RegisterSave>((name,save)=>{if(save)saves.current.set(name,save);else saves.current.delete(name)}).current
   useImperativeHandle(editorRef,()=>({saveChanges:async()=>{for(const save of [...saves.current.values()])if(!await save())return false;return true}}),[])
@@ -74,7 +74,7 @@ export function EpcForm({entries,year,month,name,signatureData,ensemble,zoom,bus
         </div>
         {Array.from({length:31},(_,i)=>i+1).map(day=>{
           const date=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-          const values=dayValues(entries,date,now)
+          const values=dayValues(entries,date,now,showPlannedPreparation)
           return [1,2].map(n=>{
             const slot=n as Slot,check=`Check Box ${day}.${slot}`,range=`Dropdown ${day}.${slot}`
             return <div key={`${day}.${slot}`}>
