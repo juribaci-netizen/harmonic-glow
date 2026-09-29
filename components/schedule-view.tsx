@@ -170,7 +170,7 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
       <header className="sticky top-14 z-20 -mx-5 border-b border-black/[.05] bg-white/92 px-5 pb-4 pt-3 backdrop-blur-2xl">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[.14em] text-black/35">Slovenská filharmónia</p>
+            
             <h1 className="mt-1 text-[36px] font-normal leading-none tracking-[-.05em]">Plán práce</h1>
           </div>
           <a
@@ -234,7 +234,7 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
                         <article key={a.id} data-activity-id={a.id} data-not-playing={notPlaying?"":undefined} className={"px-4 py-4 "+(subdued||notPlaying?"bg-[#fafafa]":"bg-white")}>
                           {a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<div className="mb-4 rounded-xl bg-[#f6f2ec] p-3">
                             <h2 className="text-sm font-semibold leading-snug">{a.workProgram.title}</h2>
-                            <p className="mt-1 text-[11px] text-black/55">{a.workProgram.start.split('-').reverse().join('.')} – {a.workProgram.end.split('-').reverse().join('.')}</p>
+                            
                           </div>}
                           <div data-activity-content className={notPlaying?"opacity-50":""}>
                           {index===0&&itemIndex===0&&<p className={"mb-1.5 text-[9px] font-semibold capitalize tracking-[.08em] "+(subdued?"text-black/28":"text-[#9a6c16]")}>{relativeDayLabel(date)}</p>}
@@ -252,10 +252,7 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
                           )}
 
                           {!off && !cancelled && program && (
-                            <details className="mt-3 border-t border-black/[.06] pt-3">
-                              <summary className="cursor-pointer list-none text-[11px] font-medium text-black/52 [&::-webkit-details-marker]:hidden">Program +</summary>
-                              <p className="mt-2 text-[13px] leading-[1.55] text-black/78">{program}</p>
-                            </details>
+                            <p className="mt-3 border-t border-black/[.06] pt-3 text-[13px] leading-[1.55] text-black/78">{program}</p>
                           )}
 
                           {!off && !cancelled && staffing && (
@@ -273,7 +270,7 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
                           )}
                           </div>
                           {canChooseParticipation(a)&&a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<ProgramChoice program={a.workProgram}/>}
-                          {canChooseParticipation(a) && <ParticipationChoice activity={a} programControl={!!a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id}/>}
+                          {canChooseParticipation(a)&&!a.workProgram&&<ParticipationChoice activity={a}/>}
                         </article>
                       )
                     })}
