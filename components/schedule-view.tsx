@@ -47,7 +47,7 @@ function ProgramChoice({ program }: { program: NonNullable<Activity['workProgram
     try{const result=await setProgramParticipation(program.id,value);if(result.error)setError(result.error)}
     catch{setError('Výber sa nepodarilo uložiť. Skúste to znova.')}
   })
-  return <div data-program-id={program.id} className="mt-3 border-t border-black/[.06] pt-2">
+  return <div data-program-id={program.id} className="">
     <ParticipationSwitch label={`Účasť na programe ${program.title}`} value={program.playing} pending={pending} onChange={choose}/>
     <p role="status" className="mt-2 text-[11px] leading-relaxed text-black/60 empty:hidden">{pending?'Ukladám…':''}</p>
     {error&&<p role="alert" className="mt-2 text-xs text-red-700">{error}</p>}
@@ -234,6 +234,7 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
                         <article key={a.id} data-activity-id={a.id} data-not-playing={notPlaying?"":undefined} className={"px-4 py-4 "+(subdued||notPlaying?"bg-[#fafafa]":"bg-white")}>
                           {a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<div className="mb-4 rounded-xl bg-[#f6f2ec] p-3">
                             <h2 className="text-sm font-semibold leading-snug">{a.workProgram.title}</h2>
+                            {canChooseParticipation(a)&&<ProgramChoice program={a.workProgram}/>}
                             
                           </div>}
                           <div data-activity-content className={notPlaying?"opacity-50":""}>
@@ -269,7 +270,6 @@ export function ScheduleView({ activities,initialNow }: { activities: Activity[]
                             </div>
                           )}
                           </div>
-                          {canChooseParticipation(a)&&a.workProgram&&firstInProgram.get(a.workProgram.id)===a.id&&<ProgramChoice program={a.workProgram}/>}
                           {canChooseParticipation(a)&&!a.workProgram&&<ParticipationChoice activity={a}/>}
                         </article>
                       )
