@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { translations, type Lang } from "@/lib/i18n/translations"
 
-type Dict = (typeof translations)["en"]
+type Dict = (typeof translations)[Lang]
 
 type LanguageContextValue = {
   lang: Lang

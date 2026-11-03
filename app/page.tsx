@@ -12,7 +12,7 @@ const activities = seasonData.map((a, index) => ({
   conductor: a.conductor,
   venue: a.venue,
   program: a.program,
-  notes: a.notes,
+  notes: a.notes ?? null,
 }))
 
 export default async function DashboardPage() {
